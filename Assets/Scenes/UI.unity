@@ -2821,7 +2821,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 32
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -4484,7 +4484,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &348867245
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16990,6 +16990,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ModelsContainer: {fileID: 796297989}
+  ModelCountText: {fileID: 348867246}
   LoadingText: {fileID: 57733175}
   ModelButtonManager: {fileID: 7230245610091643774, guid: 0b4d90342c530b24d8c4d94ca769df92,
     type: 3}
@@ -18672,6 +18673,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1654229438}
+  - component: {fileID: 1654229439}
   m_Layer: 5
   m_Name: Model
   m_TagString: Untagged
@@ -18702,6 +18704,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1654229439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1654229434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e7b32bba3ec5e246b9cc03dd2529ffb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TitleText: {fileID: 221236288}
+  DescriptionText: {fileID: 1896019667}
+  UsersCountText: {fileID: 989879109}
+  Image: {fileID: 1951036082}
 --- !u!1 &1656312979
 GameObject:
   m_ObjectHideFlags: 0
@@ -21015,7 +21033,7 @@ GameObject:
   - component: {fileID: 1896019668}
   - component: {fileID: 1896019667}
   m_Layer: 5
-  m_Name: CountText (1)
+  m_Name: DescriptionText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -21093,8 +21111,8 @@ MonoBehaviour:
   m_fontSize: 32
   m_fontSizeBase: 32
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 32
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 8
@@ -21792,7 +21810,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1bce5beefd45a9b408998c90b80f9d5d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c5adfe294554543868fc7cf60dded650, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

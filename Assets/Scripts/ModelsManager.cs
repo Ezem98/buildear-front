@@ -7,7 +7,8 @@ public class ModelsManager : MonoBehaviour
 {
 
     [SerializeField] private GameObject ModelsContainer;
-    [SerializeField] public TextMeshProUGUI LoadingText;
+    [SerializeField] private TextMeshProUGUI ModelCountText;
+    [SerializeField] private TextMeshProUGUI LoadingText;
     [SerializeField] private ModelButtonManager ModelButtonManager;
     private ApiController ApiController;
     private static ModelsManager _instance;
@@ -27,8 +28,9 @@ public class ModelsManager : MonoBehaviour
 
     private void OnEnable()
     {
-
-        LoadingText.SetActive(true);
+        if (UIController.Instance.ModelsData == null)
+            LoadingText.SetActive(true);
+        else CreateButtons();
 
         if (!ApiController) ApiController = FindObjectOfType<ApiController>();
     }
@@ -51,8 +53,17 @@ public class ModelsManager : MonoBehaviour
         }
 
         LoadingText.SetActive(false);
+        if (UIController.Instance.ModelsData.Count > 0)
+        {
+            ModelCountText.SetActive(true);
+            ModelCountText.text = "<b>" + UIController.Instance.ModelsData.Count + "</b>" + " Modelos";
+        }
+        else
+        {
+            LoadingText.text = "Aún no hay modelos para esta categoría.";
+            LoadingText.SetActive(true);
+        }
 
-        SceneManager.sceneLoaded -= (scene, mode) => CreateButtons();
     }
 
     private void DestroyButtons()
