@@ -1,18 +1,23 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem.EnhancedTouch;
 
-public class BuildController : MonoBehaviour 
+public class BuildController : MonoBehaviour
 {
-    private UIController UIController;
-    [SerializeField] public GameObject GuideResponse;
-    [SerializeField] public GameObject LoadingModal;
-    [SerializeField] public GameObject ChatButton;
-    [SerializeField] public TextMeshProUGUI StepTitle;
-    [SerializeField] public TextMeshProUGUI StepDescription;
-    [SerializeField] public TextMeshProUGUI StepCount;
-    public Guide Guide {get; set; }
-    public Paso CurrentStep {get; set; }
+    [SerializeField] private GameObject guideResponse;
+    [SerializeField] private GameObject loadingModal;
+    [SerializeField] private GameObject chatButton;
+    [SerializeField] private TextMeshProUGUI stepTitle;
+    [SerializeField] private TextMeshProUGUI stepDescription;
+    [SerializeField] private TextMeshProUGUI stepCount;
+
+    public Guide Guide { get; set; }
+    public Paso CurrentStep { get; set; }
+    public GameObject GuideResponse { get; set; }
+    public GameObject LoadingModal { get; set; }
+    public GameObject ChatButton { get; set; }
+    public TextMeshProUGUI StepTitle { get; set; }
+    public TextMeshProUGUI StepDescription { get; set; }
+    public TextMeshProUGUI StepCount { get; set; }
 
     private static BuildController _instance;
 
@@ -58,26 +63,30 @@ public class BuildController : MonoBehaviour
         }
     }
 
-    public void StepForward() {
-        if(CurrentStep.paso == Guide.pasos.Count) return;
+    public void StepForward()
+    {
+        if (CurrentStep.paso == Guide.pasos.Count) return;
         CurrentStep = Guide.pasos.Find(x => x.paso == CurrentStep.paso + 1);
         UpdateStep();
     }
 
-    public void StepBackward() {
-        if(CurrentStep.paso == 1) return;
+    public void StepBackward()
+    {
+        if (CurrentStep.paso == 1) return;
         CurrentStep = Guide.pasos.Find(x => x.paso == CurrentStep.paso - 1);
         UpdateStep();
     }
 
-    public void HandleGuideResponse(bool IsOpen){
+    public void HandleGuideResponse(bool IsOpen)
+    {
         GuideResponse.SetActive(IsOpen);
     }
 
-    private void UpdateStep(){
+    private void UpdateStep()
+    {
         StepTitle.text = CurrentStep.titulo;
         StepDescription.text = CurrentStep.descripcion;
-        StepCount.text = "Paso "+CurrentStep.paso+"/"+Guide.pasos.Count;
+        StepCount.text = "Paso " + CurrentStep.paso + "/" + Guide.pasos.Count;
     }
 
 

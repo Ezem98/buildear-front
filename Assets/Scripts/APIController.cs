@@ -172,30 +172,35 @@ public class ApiController : MonoBehaviour
 
     public void GetModelsByCategoryId(int categoryId)
     {
+        Debug.Log("GetModelsByCategoryId");
         StartCoroutine(GetRequest(baseUrl + "/models/category/" + categoryId, onSuccess: (jsonResponse) =>
         {
             APIResponse<ModelData[]> apiResponse = JsonConvert.DeserializeObject<APIResponse<ModelData[]>>(jsonResponse);
+            Debug.Log(apiResponse?.data.ToString());
             UIController.Instance.ModelsData = apiResponse?.data;
+            ModelsManager.Instance.CreateButtons();
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
         }));
     }
 
-    public Sprite GetModelImage(string url)
+    public void GetModelImage(string url, System.Action<Sprite> onSuccess, System.Action<string> onError)
     {
-        Texture2D texture = new(0, 0);
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 5f));
         StartCoroutine(DownloadImage(url, onSuccess: (webRequest) =>
         {
-            texture = DownloadHandlerTexture.GetContent(webRequest);
-            sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 5f));
+            Debug.Log("Success");
+            Texture2D texture = DownloadHandlerTexture.GetContent(webRequest);
+            Debug.Log("Texture " + texture.ToString());
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 5f));
+            Debug.Log("Sprite " + sprite);
+
+            onSuccess?.Invoke(sprite);
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
         }));
-
-        return sprite;
     }
 }
 
