@@ -19,16 +19,16 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private GameObject moveActions;
     [SerializeField] private ActionManager ActionManager;
     [SerializeField] private GameObject objectReference;
-    [SerializeField] private Resize resize;
-    [SerializeField] private Transform objectTransform;
+    // [SerializeField] private Resize resize;
+    // [SerializeField] private Transform objectTransform;
     [SerializeField] private float rotationSpeed = 45f;
     private GameObject objectCopiedReference;
     private Quaternion previousRotation;
     private Vector3 previousPosition;
-    private GameObject pivotContainer;
-    public float lengthToAdd = 0.01f;
-    private float resizeAmount = 0.01f;
-    List<string> menu = new() { "modelActions", "resizeActions", "rotateActions","moveActions" };
+    // private GameObject pivotContainer;
+    // public float lengthToAdd = 0.01f;
+    // private float resizeAmount = 0.01f;
+    List<string> menu = new() { "modelActions", "resizeActions", "rotateActions", "moveActions" };
     private string activeMenu;
     private bool isRotatingRight = false;
     private bool isRotatingLeft = false;
@@ -141,7 +141,7 @@ public class CanvasManager : MonoBehaviour
         modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         activeMenu = menu[2]; // rotateActions
-        Debug.Log ("MUESTRO EL ACTIVE MENU DEL ROATATE CANVAS: " + activeMenu);
+        Debug.Log("MUESTRO EL ACTIVE MENU DEL ROATATE CANVAS: " + activeMenu);
     }
 
     public void ActivateMoveCanvas()
@@ -168,7 +168,8 @@ public class CanvasManager : MonoBehaviour
     {
         Debug.Log("Entre al hide.");
         Debug.Log("activeMenu: " + activeMenu);
-        if(activeMenu == "modelActions"){
+        if (activeMenu == "modelActions")
+        {
             modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
             modelActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
             modelActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
@@ -211,7 +212,7 @@ public class CanvasManager : MonoBehaviour
     public void RotateRightAction()
     {
         if (objectReference != null)
-        {   
+        {
             isRotatingRight = true;
             isRotatingLeft = false;
             objectReference.transform.Rotate(Vector3.down, rotationSpeed * Time.deltaTime);
@@ -261,61 +262,64 @@ public class CanvasManager : MonoBehaviour
     public void ScaleRight()
     {
         Debug.Log("Entre fuera dle if");
-        if (objectTransform != null)
-        {
+        // if (objectTransform != null)
+        // {
 
-            
-            // if (pivotContainer == null)
-            // {
-            //     pivotContainer = new GameObject("PivotContainer");
-            //     pivotContainer.transform.position = objectTransform.position;
-            //     objectTransform.SetParent(pivotContainer.transform);
-            //     objectTransform.localPosition = new Vector3(-objectTransform.localScale.x / 2, 0, 0);
-            // }
-            // Vector3 direction = pivotContainer.transform.right;
-            // Vector3 directionNormalized = direction.normalized;
-            //ScaleContainer(lengthToAdd);
-            //Vector3 direction = objectTransform.right;
-            //float xDirection = direction.right.x;
-            // Vector3 directionNormalized = direction.normalized;
-            //pivotContainer.transform.localScale += new Vector3(directionNormalized.x * lengthToAdd, 0, directionNormalized.z * lengthToAdd);
-            // transform.localScale += new Vector3(directionNormalized.x * lengthToAdd, 0, directionNormalized.z * lengthToAdd);
-            // transform.position += new Vector3(directionNormalized.x * lengthToAdd, 0, directionNormalized.z * lengthToAdd);
-            //visualsTransform  = objectReference.transform.GetChild(1);
-            // Debug.Log("Entre");
-            // var mesh = objectReference.GetComponent<MeshFilter>().sharedMesh.bounds;
-            // Debug.Log("BOUNDS: "+mesh);
-             resize.ResizeOnDirection(resizeAmount);
-            // objectTransform.position = new Vector3 (objectTransform.position.x+(resizeAmount / 2), objectTransform.position.y, objectTransform.position.z);
-            // objectTransform.localScale += new Vector3 (resizeAmount, 0.0f, 0.0f);
-            //Resize(resizeAmount,"x");
 
-        }
+        // if (pivotContainer == null)
+        // {
+        //     pivotContainer = new GameObject("PivotContainer");
+        //     pivotContainer.transform.position = objectTransform.position;
+        //     objectTransform.SetParent(pivotContainer.transform);
+        //     objectTransform.localPosition = new Vector3(-objectTransform.localScale.x / 2, 0, 0);
+        // }
+        // Vector3 direction = pivotContainer.transform.right;
+        // Vector3 directionNormalized = direction.normalized;
+        //ScaleContainer(lengthToAdd);
+        //Vector3 direction = objectTransform.right;
+        //float xDirection = direction.right.x;
+        // Vector3 directionNormalized = direction.normalized;
+        //pivotContainer.transform.localScale += new Vector3(directionNormalized.x * lengthToAdd, 0, directionNormalized.z * lengthToAdd);
+        // transform.localScale += new Vector3(directionNormalized.x * lengthToAdd, 0, directionNormalized.z * lengthToAdd);
+        // transform.position += new Vector3(directionNormalized.x * lengthToAdd, 0, directionNormalized.z * lengthToAdd);
+        //visualsTransform  = objectReference.transform.GetChild(1);
+        // Debug.Log("Entre");
+        // var mesh = objectReference.GetComponent<MeshFilter>().sharedMesh.bounds;
+        // Debug.Log("BOUNDS: "+mesh);
+        //  resize.ResizeOnDirection(resizeAmount);
+        // objectTransform.position = new Vector3 (objectTransform.position.x+(resizeAmount / 2), objectTransform.position.y, objectTransform.position.z);
+        // objectTransform.localScale += new Vector3 (resizeAmount, 0.0f, 0.0f);
+        //Resize(resizeAmount,"x");
+
+        // }
     }
 
-        void ScaleContainer(float lengthToAdd)
-    {
-        // Escalar el pivotContainer a lo largo del eje X local
-        pivotContainer.transform.localScale += new Vector3(lengthToAdd, 0, 0);
-    }
+    // void ScaleContainer(float lengthToAdd)
+    // {
+    //     // Escalar el pivotContainer a lo largo del eje X local
+    //     pivotContainer.transform.localScale += new Vector3(lengthToAdd, 0, 0);
+    // }
 
     public void Resize(float amount, string direction)
     {
-        if (direction == "x" && transform.position.x >= 0) {
-            transform.position = new Vector3 (transform.position.x + (amount / 2), transform.position.y, transform.position.z);
-            transform.localScale = new Vector3 (transform.localScale.x + amount, transform.localScale.y, transform.localScale.z);
+        if (direction == "x" && transform.position.x >= 0)
+        {
+            transform.position = new Vector3(transform.position.x + (amount / 2), transform.position.y, transform.position.z);
+            transform.localScale = new Vector3(transform.localScale.x + amount, transform.localScale.y, transform.localScale.z);
         }
-        if (direction == "x" && transform.position.x < 0) {
-            transform.position = new Vector3 (transform.position.x - (amount / 2), transform.position.y, transform.position.z);
-            transform.localScale = new Vector3 (transform.localScale.x + amount, transform.localScale.y, transform.localScale.z);
+        if (direction == "x" && transform.position.x < 0)
+        {
+            transform.position = new Vector3(transform.position.x - (amount / 2), transform.position.y, transform.position.z);
+            transform.localScale = new Vector3(transform.localScale.x + amount, transform.localScale.y, transform.localScale.z);
         }
     }
 
-    public void CopyObject(){
+    public void CopyObject()
+    {
         Vector3 direction = objectReference.transform.forward;
-        Debug.Log("Direccion: "+ direction);
+        Debug.Log("Direccion: " + direction);
         Vector3 newPosition = objectReference.transform.position - direction;
-        Debug.Log("New Position: "+ newPosition);
+        Debug.Log("New Position: " + newPosition);
         //Debug.Log("ActionManager del objectReference: "+ objectReference.GetComponent<ActionManager>());
         objectCopiedReference = Instantiate(objectReference, newPosition, objectReference.transform.rotation);
         //Debug.Log("ActionManager del objectCopied: "+ objectCopiedReference.GetComponent<ActionManager>());
@@ -324,25 +328,31 @@ public class CanvasManager : MonoBehaviour
         objectCopiedCanvas.ActivateModelCanvas();
     }
 
-    public void MoveRightAction(){
+    public void MoveRightAction()
+    {
         SetMoveFlag("right");
         objectReference.transform.Translate(Vector3.right * Time.deltaTime);
     }
-    public void MoveLeftAction(){
+    public void MoveLeftAction()
+    {
         SetMoveFlag("left");
         objectReference.transform.Translate(Vector3.left * Time.deltaTime);
     }
-    public void MoveBackAction(){
+    public void MoveBackAction()
+    {
         SetMoveFlag("back");
         objectReference.transform.Translate(Vector3.back * Time.deltaTime);
     }
-    public void MoveForwardAction(){
+    public void MoveForwardAction()
+    {
         SetMoveFlag("forward");
         objectReference.transform.Translate(Vector3.forward * Time.deltaTime);
     }
 
-    public void SetMoveFlag(string direction){
-        switch(direction){
+    public void SetMoveFlag(string direction)
+    {
+        switch (direction)
+        {
             case "right":
                 isMovingRight = true;
                 isMovingLeft = false;
@@ -371,18 +381,22 @@ public class CanvasManager : MonoBehaviour
                 break;
         }
     }
-    
-    public void CancelAction(){
-        if (activeMenu == "rotateActions"){
+
+    public void CancelAction()
+    {
+        if (activeMenu == "rotateActions")
+        {
             objectReference.transform.rotation = previousRotation; //Funciona
         }
-        if (activeMenu == "moveActions"){
+        if (activeMenu == "moveActions")
+        {
             objectReference.transform.position = previousPosition; //Funciona
         }
         ActivateModelCanvas();
     }
     // Update is called once per frame
-    public void DestroyObject(){
+    public void DestroyObject()
+    {
         HideCanvas();
         Destroy(objectReference);
     }

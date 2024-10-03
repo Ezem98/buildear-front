@@ -37,10 +37,10 @@ public class ModelsManager : MonoBehaviour
         Debug.Log(UIController.Instance?.ModelsData?.ToString());
         foreach (ModelData model in UIController.Instance.ModelsData)
         {
-            ModelButtonManager modelButton;
-            modelButton = Instantiate(ModelButtonManager, ModelsContainer.transform);
+            ModelButtonManager modelButton = Instantiate(ModelButtonManager, ModelsContainer.transform); ;
             modelButton.Title.text = model.name;
-            Debug.Log("Imagen" + model.model_image);
+            Debug.Log("Model Id: " + model.id);
+            modelButton.Id = model.id;
             ApiController.GetModelImage(model.model_image, onSuccess: (image) => modelButton.Image.sprite = image, onError: (error) => Debug.Log(error));
         }
 

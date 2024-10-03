@@ -367,21 +367,21 @@ public class ARTemplateMenuManager : MonoBehaviour
                     if (hit.transform.gameObject == m_CurrentInteractable)
                     {
                         Debug.Log("Le pegue al current");
-                        if(m_lastObjectInteractable && m_lastObjectInteractable != m_CurrentInteractable)
+                        if (m_lastObjectInteractable && m_lastObjectInteractable != m_CurrentInteractable)
                         {
-                            if(actionsMenuEnabled)
-                            {   
+                            if (actionsMenuEnabled)
+                            {
                                 CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                                 cmLast.HideCanvas();
                                 actionsMenuEnabled = false;
                             }
-                        } 
+                        }
                         else
                         {
                             actionsMenuEnabled = false;
                         }
                         m_lastObjectInteractable = m_CurrentInteractable;
-                        if(!actionsMenuEnabled)
+                        if (!actionsMenuEnabled)
                         {
                             CanvasManager cmCurrent = m_CurrentInteractable.GetComponent<CanvasManager>();
                             cmCurrent.ActivateModelCanvas();
@@ -394,7 +394,8 @@ public class ARTemplateMenuManager : MonoBehaviour
                 {
                     Debug.Log("m_CurrentInteractable es null.");
                     actionsMenuEnabled = false;
-                    if(m_lastObjectInteractable){
+                    if (m_lastObjectInteractable)
+                    {
                         CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                         cmLast.HideCanvas();
                     }
@@ -403,10 +404,11 @@ public class ARTemplateMenuManager : MonoBehaviour
             //Si no existe raycast
             else
             {
-                if(m_lastObjectInteractable){
+                if (m_lastObjectInteractable)
+                {
                     Debug.Log("Estoy poniendo en activo el last interactable");
                     Debug.Log($"m_LastInteractable: {m_lastObjectInteractable}");
-                    if(actionsMenuEnabled)
+                    if (actionsMenuEnabled)
                     {
                         CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                         cmLast.HideCanvas();
@@ -433,7 +435,7 @@ public class ARTemplateMenuManager : MonoBehaviour
         {
             if (m_ObjectSpawner.objectPrefabs.Count > objectIndex)
             {
-                m_ObjectSpawner.spawnOptionIndex = objectIndex;
+                m_ObjectSpawner.spawnOptionId = objectIndex;
             }
             else
             {
@@ -542,7 +544,7 @@ public class ARTemplateMenuManager : MonoBehaviour
         var currentFocusedObject = m_InteractionGroup.focusInteractable;
         if (currentFocusedObject != null)
         {
-           Destroy(currentFocusedObject.transform.gameObject);
+            Destroy(currentFocusedObject.transform.gameObject);
         }
     }
 

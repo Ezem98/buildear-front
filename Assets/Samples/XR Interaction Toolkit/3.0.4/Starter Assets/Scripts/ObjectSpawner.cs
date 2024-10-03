@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine.XR.Interaction.Toolkit.Utilities;
 
 namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
@@ -28,7 +29,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 
         [SerializeField]
         [Tooltip("The list of prefabs available to spawn.")]
-        List<GameObject> m_ObjectPrefabs = new List<GameObject>();
+        List<GameObject> m_ObjectPrefabs = new();
 
         /// <summary>
         /// The list of prefabs available to spawn.
@@ -37,6 +38,19 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         {
             get => m_ObjectPrefabs;
             set => m_ObjectPrefabs = value;
+        }
+
+        [SerializeField]
+        [Tooltip("The list of prefabs available to spawn.")]
+        List<int> m_ObjectPrefabsIndex = new();
+
+        /// <summary>
+        /// The list of prefabs available to spawn.
+        /// </summary>
+        public List<int> objectPrefabsIndex
+        {
+            get => m_ObjectPrefabsIndex;
+            set => m_ObjectPrefabsIndex = value;
         }
 
         [SerializeField]
@@ -57,25 +71,25 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         [SerializeField]
         [Tooltip("The index of the prefab to spawn. If outside the range of the list, this behavior will select " +
             "a random object each time it spawns.")]
-        int m_SpawnOptionIndex = -1;
+        int m_SpawnOptionId = -1;
 
         /// <summary>
         /// The index of the prefab to spawn. If outside the range of <see cref="objectPrefabs"/>, this behavior will
         /// select a random object each time it spawns.
         /// </summary>
         /// <seealso cref="isSpawnOptionRandomized"/>
-        public int spawnOptionIndex
+        public int spawnOptionId
         {
-            get => m_SpawnOptionIndex;
-            set => m_SpawnOptionIndex = value;
+            get => m_SpawnOptionId;
+            set => m_SpawnOptionId = value;
         }
 
         /// <summary>
         /// Whether this behavior will select a random object from <see cref="objectPrefabs"/> each time it spawns.
         /// </summary>
-        /// <seealso cref="spawnOptionIndex"/>
+        /// <seealso cref="spawnOptionId"/>
         /// <seealso cref="RandomizeSpawnOption"/>
-        public bool isSpawnOptionRandomized => m_SpawnOptionIndex < 0 || m_SpawnOptionIndex >= m_ObjectPrefabs.Count;
+        public bool isSpawnOptionRandomized => m_SpawnOptionId < 0 || m_SpawnOptionId >= m_ObjectPrefabs.Count;
 
         [SerializeField]
         [Tooltip("Whether to only spawn an object if the spawn point is within view of the camera.")]
@@ -169,11 +183,11 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         /// <summary>
         /// Sets this behavior to select a random object from <see cref="objectPrefabs"/> each time it spawns.
         /// </summary>
-        /// <seealso cref="spawnOptionIndex"/>
+        /// <seealso cref="spawnOptionId"/>
         /// <seealso cref="isSpawnOptionRandomized"/>
         public void RandomizeSpawnOption()
         {
-            m_SpawnOptionIndex = -1;
+            m_SpawnOptionId = -1;
         }
 
         /// <summary>
@@ -185,7 +199,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         /// <returns>Returns <see langword="true"/> if the spawner successfully spawned an object. Otherwise returns
         /// <see langword="false"/>, for instance if the spawn point is out of view of the camera.</returns>
         /// <remarks>
-        /// The object selected to spawn is based on <see cref="spawnOptionIndex"/>. If the index is outside
+        /// The object selected to spawn is based on <see cref="spawnOptionId"/>. If the index is outside
         /// the range of <see cref="objectPrefabs"/>, this method will select a random prefab from the list to spawn.
         /// Otherwise, it will spawn the prefab at the index.
         /// </remarks>
@@ -204,7 +218,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 }
             }
 
-            var objectIndex = isSpawnOptionRandomized ? Random.Range(0, m_ObjectPrefabs.Count) : m_SpawnOptionIndex;
+            Debug.Log("m_SpawnOptionId: " + m_SpawnOptionId);
+            var objectIndex = m_ObjectPrefabsIndex.IndexOf(m_SpawnOptionId);
+            Debug.Log("objectIndex: " + objectIndex);
             var newObject = Instantiate(m_ObjectPrefabs[objectIndex]);
             if (m_SpawnAsChildren)
                 newObject.transform.parent = transform;
@@ -231,7 +247,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 visualizationTrans.position = spawnPoint;
                 visualizationTrans.rotation = newObject.transform.rotation;
             }
-            
+
             Debug.Log("rotation: " + newObject.transform.rotation);
             objectSpawned?.Invoke(newObject);
             return true;

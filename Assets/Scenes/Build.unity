@@ -1740,15 +1740,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_CameraToFace: {fileID: 0}
   m_ObjectPrefabs:
-  - {fileID: 6483867353324697693, guid: 6e3d36641b9890349b4ffe69ef0b0405, type: 3}
-  - {fileID: 5239885138427989381, guid: 894d54703eb1549009ad9f909fc154d7, type: 3}
-  - {fileID: 4354590150268805588, guid: b5ada6ba22e21ee43b0193d7a2e9bb70, type: 3}
-  - {fileID: 7631337771522950604, guid: 79224916faa8a7941ae375df163d2463, type: 3}
-  - {fileID: 308889680400715168, guid: aa0fe86b81cd2924990165ce152b7ec4, type: 3}
-  - {fileID: 9142796999374248015, guid: 28265b0c041f49449addf3b583bc3c9e, type: 3}
+  - {fileID: 7816270141425691094, guid: b39eca8a832fba54693a23fccca65d3b, type: 3}
+  - {fileID: 380680191650456937, guid: 6953ef41d3a8ca44fb1acb1274c3c280, type: 3}
   - {fileID: 4200027379208750234, guid: f48a5cd39922915429d40d931ac47f52, type: 3}
+  - {fileID: 7120341757781046214, guid: e8624ac54ea0beb43bca34c2ade04c18, type: 3}
+  - {fileID: 6233406405702043462, guid: 10510a158c2f0024a8cd2af42bbf50f4, type: 3}
+  m_ObjectPrefabsIndex: 0300000001000000050000000400000002000000
   m_SpawnVisualizationPrefab: {fileID: 0}
-  m_SpawnOptionIndex: 0
+  m_SpawnOptionId: -1
   m_OnlySpawnInView: 1
   m_ViewportPeriphery: 0
   m_ApplyRandomAngleAtSpawn: 0
@@ -9956,12 +9955,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 110584d0de626fc4eaf68df85cf6512f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GuideResponse: {fileID: 1039862133}
-  LoadingModal: {fileID: 911797487}
-  ChatButton: {fileID: 853666046}
-  StepTitle: {fileID: 940060864}
-  StepDescription: {fileID: 567054350}
-  StepCount: {fileID: 1873959334}
+  guideResponse: {fileID: 0}
+  loadingModal: {fileID: 0}
+  chatButton: {fileID: 0}
+  stepTitle: {fileID: 0}
+  stepDescription: {fileID: 0}
+  stepCount: {fileID: 0}
 --- !u!1 &2116033367 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2318766424490069697, guid: dae86721c71ee42018bbec0181a4e52e,

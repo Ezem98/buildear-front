@@ -181,7 +181,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
             {
                 if (objectIndex < m_ObjectSpawner.objectPrefabs.Count)
                 {
-                    m_ObjectSpawner.spawnOptionIndex = objectIndex;
+                    m_ObjectSpawner.spawnOptionId = objectIndex;
                 }
                 else
                 {

@@ -16,7 +16,7 @@ public class UIController : MonoBehaviour
     private string currentScreen = "Onboarding";
     private int currentModelIndex;
 
-    public int CurrentModelIndex { get; set; }
+    public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
 
     public ModelData[] ModelsData { get; set; }
 
@@ -154,7 +154,7 @@ public class UIController : MonoBehaviour
     void OnSceneLoaded()
     {
         if (objectSpawner == null) objectSpawner = FindObjectOfType<ObjectSpawner>();
-        if (objectSpawner != null) objectSpawner.spawnOptionIndex = currentModelIndex;
+        if (objectSpawner != null) objectSpawner.spawnOptionId = currentModelIndex;
         else Debug.Log("No se encontró el ObjectSpawner");
     }
 }
