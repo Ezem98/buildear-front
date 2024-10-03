@@ -1,0 +1,44 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="Header" src="project://database/Assets/UI/Components/Header.uxml?fileID=9197481963319205126&amp;guid=e35b727a10eb57e4d9d161b5bda3a0b6&amp;type=3#Header" />
+    <Style src="project://database/Assets/UI/UIDocuments/CatalogueUI/CatalogueStyles.uss?fileID=7433441132597879392&amp;guid=cfbaa958d461ea14cb9f5baf5b522112&amp;type=3#styles" />
+    <ui:VisualElement name="MainContainer" class="mainContainer">
+        <ui:VisualElement style="flex-grow: 1; width: 100%; height: 10%; margin-bottom: 80px;">
+            <ui:Instance template="Header" name="Header" style="width: 100%; height: 100%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Body" class="body" />
+        <ui:VisualElement name="Footer" class="menu">
+            <ui:GroupBox class="menuGroup">
+                <ui:Button name="home-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="homeIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/home.png?fileID=2800000&amp;guid=effd7c07effb79e40bc2c4cee1495d57&amp;type=3#home&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Inicio" name="Label" class="label" />
+                </ui:Button>
+                <ui:Button name="catalogue-button" parse-escape-sequences="false" enable-rich-text="false" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="catalogueIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/catalogue.png?fileID=21300000&amp;guid=d3a2fba7f2da1e84383181ee28a83435&amp;type=3#catalogue&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Catálogo" name="Label" enable-rich-text="false" class="label" />
+                </ui:Button>
+                <ui:Button name="build-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="buildIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/build.png?fileID=21300000&amp;guid=e330e8601dc198746be04b402029041b&amp;type=3#build&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Construir" name="Label" enable-rich-text="false" class="label" />
+                </ui:Button>
+                <ui:Button name="saved-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="savedIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/saved.png?fileID=21300000&amp;guid=332c7233c63ba6e4b8a2bfe7fd617064&amp;type=3#saved&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Favoritos" name="Label" parse-escape-sequences="false" class="label" />
+                </ui:Button>
+                <ui:Button name="profile-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="profileIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/profile.png?fileID=21300000&amp;guid=ccaebd23d61d2f44dbbb010f18e3936a&amp;type=3#profile&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Perfil" name="Label" parse-escape-sequences="false" class="label" />
+                </ui:Button>
+            </ui:GroupBox>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

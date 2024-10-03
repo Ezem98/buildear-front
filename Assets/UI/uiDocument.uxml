@@ -1,0 +1,69 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="Header" src="project://database/Assets/UI/Components/Header.uxml?fileID=9197481963319205126&amp;guid=e35b727a10eb57e4d9d161b5bda3a0b6&amp;type=3#Header" />
+    <Style src="project://database/Assets/UI/styles.uss?fileID=7433441132597879392&amp;guid=cfbaa958d461ea14cb9f5baf5b522112&amp;type=3#styles" />
+    <ui:VisualElement name="MainContainer" class="mainContainer">
+        <ui:VisualElement style="flex-grow: 1; width: 100%; height: 10%; margin-bottom: 80px;">
+            <ui:Instance template="Header" name="Header" style="width: 100%; height: 100%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Body" class="body">
+            <ui:VisualElement name="categorieContainer" class="categorieContainer">
+                <ui:VisualElement name="wall-categorie" class="categorie" style="background-image: url(&quot;project://database/Assets/UI/Images/wall.jpg?fileID=21300000&amp;guid=c43c6521b43701d45996e3f8bebc57c5&amp;type=3#wall&quot;); -unity-background-scale-mode: scale-and-crop; margin-right: 1.25%; margin-top: 0; margin-bottom: 0; margin-left: 0;">
+                    <ui:Label tabindex="-1" text="Paredes" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categorieLabel" class="categorieLabel" />
+                </ui:VisualElement>
+                <ui:VisualElement name="roof-categorie" class="categorie" style="background-image: url(&quot;project://database/Assets/UI/Images/roof.jpeg?fileID=21300000&amp;guid=e366b9c0fbef8464b9537a19e39cca62&amp;type=3#roof&quot;); -unity-background-scale-mode: scale-and-crop; -unity-slice-left: 0; margin-left: 1.25%;">
+                    <ui:Label tabindex="-1" text="Techos" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categorieLabel" enable-rich-text="false" class="categorieLabel" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="categorieContainer" class="categorieContainer">
+                <ui:VisualElement name="foundation-categorie" class="categorie" style="background-image: url(&quot;project://database/Assets/UI/Images/foundation.jpg?fileID=21300000&amp;guid=577be1a8fa241b64096c9775aec64bf7&amp;type=3#foundation&quot;); -unity-background-scale-mode: scale-and-crop; margin-right: 1.25%;">
+                    <ui:Label tabindex="-1" text="Cimientos" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categorieLabel" enable-rich-text="true" class="categorieLabel" />
+                </ui:VisualElement>
+                <ui:VisualElement name="floor-categorie" class="categorie" style="background-image: url(&quot;project://database/Assets/UI/Images/floor.jpg?fileID=21300000&amp;guid=537d8fd5b8155f5428563ba9cdc3a60d&amp;type=3#floor&quot;); -unity-background-scale-mode: scale-and-crop; margin-left: 1.25%;">
+                    <ui:Label tabindex="-1" text="Pisos" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categorieLabel" enable-rich-text="false" class="categorieLabel" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="categorieContainer" class="categorieContainer">
+                <ui:VisualElement name="aperture-categorie" class="categorie" style="background-image: url(&quot;project://database/Assets/UI/Images/aperture.jpg?fileID=21300000&amp;guid=5ba3fdb141d103346a6c1dfb853c7a6c&amp;type=3#aperture&quot;); -unity-background-scale-mode: scale-and-crop; margin-right: 1.25%;">
+                    <ui:Label tabindex="-1" text="Aberturas" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categorieLabel" class="categorieLabel" />
+                </ui:VisualElement>
+                <ui:VisualElement name="fix-categorie" class="categorie" style="background-image: url(&quot;project://database/Assets/UI/Images/fixes.jpg?fileID=21300000&amp;guid=f1b15b7220a25af40bbddb5b30b65f6a&amp;type=3#fixes&quot;); -unity-background-scale-mode: scale-and-crop; margin-left: 1.25%;">
+                    <ui:Label tabindex="-1" text="Reparaciones" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categorieLabel" enable-rich-text="false" class="categorieLabel" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Footer" class="menu">
+            <ui:GroupBox class="menuGroup">
+                <ui:Button name="home-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="homeIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/home.png?fileID=2800000&amp;guid=effd7c07effb79e40bc2c4cee1495d57&amp;type=3#home&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Inicio" name="Label" class="label" />
+                </ui:Button>
+                <ui:Button name="catalogue-button" parse-escape-sequences="false" enable-rich-text="false" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="catalogueIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/catalogue.png?fileID=21300000&amp;guid=d3a2fba7f2da1e84383181ee28a83435&amp;type=3#catalogue&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Catálogo" name="Label" enable-rich-text="false" class="label" />
+                </ui:Button>
+                <ui:Button name="build-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="buildIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/build.png?fileID=21300000&amp;guid=e330e8601dc198746be04b402029041b&amp;type=3#build&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Construir" name="Label" enable-rich-text="false" class="label" />
+                </ui:Button>
+                <ui:Button name="saved-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="savedIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/saved.png?fileID=21300000&amp;guid=332c7233c63ba6e4b8a2bfe7fd617064&amp;type=3#saved&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Likes" name="Label" parse-escape-sequences="false" class="label" />
+                </ui:Button>
+                <ui:Button name="profile-button" class="menu-item">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="profileIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&quot;project://database/Assets/UI/Icons/profile.png?fileID=21300000&amp;guid=ccaebd23d61d2f44dbbb010f18e3936a&amp;type=3#profile&quot;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Perfil" name="Label" parse-escape-sequences="false" class="label" />
+                </ui:Button>
+            </ui:GroupBox>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

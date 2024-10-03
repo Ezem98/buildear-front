@@ -1,0 +1,111 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="Header" src="project://database/Assets/UI/Components/Header.uxml" />
+    <Style src="project://database/Assets/UI/UIDocuments/CatalogueUI/CatalogueStyles.uss" />
+    <ui:VisualElement name="MainContainer" class="mainContainer">
+        <ui:VisualElement style="flex-grow: 1; width: 100%; height: 10%; margin-bottom: 80px;">
+            <ui:Instance template="Header" name="Header" style="width: 100%; height: 100%;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Body" class="body" style="-unity-font: initial;">
+            <ui:VisualElement name="categories" class="categories">
+                <ui:VisualElement name="categoryContainer" class="categoryContainer">
+                    <ui:VisualElement name="wall-category" class="category" style="background-image: url(&apos;project://database/Assets/UI/Images/wall.jpg&apos;); -unity-background-scale-mode: scale-and-crop; margin-right: 1.25%; margin-top: 0; margin-bottom: 0; margin-left: 0;">
+                        <ui:Label tabindex="-1" text="Paredes" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categoryLabel" class="categoryLabel" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="roof-category" class="category" style="background-image: url(&apos;project://database/Assets/UI/Images/roof.jpeg&apos;); -unity-background-scale-mode: scale-and-crop; -unity-slice-left: 0; margin-left: 1.25%;">
+                        <ui:Label tabindex="-1" text="Techos" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categoryLabel" enable-rich-text="false" class="categoryLabel" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="categoryContainer" class="categoryContainer">
+                    <ui:VisualElement name="foundation-category" class="category" style="background-image: url(&apos;project://database/Assets/UI/Images/foundation.jpg&apos;); -unity-background-scale-mode: scale-and-crop; margin-right: 1.25%;">
+                        <ui:Label tabindex="-1" text="Cimientos" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categoryLabel" enable-rich-text="true" class="categoryLabel" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="floor-category" class="category" style="background-image: url(&apos;project://database/Assets/UI/Images/floor.jpg&apos;); -unity-background-scale-mode: scale-and-crop; margin-left: 1.25%;">
+                        <ui:Label tabindex="-1" text="Pisos" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categoryLabel" enable-rich-text="false" class="categoryLabel" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="categoryContainer" class="categoryContainer">
+                    <ui:VisualElement name="aperture-category" class="category" style="background-image: url(&apos;project://database/Assets/UI/Images/aperture.jpg&apos;); -unity-background-scale-mode: scale-and-crop; margin-right: 1.25%;">
+                        <ui:Label tabindex="-1" text="Aberturas" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categoryLabel" class="categoryLabel" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="fix-category" class="category" style="background-image: url(&apos;project://database/Assets/UI/Images/fixes.jpg&apos;); -unity-background-scale-mode: scale-and-crop; margin-left: 1.25%;">
+                        <ui:Label tabindex="-1" text="Arreglos" parse-escape-sequences="true" display-tooltip-when-elided="true" name="categoryLabel" enable-rich-text="false" class="categoryLabel" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="itemList" class="itemList">
+                <ui:VisualElement name="itemTitle" class="title" style="flex-grow: 0;">
+                    <ui:Label tabindex="-1" parse-escape-sequences="false" display-tooltip-when-elided="true" name="itemTitleText" class="title" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-BlackItalic.ttf&apos;);" />
+                </ui:VisualElement>
+                <ui:VisualElement name="itemContainer" class="itemContainer">
+                    <ui:VisualElement name="itemImage" style="background-image: url(&apos;project://database/Assets/UI/Images/roof.jpeg&apos;); -unity-background-scale-mode: scale-and-crop; width: 33.33%; height: 100%; border-top-left-radius: 50px; border-bottom-left-radius: 50px; border-left-color: rgb(76, 69, 87); border-right-color: rgb(76, 69, 87); border-top-color: rgb(76, 69, 87); border-bottom-color: rgb(76, 69, 87); border-top-width: 4px; border-right-width: 0; border-bottom-width: 4px; border-left-width: 4px;" />
+                    <ui:VisualElement name="itemInfo" class="itemInfo" style="flex-grow: 1;">
+                        <ui:Label tabindex="-1" text="Title" parse-escape-sequences="true" display-tooltip-when-elided="true" class="itemTitle" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Bold.ttf&apos;);" />
+                        <ui:Label tabindex="-1" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus sit amet egestas lacus. Aliquam consequat leo at luctus lacinia. Nullam blandit nisi eu dapibus fermentum." parse-escape-sequences="false" display-tooltip-when-elided="true" enable-rich-text="true" name="Label" class="itemDescription" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="itemContainer" class="itemContainer">
+                    <ui:VisualElement name="itemImage" style="background-image: url(&apos;project://database/Assets/UI/Images/roof.jpeg&apos;); -unity-background-scale-mode: scale-and-crop; width: 33.33%; height: 100%; border-top-left-radius: 50px; border-bottom-left-radius: 50px; border-left-color: rgb(76, 69, 87); border-right-color: rgb(76, 69, 87); border-top-color: rgb(76, 69, 87); border-bottom-color: rgb(76, 69, 87); border-top-width: 4px; border-right-width: 0; border-bottom-width: 4px; border-left-width: 4px;" />
+                    <ui:VisualElement name="itemInfo" class="itemInfo" style="flex-grow: 1;">
+                        <ui:Label tabindex="-1" text="Title" parse-escape-sequences="true" display-tooltip-when-elided="true" class="itemTitle" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Bold.ttf&apos;);" />
+                        <ui:Label tabindex="-1" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus sit amet egestas lacus. Aliquam consequat leo at luctus lacinia. Nullam blandit nisi eu dapibus fermentum." parse-escape-sequences="false" display-tooltip-when-elided="true" enable-rich-text="true" class="itemDescription" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="itemContainer" class="itemContainer">
+                    <ui:VisualElement name="itemImage" style="background-image: url(&apos;project://database/Assets/UI/Images/roof.jpeg&apos;); -unity-background-scale-mode: scale-and-crop; width: 33.33%; height: 100%; border-top-left-radius: 50px; border-bottom-left-radius: 50px; border-left-color: rgb(76, 69, 87); border-right-color: rgb(76, 69, 87); border-top-color: rgb(76, 69, 87); border-bottom-color: rgb(76, 69, 87); border-top-width: 4px; border-right-width: 0; border-bottom-width: 4px; border-left-width: 4px;" />
+                    <ui:VisualElement name="itemInfo" class="itemInfo" style="flex-grow: 1;">
+                        <ui:Label tabindex="-1" text="Title" parse-escape-sequences="true" display-tooltip-when-elided="true" class="itemTitle" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Bold.ttf&apos;);" />
+                        <ui:Label tabindex="-1" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus sit amet egestas lacus. Aliquam consequat leo at luctus lacinia. Nullam blandit nisi eu dapibus fermentum." parse-escape-sequences="false" display-tooltip-when-elided="true" enable-rich-text="true" class="itemDescription" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="itemContainer" class="itemContainer">
+                    <ui:VisualElement name="itemImage" style="background-image: url(&apos;project://database/Assets/UI/Images/roof.jpeg&apos;); -unity-background-scale-mode: scale-and-crop; width: 33.33%; height: 100%; border-top-left-radius: 50px; border-bottom-left-radius: 50px; border-left-color: rgb(76, 69, 87); border-right-color: rgb(76, 69, 87); border-top-color: rgb(76, 69, 87); border-bottom-color: rgb(76, 69, 87); border-top-width: 4px; border-right-width: 0; border-bottom-width: 4px; border-left-width: 4px;" />
+                    <ui:VisualElement name="itemInfo" class="itemInfo" style="flex-grow: 1;">
+                        <ui:Label tabindex="-1" text="Title" parse-escape-sequences="true" display-tooltip-when-elided="true" class="itemTitle" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Bold.ttf&apos;);" />
+                        <ui:Label tabindex="-1" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus sit amet egestas lacus. Aliquam consequat leo at luctus lacinia. Nullam blandit nisi eu dapibus fermentum." parse-escape-sequences="false" display-tooltip-when-elided="true" enable-rich-text="true" class="itemDescription" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="itemContainer" class="itemContainer">
+                    <ui:VisualElement name="itemImage" style="background-image: url(&apos;project://database/Assets/UI/Images/roof.jpeg&apos;); -unity-background-scale-mode: scale-and-crop; width: 33.33%; height: 100%; border-top-left-radius: 50px; border-bottom-left-radius: 50px; border-left-color: rgb(76, 69, 87); border-right-color: rgb(76, 69, 87); border-top-color: rgb(76, 69, 87); border-bottom-color: rgb(76, 69, 87); border-top-width: 4px; border-right-width: 0; border-bottom-width: 4px; border-left-width: 4px;" />
+                    <ui:VisualElement name="itemInfo" class="itemInfo" style="flex-grow: 1;">
+                        <ui:Label tabindex="-1" text="Title" parse-escape-sequences="true" display-tooltip-when-elided="true" class="itemTitle" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Bold.ttf&apos;);" />
+                        <ui:Label tabindex="-1" text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus sit amet egestas lacus. Aliquam consequat leo at luctus lacinia. Nullam blandit nisi eu dapibus fermentum." parse-escape-sequences="false" display-tooltip-when-elided="true" enable-rich-text="true" class="itemDescription" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Footer" class="menu">
+            <ui:GroupBox class="menuGroup" style="-unity-font: url(&apos;project://database/Assets/Fonts/AntonSC-Regular.ttf&apos;);">
+                <ui:Button name="home-button" class="menu-item" style="-unity-font: url(&apos;project://database/Assets/Fonts/AntonSC-Regular.ttf&apos;);">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="homeIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&apos;project://database/Assets/UI/Icons/home.png&apos;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Inicio" name="Label" class="label" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                </ui:Button>
+                <ui:Button name="catalogue-button" parse-escape-sequences="false" enable-rich-text="false" class="menu-item" style="-unity-font: url(&apos;project://database/Assets/Fonts/AntonSC-Regular.ttf&apos;);">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="catalogueIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&apos;project://database/Assets/UI/Icons/catalogue.png&apos;); -unity-background-image-tint-color: rgb(173, 99, 115); height: 100px; width: 100px; -unity-background-scale-mode: scale-and-crop; border-top-left-radius: 50px; border-bottom-left-radius: 50px;" />
+                    </ui:VisualElement>
+                    <ui:Label text="Catálogo" name="Label" enable-rich-text="false" class="label" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                </ui:Button>
+                <ui:Button name="build-button" class="menu-item" style="-unity-font: url(&apos;project://database/Assets/Fonts/AntonSC-Regular.ttf&apos;);">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="buildIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&apos;project://database/Assets/UI/Icons/build.png&apos;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Construir" name="Label" enable-rich-text="false" class="label" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                </ui:Button>
+                <ui:Button name="saved-button" class="menu-item" style="-unity-font: url(&apos;project://database/Assets/Fonts/AntonSC-Regular.ttf&apos;);">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="savedIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&apos;project://database/Assets/UI/Icons/saved.png?fileID=21300000&amp;guid=332c7233c63ba6e4b8a2bfe7fd617064&amp;type=3#saved&apos;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Favoritos" name="Label" parse-escape-sequences="false" class="label" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                </ui:Button>
+                <ui:Button name="profile-button" class="menu-item" style="-unity-font: url(&apos;project://database/Assets/Fonts/AntonSC-Regular.ttf&apos;);">
+                    <ui:VisualElement name="icon-container" class="icon-container">
+                        <ui:Image name="profileIcon" src="Assets/Basic/Icons/home.png" class="icon" style="background-image: url(&apos;project://database/Assets/UI/Icons/profile.png&apos;); -unity-background-image-tint-color: rgb(173, 99, 115);" />
+                    </ui:VisualElement>
+                    <ui:Label text="Perfil" name="Label" parse-escape-sequences="false" class="label" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Light.ttf&apos;);" />
+                </ui:Button>
+            </ui:GroupBox>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

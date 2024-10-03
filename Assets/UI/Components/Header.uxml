@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Components/Header.uss?fileID=7433441132597879392&amp;guid=421adb56c59d7d2459fd28a34ec239b4&amp;type=3#Header" />
+    <ui:VisualElement name="Header" class="header">
+        <ui:VisualElement name="backArrow" class="icon" style="background-image: url(&apos;project://database/Assets/UI/Icons/back-arrow%201.png?fileID=21300000&amp;guid=6471189972d87ae4eb9de2d5fa3f3a5f&amp;type=3#back-arrow 1&apos;); -unity-background-scale-mode: scale-to-fit;" />
+        <ui:Label tabindex="-1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="sectionTitle" enable-rich-text="false" class="sectionTitle" style="-unity-font: url(&apos;project://database/Assets/Fonts/Roboto/Roboto-Bold.ttf?fileID=12800000&amp;guid=d0d10aa10f64d064d9bbfac11329879f&amp;type=3#Roboto-Bold&apos;);" />
+        <ui:VisualElement name="bell" class="icon" style="background-image: url(&apos;project://database/Assets/UI/Icons/bell.png?fileID=21300000&amp;guid=3c9303bbd4616b4448ea497ec23b0c19&amp;type=3#bell&apos;); -unity-background-scale-mode: scale-to-fit;" />
+    </ui:VisualElement>
+</ui:UXML>
