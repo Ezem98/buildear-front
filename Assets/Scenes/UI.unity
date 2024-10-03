@@ -7987,7 +7987,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1785133428}
   m_Horizontal: 1
-  m_Vertical: 1
+  m_Vertical: 0
   m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
@@ -12586,7 +12586,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1627319410}
   m_Horizontal: 1
-  m_Vertical: 1
+  m_Vertical: 0
   m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
@@ -15252,7 +15252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1732246085}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -23764,8 +23764,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 561257495}
-  m_Horizontal: 1
-  m_Vertical: 1
+  m_Horizontal: 0
+  m_Vertical: 0
   m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
