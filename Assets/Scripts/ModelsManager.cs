@@ -1,10 +1,13 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Utilities.Extensions;
 
 public class ModelsManager : MonoBehaviour
 {
 
     [SerializeField] private GameObject ModelsContainer;
+    [SerializeField] public TextMeshProUGUI LoadingText;
     [SerializeField] private ModelButtonManager ModelButtonManager;
     private ApiController ApiController;
     private static ModelsManager _instance;
@@ -24,6 +27,9 @@ public class ModelsManager : MonoBehaviour
 
     private void OnEnable()
     {
+
+        LoadingText.SetActive(true);
+
         if (!ApiController) ApiController = FindObjectOfType<ApiController>();
     }
 
@@ -43,6 +49,8 @@ public class ModelsManager : MonoBehaviour
             modelButton.Id = model.id;
             ApiController.GetModelImage(model.model_image, onSuccess: (image) => modelButton.Image.sprite = image, onError: (error) => Debug.Log(error));
         }
+
+        LoadingText.SetActive(false);
 
         SceneManager.sceneLoaded -= (scene, mode) => CreateButtons();
     }
