@@ -3,21 +3,15 @@ using UnityEngine;
 
 public class BuildController : MonoBehaviour
 {
-    [SerializeField] private GameObject guideResponse;
-    [SerializeField] private GameObject loadingModal;
-    [SerializeField] private GameObject chatButton;
-    [SerializeField] private TextMeshProUGUI stepTitle;
-    [SerializeField] private TextMeshProUGUI stepDescription;
-    [SerializeField] private TextMeshProUGUI stepCount;
+    [SerializeField] public GameObject GuideResponse;
+    [SerializeField] public GameObject LoadingModal;
+    [SerializeField] public GameObject ChatButton;
+    [SerializeField] public TextMeshProUGUI StepTitle;
+    [SerializeField] public TextMeshProUGUI StepDescription;
+    [SerializeField] public TextMeshProUGUI StepCount;
 
     public Guide Guide { get; set; }
     public Paso CurrentStep { get; set; }
-    public GameObject GuideResponse { get; set; }
-    public GameObject LoadingModal { get; set; }
-    public GameObject ChatButton { get; set; }
-    public TextMeshProUGUI StepTitle { get; set; }
-    public TextMeshProUGUI StepDescription { get; set; }
-    public TextMeshProUGUI StepCount { get; set; }
 
     private static BuildController _instance;
 
@@ -28,7 +22,6 @@ public class BuildController : MonoBehaviour
 
     void Awake()
     {
-        //TouchSimulation.Enable();
         if (_instance != null)
         {
             Destroy(gameObject); // Si ya existe una instancia, destruir este objeto

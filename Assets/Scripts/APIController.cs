@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 public class ApiController : MonoBehaviour
 {
@@ -125,7 +126,6 @@ public class ApiController : MonoBehaviour
         StartCoroutine(PostRequest(baseUrl + "/users", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
-            Debug.Log(apiResponse.message);
             UIController.Instance.ScreenHandler("Home");
         }, onError: (jsonResponse) =>
         {
@@ -172,11 +172,9 @@ public class ApiController : MonoBehaviour
 
     public void GetModelsByCategoryId(int categoryId)
     {
-        Debug.Log("GetModelsByCategoryId");
         StartCoroutine(GetRequest(baseUrl + "/models/category/" + categoryId, onSuccess: (jsonResponse) =>
         {
-            APIResponse<ModelData[]> apiResponse = JsonConvert.DeserializeObject<APIResponse<ModelData[]>>(jsonResponse);
-            Debug.Log(apiResponse?.data.ToString());
+            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
             UIController.Instance.ModelsData = apiResponse?.data;
             ModelsManager.Instance.CreateButtons();
         }, onError: (jsonResponse) =>
@@ -189,13 +187,23 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(DownloadImage(url, onSuccess: (webRequest) =>
         {
-            Debug.Log("Success");
             Texture2D texture = DownloadHandlerTexture.GetContent(webRequest);
-            Debug.Log("Texture " + texture.ToString());
             Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 5f));
-            Debug.Log("Sprite " + sprite);
 
             onSuccess?.Invoke(sprite);
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void GetModelsUnderBuild(string modelId, System.Action<List<ModelData>> onSuccess, System.Action<string> onError)
+    {
+        StartCoroutine(GetRequest(baseUrl + "/userModels/model/" + modelId, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            onSuccess?.Invoke(apiResponse?.data);
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);

@@ -18,7 +18,7 @@ public class UIController : MonoBehaviour
 
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
 
-    public ModelData[] ModelsData { get; set; }
+    public List<ModelData> ModelsData { get; set; }
 
     [SerializeField] private GameObject canvas;
     [SerializeField] private GameObject onBoarding;

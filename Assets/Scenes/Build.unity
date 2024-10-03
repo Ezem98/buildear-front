@@ -9955,12 +9955,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 110584d0de626fc4eaf68df85cf6512f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  guideResponse: {fileID: 0}
-  loadingModal: {fileID: 0}
-  chatButton: {fileID: 0}
-  stepTitle: {fileID: 0}
-  stepDescription: {fileID: 0}
-  stepCount: {fileID: 0}
+  GuideResponse: {fileID: 1039862133}
+  LoadingModal: {fileID: 911797487}
+  ChatButton: {fileID: 853666046}
+  StepTitle: {fileID: 940060864}
+  StepDescription: {fileID: 567054350}
+  StepCount: {fileID: 1873959334}
 --- !u!1 &2116033367 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2318766424490069697, guid: dae86721c71ee42018bbec0181a4e52e,
