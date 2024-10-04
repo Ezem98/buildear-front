@@ -10,8 +10,6 @@ using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 public class UIController : MonoBehaviour
 {
-    private readonly string[] _sceneNames = { "Menu", "Build" };
-    private readonly string[] _screenNames = { "Onboarding", "Register", "Login", "Home", "Catalogue", "Models", "Model", "Profile", "Favorites" };
     private bool loggedIn = false;
     private string currentScreen = "Onboarding";
     private int currentModelIndex;
@@ -32,8 +30,10 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject profile;
     [SerializeField] private GameObject favorites;
     [SerializeField] private GameObject footer;
+    [SerializeField] private GameObject header;
     private Dictionary<string, GameObject> screenDictionary;
     private Dictionary<string, bool> footerDictionary;
+    private Dictionary<string, bool> headerDictionary;
     ObjectSpawner m_ObjectSpawner;
 
     /// <summary>
@@ -85,6 +85,19 @@ public class UIController : MonoBehaviour
                 {"Favorites", true}
             };
 
+            headerDictionary = new(){
+                {"Onboarding", false},
+                {"Register", false},
+                {"Login", false},
+                {"Home", true},
+                {"Catalogue", true},
+                {"Models", true},
+                {"Model", false},
+                {"Profile", false},
+                {"Favorites", false}
+            };
+
+
             if (loggedIn)
             {
                 ScreenHandler("Home");
@@ -106,6 +119,7 @@ public class UIController : MonoBehaviour
         screenDictionary[currentScreen].SetActive(false);
         screenDictionary[newScreenName].SetActive(true);
         footer.SetActive(footerDictionary[newScreenName]);
+        header.SetActive(headerDictionary[newScreenName]);
         currentScreen = newScreenName;
     }
 

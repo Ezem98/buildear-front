@@ -9881,7 +9881,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2099970465}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30f0e07d95a4d497bbc3dbd22d792191, type: 3}
   m_Name: 
@@ -9981,6 +9981,9 @@ MonoBehaviour:
   StepTitle: {fileID: 940060864}
   StepDescription: {fileID: 567054350}
   StepCount: {fileID: 1873959334}
+  objectSpawner: {fileID: 436358033}
+  interactionGroup: {fileID: 2001374502}
+  planeManager: {fileID: 151853166}
 --- !u!1 &2116033367 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2318766424490069697, guid: dae86721c71ee42018bbec0181a4e52e,

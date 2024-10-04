@@ -27,7 +27,23 @@ public class ModelManager : MonoBehaviour
             DescriptionText.text = model.description;
             if (ApiController)
             {
-                ApiController.GetModelsUnderBuild(model.id.ToString(), onSuccess: (modelsData) => UsersCountText.text = modelsData.Count + " usuarios han empezado esta construcción.", onError: (error) => Debug.Log(error));
+                ApiController.GetModelsUnderBuild(model.id.ToString(), onSuccess: (modelsData) =>
+                {
+                    int count = (int)(modelsData?.Count != null ? modelsData?.Count : 0);
+                    if (count == 0)
+                    {
+                        UsersCountText.text = "Ningún usuario ha empezado esta construcción todavía";
+                    }
+                    else if (count == 1)
+                    {
+                        UsersCountText.text = count + " usuario ya ha empezado esta construcción";
+                    }
+                    else
+                    {
+                        UsersCountText.text = count + " usuarios ya han empezado esta construcción";
+                    }
+
+                }, onError: (error) => Debug.Log(error));
                 ApiController.GetModelImage(model.model_image, onSuccess: (image) => Image.sprite = image, onError: (error) => Debug.Log(error));
             }
         }
