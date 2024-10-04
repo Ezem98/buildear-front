@@ -260,11 +260,11 @@ public class ApiController : MonoBehaviour
         }));
     }
 
-    public void GetModelsUnderBuild(string modelId, System.Action<List<ModelData>> onSuccess, System.Action<string> onError)
+    public void GetModelsUnderBuild(string modelId, System.Action<List<UserModelData>> onSuccess, System.Action<string> onError)
     {
         StartCoroutine(GetRequest(baseUrl + "/userModels/model/" + modelId, onSuccess: (jsonResponse) =>
         {
-            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            APIResponse<List<UserModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<UserModelData>>>(jsonResponse);
             onSuccess?.Invoke(apiResponse?.data);
         }, onError: (jsonResponse) =>
         {
