@@ -38,7 +38,7 @@ public class HomeManager : MonoBehaviour
         LoadingText.SetActive(false);
         if (UIController.Instance.MyModelsData.Count == 0)
         {
-            LoadingText.text = "Sin modelos disponibles.";
+            LoadingText.text = "Aún no has empezado ninguna construcción ¡Animate!";
             LoadingText.SetActive(true);
         }
     }
