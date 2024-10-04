@@ -36,7 +36,7 @@ public class ModelsManager : MonoBehaviour
 
         if (!ApiController) ApiController = GetComponent<ApiController>();
         if (!ApiController) ApiController = new();
-        if (UIController.Instance.ModelsData.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
+        if (UIController.Instance.ModelsData?.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
         else GridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
     }
 
