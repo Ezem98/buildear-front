@@ -7,8 +7,8 @@ using System.Collections.Generic;
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
-    private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
-    // private readonly string baseUrl = "http://localhost:1234";
+    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+    private readonly string baseUrl = "http://localhost:1234";
 
     // Método para realizar el GET
     IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
@@ -126,6 +126,27 @@ public class ApiController : MonoBehaviour
         StartCoroutine(PostRequest(baseUrl + "/users", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            UIController.Instance.ScreenHandler("Login");
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+        }));
+    }
+
+    public void Login(LoginData loginData)
+    {
+        // Convertir el objeto a un string JSON
+        string jsonData = JsonUtility.ToJson(loginData);
+
+        StartCoroutine(PostRequest(baseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            if (apiResponse.successfully == false)
+            {
+                Debug.Log("Usuario o contraseña incorrectos");
+                return;
+            }
+            UIController.Instance.UserData = apiResponse.data;
             UIController.Instance.ScreenHandler("Home");
         }, onError: (jsonResponse) =>
         {
@@ -136,38 +157,79 @@ public class ApiController : MonoBehaviour
     public void GenerateBuildTutorial()
     {
         // Crear un objeto con los datos del tutorial
-        TutorialData tutorialData = new()
-        {
-            modelName = "pared de ladrillo",
-            modelSize = new()
-            {
-                width = 200,
-                height = 100
-            },
-            experienceLevel = 1
-        };
-
-        // Convertir el objeto a un string JSONa
-        string jsonData = JsonUtility.ToJson(tutorialData);
+        int modelId = UIController.Instance.CurrentModelIndex;
+        int userId = UIController.Instance.UserData.id;
 
         BuildController.Instance.LoadingModal.SetActive(true);
-        StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
-        {
-            APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
 
-            BuildController.Instance.Guide = apiResponse?.data;
-            BuildController.Instance.CurrentStep = apiResponse?.data.pasos[0];
-
-            BuildController.Instance.LoadingModal.SetActive(false);
-            BuildController.Instance.GuideResponse.SetActive(true);
-            BuildController.Instance.ChatButton.SetActive(true);
-            BuildController.Instance.StepTitle.text = apiResponse.data.pasos[0].titulo;
-            BuildController.Instance.StepDescription.text = apiResponse.data.pasos[0].descripcion;
-            BuildController.Instance.StepCount.text = "Paso 1/" + apiResponse.data.pasos.Count;
-        }, onError: (jsonResponse) =>
+        GetUerModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
         {
-            Debug.Log(jsonResponse);
-        }));
+            if (userModelData != null)
+            {
+                BuildController.Instance.Guide = userModelData.guideObject;
+                BuildController.Instance.CurrentStep = userModelData.guideObject.pasos[userModelData.current_step];
+                BuildController.Instance.LoadingModal.SetActive(false);
+                BuildController.Instance.GuideResponse.SetActive(true);
+                BuildController.Instance.ChatButton.SetActive(true);
+                BuildController.Instance.StepTitle.text = userModelData.guideObject.pasos[userModelData.current_step].titulo;
+                BuildController.Instance.StepDescription.text = userModelData.guideObject.pasos[userModelData.current_step].descripcion;
+                BuildController.Instance.StepCount.text = "Paso " + (userModelData.current_step + 1) + "/" + userModelData.guideObject.pasos.Count;
+                return;
+            }
+
+            TutorialData tutorialData = new()
+            {
+                modelName = "pared de ladrillo",
+                modelSize = new()
+                {
+                    width = 200,
+                    height = 100
+                },
+                experienceLevel = 1
+            };
+            // Convertir el objeto a un string JSONa
+            string jsonData = JsonUtility.ToJson(tutorialData);
+
+            StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
+            {
+                APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
+
+                BuildController.Instance.Guide = apiResponse?.data;
+                BuildController.Instance.CurrentStep = apiResponse?.data.pasos[0];
+
+                BuildController.Instance.LoadingModal.SetActive(false);
+                BuildController.Instance.GuideResponse.SetActive(true);
+                BuildController.Instance.ChatButton.SetActive(true);
+                BuildController.Instance.StepTitle.text = apiResponse.data.pasos[0].titulo;
+                BuildController.Instance.StepDescription.text = apiResponse.data.pasos[0].descripcion;
+                BuildController.Instance.StepCount.text = "Paso 1/" + apiResponse.data.pasos.Count;
+
+                UserModelData userModelData = new()
+                {
+                    user_id = UIController.Instance.UserData.id,
+                    model_id = UIController.Instance.CurrentModelIndex,
+                    guideObject = BuildController.Instance.Guide,
+                    completed = false,
+                    current_step = 1
+                };
+
+                CreateUserModel(userModelData, onSuccess: (userModelData) =>
+                {
+                    Debug.Log("UserModel creado");
+                }, onError: (error) =>
+                {
+                    Debug.Log(error);
+                });
+
+            }, onError: (jsonResponse) =>
+            {
+                Debug.Log(jsonResponse);
+            }));
+        }, onError: (error) =>
+        {
+            Debug.Log(error);
+        });
+
     }
 
     public void GetModelsByCategoryId(int categoryId)
@@ -208,6 +270,42 @@ public class ApiController : MonoBehaviour
         {
             Debug.Log(jsonResponse);
             onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void GetUerModel(string userId, string modelId, System.Action<UserModelData> onSuccess, System.Action<string> onError)
+    {
+        StartCoroutine(GetRequest(baseUrl + "/userModels/" + userId + "/" + modelId, onSuccess: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            APIResponse<UserModelData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserModelData>>(jsonResponse);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+            apiResponse.data.guideObject = JsonConvert.DeserializeObject<Guide>(apiResponse.data.guide);
+            onSuccess?.Invoke(apiResponse?.data);
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void CreateUserModel(UserModelData userModelData, System.Action<UserModelData> onSuccess, System.Action<string> onError)
+    {
+        // Convertir el objeto a un string JSON
+        // string jsonGuide = JsonUtility.ToJson(userModelData.guide);
+        string jsonData = JsonUtility.ToJson(userModelData);
+
+        Debug.Log(jsonData.ToString());
+
+        StartCoroutine(PostRequest(baseUrl + "/userModels", jsonData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<UserModelData> apiResponse = JsonUtility.FromJson<APIResponse<UserModelData>>(jsonResponse);
+            Debug.Log(apiResponse.data);
+            onSuccess?.Invoke(apiResponse.data);
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError.Invoke(jsonResponse);
         }));
     }
 }

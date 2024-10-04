@@ -17,7 +17,6 @@ public class CataloguesScript : MonoBehaviour
         _document = GetComponent<UIDocument>();
 
         _categoryButtons = _document.rootVisualElement.Query<VisualElement>(className: "category").ToList();
-        Debug.Log("Count" + _categoryButtons.Count);
         for (int i = 0; i < _categoryButtons.Count; i++)
         {
             string categoryName = _categoryNames[i];
@@ -36,7 +35,6 @@ public class CataloguesScript : MonoBehaviour
         itemTitle.text = categoryName;
 
         _itemButtons = _document.rootVisualElement.Query<VisualElement>(className: "itemContainer").ToList();
-        Debug.Log("Count" + _itemButtons.Count);
         for (int i = 0; i < _itemButtons.Count; i++)
         {
             _itemButtons[i].RegisterCallback<ClickEvent>(e => Pick3DModel());
@@ -45,7 +43,6 @@ public class CataloguesScript : MonoBehaviour
 
     public void Pick3DModel()
     {
-        Debug.Log("Picking 3D Model");
         SceneManager.LoadScene("Build");
 
     }

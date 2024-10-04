@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-
+[System.Serializable]
 public partial class Guide
-    {
-        public string titulo;
+{
+    public string titulo;
 
-        public string explicacion;
+    public string explicacion;
 
-        public List<Paso> pasos;
-    }
+    public List<Paso> pasos;
+}

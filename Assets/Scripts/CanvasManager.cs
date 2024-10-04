@@ -63,7 +63,6 @@ public class CanvasManager : MonoBehaviour
 
     public void ActivateModelCanvas()
     {
-        Debug.Log("Entre a model.");
         modelActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         modelActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         modelActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
@@ -105,7 +104,6 @@ public class CanvasManager : MonoBehaviour
 
     public void ActivateResizeCanvas()
     {
-        Debug.Log("Entre a resize.");
         resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
@@ -126,7 +124,6 @@ public class CanvasManager : MonoBehaviour
 
     public void ActivateRotateCanvas()
     {
-        Debug.Log("Entre a Rotate, guardo estado.");
         previousRotation = objectReference.transform.rotation;
         rotateActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         rotateActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
@@ -141,7 +138,6 @@ public class CanvasManager : MonoBehaviour
         modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         activeMenu = menu[2]; // rotateActions
-        Debug.Log("MUESTRO EL ACTIVE MENU DEL ROATATE CANVAS: " + activeMenu);
     }
 
     public void ActivateMoveCanvas()
@@ -166,8 +162,6 @@ public class CanvasManager : MonoBehaviour
 
     public void HideCanvas()
     {
-        Debug.Log("Entre al hide.");
-        Debug.Log("activeMenu: " + activeMenu);
         if (activeMenu == "modelActions")
         {
             modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
@@ -261,7 +255,6 @@ public class CanvasManager : MonoBehaviour
 
     public void ScaleRight()
     {
-        Debug.Log("Entre fuera dle if");
         // if (objectTransform != null)
         // {
 
@@ -317,9 +310,7 @@ public class CanvasManager : MonoBehaviour
     public void CopyObject()
     {
         Vector3 direction = objectReference.transform.forward;
-        Debug.Log("Direccion: " + direction);
         Vector3 newPosition = objectReference.transform.position - direction;
-        Debug.Log("New Position: " + newPosition);
         //Debug.Log("ActionManager del objectReference: "+ objectReference.GetComponent<ActionManager>());
         objectCopiedReference = Instantiate(objectReference, newPosition, objectReference.transform.rotation);
         //Debug.Log("ActionManager del objectCopied: "+ objectCopiedReference.GetComponent<ActionManager>());

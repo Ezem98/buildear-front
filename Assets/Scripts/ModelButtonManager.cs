@@ -14,7 +14,6 @@ public class ModelButtonManager : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log("Id: " + id);
         Button.onClick.AddListener(() => UIController.Instance.CurrentModelIndex = id);
         Button.onClick.AddListener(() => UIController.Instance.ScreenHandler("Model"));
     }

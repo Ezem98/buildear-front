@@ -218,9 +218,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 }
             }
 
-            Debug.Log("m_SpawnOptionId: " + m_SpawnOptionId);
             var objectIndex = m_ObjectPrefabsIndex.IndexOf(m_SpawnOptionId);
-            Debug.Log("objectIndex: " + objectIndex);
             var newObject = Instantiate(m_ObjectPrefabs[objectIndex]);
             if (m_SpawnAsChildren)
                 newObject.transform.parent = transform;
@@ -232,8 +230,6 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             var forward = spawnPoint - facePosition;
             BurstMathUtility.ProjectOnPlane(forward, spawnNormal, out var projectedForward);
             newObject.transform.rotation = Quaternion.LookRotation(projectedForward, spawnNormal);
-
-            Debug.Log("rotation: " + newObject.transform.rotation);
 
             if (m_ApplyRandomAngleAtSpawn)
             {
@@ -248,7 +244,6 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 visualizationTrans.rotation = newObject.transform.rotation;
             }
 
-            Debug.Log("rotation: " + newObject.transform.rotation);
             objectSpawned?.Invoke(newObject);
             return true;
         }

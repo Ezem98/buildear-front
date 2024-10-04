@@ -315,7 +315,6 @@ public class ARTemplateMenuManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("Saco tachito.");
                 // EnableActionsMenu(false);
                 m_DeleteButton.gameObject.SetActive(m_InteractionGroup?.focusInteractable != null);
             }
@@ -334,17 +333,10 @@ public class ARTemplateMenuManager : MonoBehaviour
             m_IsPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(-1);
         }
 
-        if (!m_InteractionGroup)
-        {
-            Debug.LogError("m_InteractionGroup no está asignado.");
-            return;
-        }
-
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && m_InteractionGroup)
         {
             XRBaseInteractable interactable = m_InteractionGroup.focusInteractable as XRBaseInteractable;
             m_CurrentInteractable = interactable?.gameObject;
-            Debug.Log($"m_CurrentInteractable: {m_CurrentInteractable}");
             // Realizar un raycast desde la posición del mouse
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -359,14 +351,12 @@ public class ARTemplateMenuManager : MonoBehaviour
             //Hay Raycast
             if (Physics.Raycast(ray, out hit))
             {
-                Debug.Log($"Raycast hit: {hit.transform.gameObject.name}");
                 //Entra si ya hay un objeto spawneado
                 if (m_CurrentInteractable) // Le pegue a un objeto
                 {
                     //Toque el current
                     if (hit.transform.gameObject == m_CurrentInteractable)
                     {
-                        Debug.Log("Le pegue al current");
                         if (m_lastObjectInteractable && m_lastObjectInteractable != m_CurrentInteractable)
                         {
                             if (actionsMenuEnabled)
@@ -392,7 +382,6 @@ public class ARTemplateMenuManager : MonoBehaviour
                 //No hay nada en la escena
                 else
                 {
-                    Debug.Log("m_CurrentInteractable es null.");
                     actionsMenuEnabled = false;
                     if (m_lastObjectInteractable)
                     {
@@ -406,14 +395,11 @@ public class ARTemplateMenuManager : MonoBehaviour
             {
                 if (m_lastObjectInteractable)
                 {
-                    Debug.Log("Estoy poniendo en activo el last interactable");
-                    Debug.Log($"m_LastInteractable: {m_lastObjectInteractable}");
                     if (actionsMenuEnabled)
                     {
                         CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                         cmLast.HideCanvas();
                         actionsMenuEnabled = false;
-                        Debug.Log("Active menu del last interactable: " + cmLast.GetActiveMenu());
                     }
                 }
             }

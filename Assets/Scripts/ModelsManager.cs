@@ -47,7 +47,6 @@ public class ModelsManager : MonoBehaviour
         {
             ModelButtonManager modelButton = Instantiate(ModelButtonManager, ModelsContainer.transform); ;
             modelButton.Title.text = model.name;
-            Debug.Log("Model Id: " + model.id);
             modelButton.Id = model.id;
             ApiController.GetModelImage(model.model_image, onSuccess: (image) => modelButton.Image.sprite = image, onError: (error) => Debug.Log(error));
         }

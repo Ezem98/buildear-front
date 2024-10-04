@@ -42,7 +42,6 @@ namespace Components
 
         public void SetTitle(string label)
         {
-            Debug.Log("Setting title to: " + label);
             if (_title != null)
             {
                 _title.text = label;

@@ -12,15 +12,16 @@ public class ButtonsHandler : MonoBehaviour
     [SerializeField] private Transform objectToRotate; // Añade esta línea para especificar el objeto a rotar
     [SerializeField] private float rotationSpeed = 45f; // Velocidad de rotación en grados por segundo
 
-    void OnEnable(){
-        
+    void OnEnable()
+    {
+
         if (ActionManager != null)
         {
             ActionManager.OnRotateRightAction += RotateRightAction;
         }
     }
 
-        void OnDisable()
+    void OnDisable()
     {
         // Desuscribirse del evento de rotación para evitar llamadas a métodos de objetos destruidos
         if (ActionManager != null)
@@ -37,23 +38,20 @@ public class ButtonsHandler : MonoBehaviour
     public void ToggleResizeActions()
     {
         ResizeActions.SetActive(!ResizeActions.activeSelf);
-        Debug.Log("Estoy en ToggleResizeActions");
     }
 
     public void ActivateModelCanvas()
     {
-        Debug.Log("Entre al activateModelCanvas");
         CanvasManager?.ActivateModelCanvas();
     }
 
     public void HideModelCanvas()
     {
-        Debug.Log("Entre al activateModelCanvas");
         CanvasManager?.HideCanvas();
     }
-    
-    public void RotateRightAction(){
-        Debug.Log("Entre al rotate del buttonshandler");
+
+    public void RotateRightAction()
+    {
         if (objectToRotate != null)
         {
             // Rota el objeto 45 grados alrededor del eje Y

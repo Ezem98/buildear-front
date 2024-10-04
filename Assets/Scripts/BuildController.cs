@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class BuildController : MonoBehaviour
 {
@@ -18,9 +19,11 @@ public class BuildController : MonoBehaviour
     public void BackToUI()
     {
         UIController.Instance.SceneHandler("UI");
+        // GameObject.Find("UI").SetActive(false);
+        // GameObject.Find("XR Origin (AR Rig)").SetActive(false);
     }
 
-    void Awake()
+    private void Awake()
     {
         if (_instance != null)
         {

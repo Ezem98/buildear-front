@@ -19,6 +19,7 @@ public class UIController : MonoBehaviour
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
 
     public List<ModelData> ModelsData { get; set; }
+    public UserData UserData { get; set; }
 
     [SerializeField] private GameObject canvas;
     [SerializeField] private GameObject onBoarding;
@@ -132,6 +133,8 @@ public class UIController : MonoBehaviour
         }
     }
 
+
+
     public void SceneHandler(string newSceneName)
     {
         if (newSceneName == "UI")
@@ -139,15 +142,12 @@ public class UIController : MonoBehaviour
             // Restaura la pantalla donde estabas antes de salir
             screenDictionary[currentScreen].SetActive(true);
             footer.SetActive(footerDictionary[currentScreen]);
-
         }
         else
         {
             screenDictionary[currentScreen].SetActive(false);
             footer.SetActive(false);
-
         }
-
         SceneManager.LoadScene(newSceneName);
     }
 
