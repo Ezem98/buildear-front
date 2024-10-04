@@ -308,5 +308,19 @@ public class ApiController : MonoBehaviour
             onError.Invoke(jsonResponse);
         }));
     }
+
+    public void SearchModels(string search)
+    {
+        StartCoroutine(GetRequest(baseUrl + "/models/search/" + search, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            UIController.Instance.ModelsData = apiResponse?.data;
+            UIController.Instance.ScreenHandler("Models");
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+        }));
+    }
 }
 
