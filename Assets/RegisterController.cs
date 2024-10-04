@@ -1,23 +1,24 @@
 using TMPro;
 using UnityEngine;
 
-public class LoginController : MonoBehaviour
+public class RegisterController : MonoBehaviour
 {
     public TMP_InputField UsernameInputField;
     public TMP_InputField PasswordInputField;
+    public TMP_InputField EmailInputField;
     [SerializeField] private ApiController ApiController;
-    // Start is called before the first frame update
 
-    public void TryToLogin()
+    public void TryToRegister()
     {
         if (ApiController)
         {
-            LoginData loginData = new()
+            RegisterData registerData = new()
             {
                 username = UsernameInputField.text,
+                email = EmailInputField.text,
                 password = PasswordInputField.text
             };
-            ApiController.Login(loginData);
+            ApiController.Register(registerData);
         }
     }
 }

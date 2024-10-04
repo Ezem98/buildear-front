@@ -9812,9 +9812,9 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0.3
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -9981,9 +9981,6 @@ MonoBehaviour:
   StepTitle: {fileID: 940060864}
   StepDescription: {fileID: 567054350}
   StepCount: {fileID: 1873959334}
-  objectSpawner: {fileID: 436358033}
-  interactionGroup: {fileID: 2001374502}
-  planeManager: {fileID: 151853166}
 --- !u!1 &2116033367 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2318766424490069697, guid: dae86721c71ee42018bbec0181a4e52e,

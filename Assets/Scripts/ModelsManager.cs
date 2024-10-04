@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Utilities.Extensions;
 
@@ -12,7 +11,7 @@ public class ModelsManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI LoadingText;
     [SerializeField] private ModelButtonManager ModelButtonManager;
     [SerializeField] private GridLayoutGroup GridLayoutGroup;
-    private ApiController ApiController;
+    [SerializeField] private ApiController ApiController;
     private static ModelsManager _instance;
 
     private void Awake()
@@ -34,8 +33,6 @@ public class ModelsManager : MonoBehaviour
             LoadingText.SetActive(true);
         else CreateButtons();
 
-        if (!ApiController) ApiController = GetComponent<ApiController>();
-        if (!ApiController) ApiController = new();
         if (UIController.Instance.ModelsData?.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
         else GridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
     }
