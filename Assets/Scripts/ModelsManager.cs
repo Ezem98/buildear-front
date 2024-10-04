@@ -1,6 +1,6 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Utilities.Extensions;
 
 public class ModelsManager : MonoBehaviour
@@ -10,7 +10,8 @@ public class ModelsManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI ModelCountText;
     [SerializeField] private TextMeshProUGUI LoadingText;
     [SerializeField] private ModelButtonManager ModelButtonManager;
-    private ApiController ApiController;
+    [SerializeField] private GridLayoutGroup GridLayoutGroup;
+    [SerializeField] private ApiController ApiController;
     private static ModelsManager _instance;
 
     private void Awake()
@@ -32,7 +33,8 @@ public class ModelsManager : MonoBehaviour
             LoadingText.SetActive(true);
         else CreateButtons();
 
-        if (!ApiController) ApiController = FindObjectOfType<ApiController>();
+        if (UIController.Instance.ModelsData?.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
+        else GridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
     }
 
     private void OnDisable()
@@ -48,7 +50,8 @@ public class ModelsManager : MonoBehaviour
             ModelButtonManager modelButton = Instantiate(ModelButtonManager, ModelsContainer.transform); ;
             modelButton.Title.text = model.name;
             modelButton.Id = model.id;
-            ApiController.GetModelImage(model.model_image, onSuccess: (image) => modelButton.Image.sprite = image, onError: (error) => Debug.Log(error));
+            if (ApiController)
+                ApiController.GetModelImage(model.model_image, onSuccess: (image) => modelButton.Image.sprite = image, onError: (error) => Debug.Log(error));
         }
 
         LoadingText.SetActive(false);
@@ -59,7 +62,7 @@ public class ModelsManager : MonoBehaviour
         }
         else
         {
-            LoadingText.text = "Aún no hay modelos para esta categoría.";
+            LoadingText.text = "Sin modelos disponibles.";
             LoadingText.SetActive(true);
         }
 

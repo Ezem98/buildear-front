@@ -1,13 +1,9 @@
-using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -283,6 +279,15 @@ public class ARTemplateMenuManager : MonoBehaviour
         InitializeDebugMenuOffsets();
         HideMenu();
         m_PlaneManager.planePrefab = m_DebugPlane;
+
+        SceneManager.sceneLoaded += (scene, mode) => OnSceneLoaded();
+    }
+
+    private void OnSceneLoaded()
+    {
+        if (objectSpawner == null) objectSpawner = FindObjectOfType<ObjectSpawner>();
+        if (interactionGroup == null) interactionGroup = FindObjectOfType<XRInteractionGroup>();
+        if (planeManager == null) planeManager = FindObjectOfType<ARPlaneManager>();
     }
 
     /// <summary>

@@ -107,21 +107,11 @@ public class ApiController : MonoBehaviour
     }
 
     // Método que llamas para iniciar la solicitud
-    public void CreateUser()
+    public void Register(RegisterData registerData)
     {
 
-        // Crear un objeto con los datos del usuario
-        UserData userData = new()
-        {
-            username = "ezem98",
-            email = "ezem98@example.com",
-            password = "min8chars",
-            image = "https://img.freepik.com/free-photo/portrait-man-laughing_23-2148859448.jpg?size=338&ext=jpg&ga=GA1.1.2008272138.1721865600&semt=ais_user",
-            experienceLevel = 1
-        };
-
         // Convertir el objeto a un string JSON
-        string jsonData = JsonUtility.ToJson(userData);
+        string jsonData = JsonUtility.ToJson(registerData);
 
         StartCoroutine(PostRequest(baseUrl + "/users", jsonData, onSuccess: (jsonResponse) =>
         {
@@ -147,7 +137,14 @@ public class ApiController : MonoBehaviour
                 return;
             }
             UIController.Instance.UserData = apiResponse.data;
-            UIController.Instance.ScreenHandler("Home");
+            UIController.Instance.LoggedIn = true;
+            GetModelsByUserId(apiResponse.data.id, onSuccess: (modelData) =>
+                {
+                    UIController.Instance.ScreenHandler("Home");
+                }, onError: (error) =>
+                {
+                    Debug.Log(error);
+                });
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
@@ -260,11 +257,11 @@ public class ApiController : MonoBehaviour
         }));
     }
 
-    public void GetModelsUnderBuild(string modelId, System.Action<List<ModelData>> onSuccess, System.Action<string> onError)
+    public void GetModelsUnderBuild(string modelId, System.Action<List<UserModelData>> onSuccess, System.Action<string> onError)
     {
         StartCoroutine(GetRequest(baseUrl + "/userModels/model/" + modelId, onSuccess: (jsonResponse) =>
         {
-            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            APIResponse<List<UserModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<UserModelData>>>(jsonResponse);
             onSuccess?.Invoke(apiResponse?.data);
         }, onError: (jsonResponse) =>
         {
@@ -306,6 +303,36 @@ public class ApiController : MonoBehaviour
         {
             Debug.Log(jsonResponse);
             onError.Invoke(jsonResponse);
+        }));
+    }
+
+    public void SearchModels(string search)
+    {
+        StartCoroutine(GetRequest(baseUrl + "/models/search/" + search, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            UIController.Instance.ModelsData = apiResponse?.data;
+            if (UIController.Instance.CurrentScreen != "Models")
+                UIController.Instance.ScreenHandler("Models");
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+        }));
+    }
+
+    public void GetModelsByUserId(int userId, System.Action<List<ModelData>> onSuccess, System.Action<string> onError)
+    {
+        StartCoroutine(GetRequest(baseUrl + "/models/user/" + userId, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            UIController.Instance.MyModelsData = apiResponse?.data;
+            onSuccess?.Invoke(apiResponse?.data);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            onError?.Invoke(jsonResponse);
+            Debug.Log(jsonResponse);
         }));
     }
 }
