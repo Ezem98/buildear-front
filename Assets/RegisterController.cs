@@ -22,7 +22,14 @@ public class RegisterController : MonoBehaviour
                 email = EmailInputField.text.ToLower(),
                 password = PasswordInputField.text
             };
-            ApiController.Register(registerData);
+            ApiController.Register(registerData, onSuccess: () =>
+            {
+                NameInputField.text = "";
+                SurnameInputField.text = "";
+                UsernameInputField.text = "";
+                EmailInputField.text = "";
+                PasswordInputField.text = "";
+            });
         }
     }
 }

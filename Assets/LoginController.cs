@@ -17,7 +17,11 @@ public class LoginController : MonoBehaviour
                 username = UsernameInputField.text,
                 password = PasswordInputField.text
             };
-            ApiController.Login(loginData);
+            ApiController.Login(loginData, onSuccess: () =>
+            {
+                UsernameInputField.text = "";
+                PasswordInputField.text = "";
+            });
         }
     }
 }

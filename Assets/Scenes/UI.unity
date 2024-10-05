@@ -4281,9 +4281,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1654186803}
-        m_TargetAssemblyTypeName: LoginController, Assembly-CSharp
-        m_MethodName: TryToLogin
+      - m_Target: {fileID: 532573026}
+        m_TargetAssemblyTypeName: ProfileManager, Assembly-CSharp
+        m_MethodName: Logout
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6112,8 +6112,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Gonzalo Ezequiel
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 6bfca138ab185a142a643e3f87f40037, type: 2}
-  m_sharedMaterial: {fileID: 8772363048756017875, guid: 6bfca138ab185a142a643e3f87f40037,
+  m_fontAsset: {fileID: 11400000, guid: c309999ccbd9bcf4fba6e5645b2e4025, type: 2}
+  m_sharedMaterial: {fileID: -20303419204047670, guid: c309999ccbd9bcf4fba6e5645b2e4025,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -7054,6 +7054,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 532573025}
+  - component: {fileID: 532573026}
   m_Layer: 5
   m_Name: Profile
   m_TagString: Untagged
@@ -7095,6 +7096,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &532573026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 532573024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95b62fc97002ae746a50a36b091d15d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FullNameText: {fileID: 488362012}
+  EmailText: {fileID: 56857109}
+  ProfileImage: {fileID: 1263422372}
+  ApiController: {fileID: 1638469110}
 --- !u!1 &536022563
 GameObject:
   m_ObjectHideFlags: 0

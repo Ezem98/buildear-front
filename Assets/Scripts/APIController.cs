@@ -127,7 +127,7 @@ public class ApiController : MonoBehaviour
     }
 
     // Método que llamas para iniciar la solicitud
-    public void Register(RegisterData registerData)
+    public void Register(RegisterData registerData, System.Action onSuccess)
     {
 
         // Convertir el objeto a un string JSON
@@ -137,13 +137,14 @@ public class ApiController : MonoBehaviour
         {
             APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
             UIController.Instance.ScreenHandler("Login");
+            onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
         }));
     }
 
-    public void Login(LoginData loginData)
+    public void Login(LoginData loginData, System.Action onSuccess)
     {
         // Convertir el objeto a un string JSON
         string jsonData = JsonUtility.ToJson(loginData);
@@ -161,6 +162,7 @@ public class ApiController : MonoBehaviour
             GetModelsByUserId(apiResponse.data.id, onSuccess: (modelData) =>
                 {
                     UIController.Instance.ScreenHandler("Home");
+                    onSuccess?.Invoke();
                 }, onError: (error) =>
                 {
                     Debug.Log(error);
