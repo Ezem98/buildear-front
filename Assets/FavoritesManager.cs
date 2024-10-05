@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Utilities.Extensions;
 
 public class FavoritesManager : MonoBehaviour
@@ -9,6 +10,8 @@ public class FavoritesManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI LoadingText;
     [SerializeField] private ModelButtonManager ModelButtonManager;
     [SerializeField] private ApiController ApiController;
+    [SerializeField] private GridLayoutGroup GridLayoutGroup;
+
     private static FavoritesManager _instance;
     void Awake()
     {
@@ -25,16 +28,14 @@ public class FavoritesManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (UIController.Instance.FavoritesModelsData != null)
-            CreateButtons();
-        else
+        LoadingText.SetActive(true);
+        ApiController.GetFavoritesModels(UIController.Instance.UserData.id, onSuccess: (models) =>
         {
-            LoadingText.SetActive(true);
-            ApiController.GetFavoritesModels(UIController.Instance.UserData.id, onSuccess: (models) =>
-            {
-                CreateButtons();
-            }, onError: (error) => Debug.Log(error));
-        }
+            CreateButtons();
+            if (UIController.Instance.FavoritesModelsData?.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
+            else GridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
+        }, onError: (error) => Debug.Log(error));
+
     }
 
     public static FavoritesManager Instance

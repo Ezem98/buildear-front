@@ -12,6 +12,7 @@ public class UIController : MonoBehaviour
 {
     private bool loggedIn = false;
     private string currentScreen = "Onboarding";
+    private string previousScreen = "Onboarding";
     private int currentModelIndex;
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
     public List<ModelData> ModelsData { get; set; }
@@ -20,6 +21,7 @@ public class UIController : MonoBehaviour
     public UserData UserData { get; set; }
     public bool LoggedIn { get => loggedIn; set => loggedIn = value; }
     public string CurrentScreen { get => currentScreen; set => currentScreen = value; }
+    public string PreviousScreen { get => previousScreen; set => previousScreen = value; }
 
     [SerializeField] private GameObject canvas;
     [SerializeField] private GameObject onBoarding;
@@ -118,6 +120,9 @@ public class UIController : MonoBehaviour
 
     public void ScreenHandler(string newScreenName)
     {
+        Debug.Log("NewScreen: " + newScreenName);
+        Debug.Log("CurrentScreen: " + currentScreen);
+        previousScreen = currentScreen;
         screenDictionary[currentScreen].SetActive(false);
         screenDictionary[newScreenName].SetActive(true);
         footer.SetActive(footerDictionary[newScreenName]);

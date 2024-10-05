@@ -2397,6 +2397,7 @@ MonoBehaviour:
   ModelButtonManager: {fileID: 7230245610091643774, guid: 0b4d90342c530b24d8c4d94ca769df92,
     type: 3}
   ApiController: {fileID: 1638469110}
+  GridLayoutGroup: {fileID: 1333239422}
 --- !u!1 &204578691
 GameObject:
   m_ObjectHideFlags: 0
@@ -11026,8 +11027,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 60, y: 0}
+  m_SizeDelta: {x: -120, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1001633490
 MonoBehaviour:
@@ -13356,8 +13357,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -100}
-  m_SizeDelta: {x: 0, y: 1200}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 1444.3833}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1184032256
 MonoBehaviour:
@@ -15686,7 +15687,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000003947451, y: 0.0009789853}
+  m_AnchoredPosition: {x: 0, y: 0.0009789853}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1333239422
@@ -19028,10 +19029,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1638469108}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: ScreenHandler
-        m_Mode: 5
+      - m_Target: {fileID: 1654229439}
+        m_TargetAssemblyTypeName: ModelManager, Assembly-CSharp
+        m_MethodName: GoBack
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

@@ -20,7 +20,21 @@ public class ModelManager : MonoBehaviour
             ApiController = FindObjectOfType<ApiController>();
         Debug.Log("CurrentModelIndex: " + UIController.Instance.CurrentModelIndex);
         int modelId = UIController.Instance.CurrentModelIndex;
-        ModelData model = UIController.Instance.ModelsData.Find(x => x.id == modelId);
+        ModelData model = null;
+        if (UIController.Instance.PreviousScreen == "Home")
+        {
+            model = UIController.Instance.MyModelsData.Find(m => m.id == modelId);
+        }
+        else if (UIController.Instance.PreviousScreen == "Catalogue")
+        {
+            model = UIController.Instance.ModelsData.Find(m => m.id == modelId);
+        }
+        else if (UIController.Instance.PreviousScreen == "Favorites")
+        {
+            Debug.Log("FavoritesModelsData: " + UIController.Instance.FavoritesModelsData.Count);
+            model = UIController.Instance.FavoritesModelsData.Find(x => x.id == modelId);
+        }
+
         if (model != null)
         {
             TitleText.text = model.name;
@@ -46,15 +60,26 @@ public class ModelManager : MonoBehaviour
                 }, onError: (error) => Debug.Log(error));
                 ApiController.GetModelImage(model.model_image, onSuccess: (image) => Image.sprite = image, onError: (error) => Debug.Log(error));
             }
+            IsFavorite(() =>
+            {
+                if (IsFav)
+                {
+                    FavoriteButton.transform.GetChild(0).SetActive(false);
+                    FavoriteButton.transform.GetChild(1).SetActive(true);
+                }
+                else
+                {
+                    FavoriteButton.transform.GetChild(0).SetActive(true);
+                    FavoriteButton.transform.GetChild(1).SetActive(false);
+                }
+            });
         }
     }
 
     public void ToggleFavorite()
     {
-        FavoriteButton.interactable = false;
-        FavoritesManager.IsFavorite(UIController.Instance.CurrentModelIndex, onSuccess: (isFavorite) =>
+        IsFavorite(() =>
         {
-            IsFav = isFavorite;
             if (IsFav)
             {
                 FavoritesManager.RemoveFavorite(UIController.Instance.CurrentModelIndex);
@@ -67,8 +92,23 @@ public class ModelManager : MonoBehaviour
                 FavoriteButton.transform.GetChild(0).SetActive(false);
                 FavoriteButton.transform.GetChild(1).SetActive(true);
             }
-            FavoriteButton.interactable = true;
         });
 
+    }
+
+    private void IsFavorite(System.Action onSuccess)
+    {
+        FavoriteButton.interactable = false;
+        FavoritesManager.IsFavorite(UIController.Instance.CurrentModelIndex, onSuccess: (isFavorite) =>
+        {
+            IsFav = isFavorite;
+            FavoriteButton.interactable = true;
+            onSuccess?.Invoke();
+        });
+    }
+
+    public void GoBack()
+    {
+        UIController.Instance.ScreenHandler(UIController.Instance.PreviousScreen);
     }
 }
