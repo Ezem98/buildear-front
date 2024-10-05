@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,12 +30,20 @@ public class ModelsManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (UIController.Instance.ModelsData == null)
-            LoadingText.SetActive(true);
-        else CreateButtons();
+        LoadingText.SetActive(true);
+        if (UIController.Instance.ComesFromSearch)
+        {
+            UIController.Instance.ComesFromSearch = false;
+            CreateButtons(UIController.Instance.SearchModelsData);
+        }
+        else
+        {
 
-        if (UIController.Instance.ModelsData?.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
-        else GridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
+            ApiController.GetModelsByCategoryId(UIController.Instance.CurrentCategoryIndex, onSuccess: () =>
+            {
+                CreateButtons(UIController.Instance.ModelsData);
+            });
+        }
     }
 
     private void OnDisable()
@@ -42,10 +51,9 @@ public class ModelsManager : MonoBehaviour
         DestroyButtons();
     }
 
-    public void CreateButtons()
+    public void CreateButtons(List<ModelData> models)
     {
-        Debug.Log(UIController.Instance?.ModelsData?.ToString());
-        foreach (ModelData model in UIController.Instance.ModelsData)
+        foreach (ModelData model in models)
         {
             ModelButtonManager modelButton = Instantiate(ModelButtonManager, ModelsContainer.transform); ;
             modelButton.Title.text = model.name;
@@ -55,10 +63,13 @@ public class ModelsManager : MonoBehaviour
         }
 
         LoadingText.SetActive(false);
-        if (UIController.Instance.ModelsData.Count > 0)
+        if (models?.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
+        else GridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
+
+        if (models?.Count > 0)
         {
             ModelCountText.SetActive(true);
-            ModelCountText.text = "<b>" + UIController.Instance.ModelsData.Count + "</b>" + " Modelos";
+            ModelCountText.text = "<b>" + models?.Count + "</b>" + " Modelos";
         }
         else
         {

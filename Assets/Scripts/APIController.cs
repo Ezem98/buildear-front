@@ -7,8 +7,8 @@ using System.Collections.Generic;
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
-    private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
-    // private readonly string baseUrl = "http://localhost:1234";
+    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+    private readonly string baseUrl = "http://localhost:1234";
 
     // Método para realizar el GET
     IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
@@ -267,13 +267,13 @@ public class ApiController : MonoBehaviour
 
     }
 
-    public void GetModelsByCategoryId(int categoryId)
+    public void GetModelsByCategoryId(int categoryId, System.Action onSuccess)
     {
         StartCoroutine(GetRequest(baseUrl + "/models/category/" + categoryId, onSuccess: (jsonResponse) =>
         {
             APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
             UIController.Instance.ModelsData = apiResponse?.data;
-            ModelsManager.Instance.CreateButtons();
+            onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
@@ -351,10 +351,13 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/models/search/" + search, onSuccess: (jsonResponse) =>
         {
+            UIController.Instance.SearchModelsData?.Clear();
+            Debug.Log("Clear: " + UIController.Instance.SearchModelsData?.Count);
             APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
-            UIController.Instance.ModelsData = apiResponse?.data;
-            if (UIController.Instance.CurrentScreen != "Models")
-                UIController.Instance.ScreenHandler("Models");
+            UIController.Instance.SearchModelsData = apiResponse?.data;
+            Debug.Log("SearchModelsData: " + UIController.Instance.SearchModelsData.Count);
+            UIController.Instance.ComesFromSearch = true;
+            UIController.Instance.ScreenHandler("Models");
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {

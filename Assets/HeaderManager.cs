@@ -4,14 +4,7 @@ using UnityEngine;
 public class HeaderManager : MonoBehaviour
 {
     public TMP_InputField SearchInputField;
-    private ApiController ApiController;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        if (!ApiController)
-            ApiController = FindObjectOfType<ApiController>();
-    }
+    [SerializeField] private ApiController ApiController;
 
     public void TryToSearch()
     {

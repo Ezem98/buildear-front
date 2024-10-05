@@ -14,11 +14,15 @@ public class UIController : MonoBehaviour
     private string currentScreen = "Onboarding";
     private string previousScreen = "Onboarding";
     private int currentModelIndex;
+    private int currentCategoryIndex;
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
+    public int CurrentCategoryIndex { get => currentCategoryIndex; set => currentCategoryIndex = value; }
     public List<ModelData> ModelsData { get; set; }
     public List<ModelData> MyModelsData { get; set; }
     public List<ModelData> FavoritesModelsData { get; set; }
+    public List<ModelData> SearchModelsData { get; set; }
     public UserData UserData { get; set; }
+    public bool ComesFromSearch { get; set; }
     public bool LoggedIn { get => loggedIn; set => loggedIn = value; }
     public string CurrentScreen { get => currentScreen; set => currentScreen = value; }
     public string PreviousScreen { get => previousScreen; set => previousScreen = value; }
@@ -120,8 +124,6 @@ public class UIController : MonoBehaviour
 
     public void ScreenHandler(string newScreenName)
     {
-        Debug.Log("NewScreen: " + newScreenName);
-        Debug.Log("CurrentScreen: " + currentScreen);
         previousScreen = currentScreen;
         screenDictionary[currentScreen].SetActive(false);
         screenDictionary[newScreenName].SetActive(true);
@@ -177,6 +179,12 @@ public class UIController : MonoBehaviour
         if (objectSpawner == null) objectSpawner = FindObjectOfType<ObjectSpawner>();
         if (objectSpawner != null) objectSpawner.spawnOptionId = currentModelIndex;
         else Debug.Log("No se encontró el ObjectSpawner");
+    }
+
+    public void ChangeCategory(int categoryIndex)
+    {
+        currentCategoryIndex = categoryIndex;
+        ScreenHandler("Models");
     }
 }
 
