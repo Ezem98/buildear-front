@@ -7,8 +7,8 @@ using System.Collections.Generic;
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
-     private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
-    //private readonly string baseUrl = "http://localhost:1234";
+    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+    private readonly string baseUrl = "http://localhost:1234";
 
     // Método para realizar el GET
     IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
@@ -27,6 +27,26 @@ public class ApiController : MonoBehaviour
             {
                 // Invocar el callback de error con el mensaje de error
                 onError?.Invoke(webRequest.error);
+            }
+        }
+    }
+
+    IEnumerator DeleteRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
+    {
+        using (UnityWebRequest webRequest = UnityWebRequest.Delete(url))
+        {
+            // Enviar la solicitud y esperar respuesta
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                // Invocar el callback de éxito con la respuesta
+                onSuccess?.Invoke("Delete request successful");
+            }
+            else
+            {
+                // Invocar el callback de error con el mensaje de error
+                onError?.Invoke($"Error: {webRequest.error}");
             }
         }
     }
@@ -333,6 +353,67 @@ public class ApiController : MonoBehaviour
         {
             onError?.Invoke(jsonResponse);
             Debug.Log(jsonResponse);
+        }));
+    }
+
+    public void GetFavoritesModels(int userId, System.Action<List<ModelData>> onSuccess, System.Action<string> onError)
+    {
+        StartCoroutine(GetRequest(baseUrl + "/models/favorite/" + userId, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            UIController.Instance.FavoritesModelsData = apiResponse?.data;
+            onSuccess?.Invoke(apiResponse?.data);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            onError?.Invoke(jsonResponse);
+            Debug.Log(jsonResponse);
+        }));
+    }
+
+    public void CreateFavorite(FavoriteData favoriteData)
+    {
+        // Convertir el objeto a un string JSON
+        // string jsonGuide = JsonUtility.ToJson(userModelData.guide);
+        string jsonData = JsonUtility.ToJson(favoriteData);
+
+        Debug.Log(jsonData.ToString());
+
+        StartCoroutine(PostRequest(baseUrl + "/favorites", jsonData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<FavoriteData> apiResponse = JsonUtility.FromJson<APIResponse<FavoriteData>>(jsonResponse);
+            Debug.Log(apiResponse.message);
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+        }));
+    }
+
+    public void DeleteFavorite(FavoriteData favoriteData)
+    {
+        StartCoroutine(DeleteRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<FavoriteData> apiResponse = JsonConvert.DeserializeObject<APIResponse<FavoriteData>>(jsonResponse);
+            Debug.Log(apiResponse.message);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+        }));
+    }
+
+    public void IsFavorite(FavoriteData favoriteData, System.Action<bool> onSuccess, System.Action<string> onError)
+    {
+        Debug.Log(favoriteData.user_id + " " + favoriteData.model_id);
+        StartCoroutine(GetRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
+        {
+            bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
+            onSuccess?.Invoke(apiResponse);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
         }));
     }
 }

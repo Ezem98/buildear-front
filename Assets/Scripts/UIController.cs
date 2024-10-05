@@ -16,6 +16,7 @@ public class UIController : MonoBehaviour
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
     public List<ModelData> ModelsData { get; set; }
     public List<ModelData> MyModelsData { get; set; }
+    public List<ModelData> FavoritesModelsData { get; set; }
     public UserData UserData { get; set; }
     public bool LoggedIn { get => loggedIn; set => loggedIn = value; }
     public string CurrentScreen { get => currentScreen; set => currentScreen = value; }

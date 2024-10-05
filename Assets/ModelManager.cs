@@ -1,17 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Utilities.Extensions;
 
 public class ModelManager : MonoBehaviour
 {
-
-
     [SerializeField] private TextMeshProUGUI TitleText;
     [SerializeField] private TextMeshProUGUI DescriptionText;
     [SerializeField] private TextMeshProUGUI UsersCountText;
     [SerializeField] private Image Image;
+    [SerializeField] private FavoritesManager FavoritesManager;
+    [SerializeField] private Button FavoriteButton;
+    private bool IsFav { get; set; }
     private ApiController ApiController;
     // Start is called before the first frame update
     void OnEnable()
@@ -47,5 +47,28 @@ public class ModelManager : MonoBehaviour
                 ApiController.GetModelImage(model.model_image, onSuccess: (image) => Image.sprite = image, onError: (error) => Debug.Log(error));
             }
         }
+    }
+
+    public void ToggleFavorite()
+    {
+        FavoriteButton.interactable = false;
+        FavoritesManager.IsFavorite(UIController.Instance.CurrentModelIndex, onSuccess: (isFavorite) =>
+        {
+            IsFav = isFavorite;
+            if (IsFav)
+            {
+                FavoritesManager.RemoveFavorite(UIController.Instance.CurrentModelIndex);
+                FavoriteButton.transform.GetChild(0).SetActive(true);
+                FavoriteButton.transform.GetChild(1).SetActive(false);
+            }
+            else
+            {
+                FavoritesManager.AddFavorite(UIController.Instance.CurrentModelIndex);
+                FavoriteButton.transform.GetChild(0).SetActive(false);
+                FavoriteButton.transform.GetChild(1).SetActive(true);
+            }
+            FavoriteButton.interactable = true;
+        });
+
     }
 }
