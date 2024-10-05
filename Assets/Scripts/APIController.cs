@@ -8,6 +8,7 @@ public class ApiController : MonoBehaviour
 {
     // URL de tu API
     private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+
     // private readonly string baseUrl = "http://localhost:1234";
 
     // Método para realizar el GET
@@ -184,7 +185,7 @@ public class ApiController : MonoBehaviour
         {
             model = UIController.Instance.MyModelsData.Find(m => m.id == modelId);
         }
-        else if (UIController.Instance.PreviousScreen == "Catalogue")
+        else if (UIController.Instance.PreviousScreen == "Models")
         {
             model = UIController.Instance.ModelsData.Find(m => m.id == modelId);
         }

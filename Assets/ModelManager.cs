@@ -12,21 +12,20 @@ public class ModelManager : MonoBehaviour
     [SerializeField] private FavoritesManager FavoritesManager;
     [SerializeField] private Button FavoriteButton;
     private bool IsFav { get; set; }
-    private ApiController ApiController;
+    [SerializeField] private ApiController ApiController;
     // Start is called before the first frame update
     void OnEnable()
     {
-        if (!ApiController)
-            ApiController = FindObjectOfType<ApiController>();
-        Debug.Log("CurrentModelIndex: " + UIController.Instance.CurrentModelIndex);
+        Debug.Log(UIController.Instance.PreviousScreen);
         int modelId = UIController.Instance.CurrentModelIndex;
         ModelData model = null;
         if (UIController.Instance.PreviousScreen == "Home")
         {
             model = UIController.Instance.MyModelsData.Find(m => m.id == modelId);
         }
-        else if (UIController.Instance.PreviousScreen == "Catalogue")
+        else if (UIController.Instance.PreviousScreen == "Models")
         {
+            Debug.Log("ModelsData: " + UIController.Instance.ModelsData?.Count);
             model = UIController.Instance.ModelsData.Find(m => m.id == modelId);
         }
         else if (UIController.Instance.PreviousScreen == "Favorites")
