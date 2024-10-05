@@ -1765,7 +1765,8 @@ MonoBehaviour:
   - {fileID: 4200027379208750234, guid: f48a5cd39922915429d40d931ac47f52, type: 3}
   - {fileID: 7120341757781046214, guid: e8624ac54ea0beb43bca34c2ade04c18, type: 3}
   - {fileID: 6233406405702043462, guid: 10510a158c2f0024a8cd2af42bbf50f4, type: 3}
-  m_ObjectPrefabsIndex: 0300000001000000050000000400000002000000
+  - {fileID: 6483867353324697693, guid: 6e3d36641b9890349b4ffe69ef0b0405, type: 3}
+  m_ObjectPrefabsIndex: 030000000100000005000000040000000200000006000000
   m_SpawnVisualizationPrefab: {fileID: 0}
   m_SpawnOptionId: -1
   m_OnlySpawnInView: 1
