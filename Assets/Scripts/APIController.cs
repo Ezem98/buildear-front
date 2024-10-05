@@ -179,6 +179,21 @@ public class ApiController : MonoBehaviour
         int modelId = UIController.Instance.CurrentModelIndex;
         int userId = UIController.Instance.UserData.id;
 
+        ModelData model = null;
+        if (UIController.Instance.PreviousScreen == "Home")
+        {
+            model = UIController.Instance.MyModelsData.Find(m => m.id == modelId);
+        }
+        else if (UIController.Instance.PreviousScreen == "Catalogue")
+        {
+            model = UIController.Instance.ModelsData.Find(m => m.id == modelId);
+        }
+        else if (UIController.Instance.PreviousScreen == "Favorites")
+        {
+            Debug.Log("FavoritesModelsData: " + UIController.Instance.FavoritesModelsData.Count);
+            model = UIController.Instance.FavoritesModelsData.Find(x => x.id == modelId);
+        }
+
         BuildController.Instance.LoadingModal.SetActive(true);
 
         GetUerModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
@@ -198,11 +213,12 @@ public class ApiController : MonoBehaviour
 
             TutorialData tutorialData = new()
             {
-                modelName = "pared de ladrillo",
+                modelCategory = (Categories)model.category_id,
+                modelName = model.name,
                 modelSize = new()
                 {
-                    width = 200,
-                    height = 100
+                    width = 100,
+                    height = 200
                 },
                 experienceLevel = 1
             };
