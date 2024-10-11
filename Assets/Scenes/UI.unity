@@ -2510,7 +2510,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Encadenado Encadenado Encadenado
+  m_text: Cargando...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c309999ccbd9bcf4fba6e5645b2e4025, type: 2}
   m_sharedMaterial: {fileID: -20303419204047670, guid: c309999ccbd9bcf4fba6e5645b2e4025,
@@ -4111,7 +4111,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 327349713}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1638469110}
+        m_TargetAssemblyTypeName: ApiController, Assembly-CSharp
+        m_MethodName: SignInGoogle
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &327349713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10870,7 +10882,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "1.469 personas han realizado esta construcci\xF3n"
+  m_text: Cargando...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6bfca138ab185a142a643e3f87f40037, type: 2}
   m_sharedMaterial: {fileID: 8772363048756017875, guid: 6bfca138ab185a142a643e3f87f40037,
@@ -16828,7 +16840,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Aluminio \u2022 40x90 cm"
+  m_text: Cargando...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6bfca138ab185a142a643e3f87f40037, type: 2}
   m_sharedMaterial: {fileID: 8772363048756017875, guid: 6bfca138ab185a142a643e3f87f40037,
@@ -19932,7 +19944,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1792846819
 RectTransform:
   m_ObjectHideFlags: 0
@@ -20953,9 +20965,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec gravida
-    ullamcorper diam vitae accumsan. Pellentesque a pharetra ex, vitae gravida velit.
-    Aenean tristique egestas porttitor.
+  m_text: Cargando...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6bfca138ab185a142a643e3f87f40037, type: 2}
   m_sharedMaterial: {fileID: 8772363048756017875, guid: 6bfca138ab185a142a643e3f87f40037,
@@ -20983,7 +20993,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
+  m_fontSize: 40.45
   m_fontSizeBase: 32
   m_fontWeight: 400
   m_enableAutoSizing: 1

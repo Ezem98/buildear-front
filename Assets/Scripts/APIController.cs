@@ -218,10 +218,10 @@ public class ApiController : MonoBehaviour
                 modelName = model.name,
                 modelSize = new()
                 {
-                    width = 100,
-                    height = 200
+                    height = model.height,
+                    width = model.width,
                 },
-                experienceLevel = 1
+                experienceLevel = UIController.Instance.UserData.experience_level
             };
             // Convertir el objeto a un string JSONa
             string jsonData = JsonUtility.ToJson(tutorialData);
@@ -439,6 +439,20 @@ public class ApiController : MonoBehaviour
         {
             Debug.Log(jsonResponse);
             onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void SignInGoogle()
+    {
+        StartCoroutine(GetRequest(baseUrl + "/auth/google", onSuccess: (jsonResponse) =>
+        {
+            Debug.Log("Salio bien ");
+            // bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
+            // onSuccess?.Invoke(apiResponse);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
         }));
     }
 }

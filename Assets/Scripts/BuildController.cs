@@ -1,5 +1,8 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 
 public class BuildController : MonoBehaviour
 {
@@ -9,6 +12,7 @@ public class BuildController : MonoBehaviour
     [SerializeField] public TextMeshProUGUI StepTitle;
     [SerializeField] public TextMeshProUGUI StepDescription;
     [SerializeField] public TextMeshProUGUI StepCount;
+    [SerializeField] public ARPlaneManager ARPlaneManager;
 
     public Guide Guide { get; set; }
     public Paso CurrentStep { get; set; }
