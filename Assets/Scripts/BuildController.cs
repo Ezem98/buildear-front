@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,6 +14,10 @@ public class BuildController : MonoBehaviour
     [SerializeField] public TextMeshProUGUI StepDescription;
     [SerializeField] public TextMeshProUGUI StepCount;
     [SerializeField] public ARPlaneManager ARPlaneManager;
+    private readonly Dictionary<string, PlaneDetectionMode> detectionModeDictionary = new() {
+        { "horizontal", PlaneDetectionMode.Horizontal },
+        { "vertical", PlaneDetectionMode.Vertical },
+    };
 
     public Guide Guide { get; set; }
     public Paso CurrentStep { get; set; }
@@ -28,6 +33,8 @@ public class BuildController : MonoBehaviour
 
     private void Awake()
     {
+        ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+
         if (_instance != null)
         {
             Destroy(gameObject); // Si ya existe una instancia, destruir este objeto

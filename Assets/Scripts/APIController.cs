@@ -7,9 +7,9 @@ using System.Collections.Generic;
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
-    private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
-    // private readonly string baseUrl = "http://localhost:1234";
+    private readonly string baseUrl = "http://localhost:1234";
 
     // Método para realizar el GET
     IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
@@ -212,6 +212,13 @@ public class ApiController : MonoBehaviour
                 return;
             }
 
+            int EXPERIENCE_LEVEL = 1;
+
+            if (UIController.Instance.UserData != null)
+                EXPERIENCE_LEVEL = (int)UIController.Instance.UserData.experience_level;
+            else
+                EXPERIENCE_LEVEL = (int)ExperienceLevel.Intermediate;
+
             TutorialData tutorialData = new()
             {
                 modelCategory = (Categories)model.category_id,
@@ -221,7 +228,7 @@ public class ApiController : MonoBehaviour
                     height = model.height,
                     width = model.width,
                 },
-                experienceLevel = UIController.Instance.UserData.experience_level
+                experienceLevel = EXPERIENCE_LEVEL,
             };
             // Convertir el objeto a un string JSONa
             string jsonData = JsonUtility.ToJson(tutorialData);
@@ -249,13 +256,14 @@ public class ApiController : MonoBehaviour
                     current_step = 1
                 };
 
-                CreateUserModel(userModelData, onSuccess: (userModelData) =>
-                {
-                    Debug.Log("UserModel creado");
-                }, onError: (error) =>
-                {
-                    Debug.Log(error);
-                });
+                if (!UIController.Instance.GuestUser)
+                    CreateUserModel(userModelData, onSuccess: (userModelData) =>
+                    {
+                        Debug.Log("UserModel creado");
+                    }, onError: (error) =>
+                    {
+                        Debug.Log(error);
+                    });
 
             }, onError: (jsonResponse) =>
             {
