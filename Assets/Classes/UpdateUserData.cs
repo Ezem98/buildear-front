@@ -1,13 +1,10 @@
-[System.Serializable]
-public class UserData
+public class UpdateUserData
 {
-    public int id;
-    public string name;
-    public string surname;
     public string username;
     public string email;
     public string password;
-    public string image;
+    public string newPassword;
     public int experience_level;
+    public string image;
     public int completed_profile;
 }

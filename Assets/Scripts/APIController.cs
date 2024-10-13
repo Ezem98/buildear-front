@@ -83,6 +83,39 @@ public class ApiController : MonoBehaviour
         }
     }
 
+    // Método para realizar el PUT
+    IEnumerator PatchRequest(string url, string jsonData, System.Action<string> onSuccess, System.Action<string> onError)
+    {
+        // Crear la solicitud PUT
+        UnityWebRequest webRequest = new UnityWebRequest(url, "PATCH");
+
+        // Convertir los datos a un formato de JSON o similar
+        byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(jsonData);
+
+        // Asignar los datos a la solicitud
+        webRequest.uploadHandler = new UploadHandlerRaw(jsonToSend);
+        webRequest.downloadHandler = new DownloadHandlerBuffer();
+
+        // Definir el tipo de contenido (importante para APIs que reciben JSON)
+        webRequest.SetRequestHeader("Content-Type", "application/json");
+
+        // Enviar la solicitud y esperar respuesta
+        yield return webRequest.SendWebRequest();
+
+        // Manejo de errores
+        if (webRequest.result == UnityWebRequest.Result.Success)
+        {
+            // Invocar el callback de éxito con la respuesta
+            onSuccess?.Invoke(webRequest.downloadHandler.text);
+        }
+        else
+        {
+            // Invocar el callback de error con el mensaje de error
+            onError?.Invoke(webRequest.error);
+        }
+    }
+
+
     IEnumerator DownloadImage(string url, System.Action<UnityWebRequest> onSuccess, System.Action<string> onError)
     {
         // Crear la solicitud POST
@@ -153,21 +186,40 @@ public class ApiController : MonoBehaviour
         StartCoroutine(PostRequest(baseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
-            if (apiResponse.successfully == false)
+            if (apiResponse.data == null)
             {
                 Debug.Log("Usuario o contraseña incorrectos");
                 return;
             }
             UIController.Instance.UserData = apiResponse.data;
             UIController.Instance.LoggedIn = true;
-            GetModelsByUserId(apiResponse.data.id, onSuccess: (modelData) =>
-                {
-                    UIController.Instance.ScreenHandler("Home");
-                    onSuccess?.Invoke();
-                }, onError: (error) =>
-                {
-                    Debug.Log(error);
-                });
+            if (UIController.Instance.UserData.completed_profile == (int)CompletedProfile.Incomplete)
+                UIController.Instance.ScreenHandler("Profile");
+            else GetModelsByUserId(apiResponse.data.id, onSuccess: (modelData) =>
+                    {
+                        UIController.Instance.ScreenHandler("Home");
+                        onSuccess?.Invoke();
+                    }, onError: (error) =>
+                    {
+                        Debug.Log(error);
+                    });
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+        }));
+    }
+
+    public void UpdateUserData(UpdateUserData updateUserData, System.Action onSuccess)
+    {
+
+        // Convertir el objeto a un string JSON
+        string jsonData = JsonUtility.ToJson(updateUserData);
+
+        StartCoroutine(PatchRequest(baseUrl + "/users/" + UIController.Instance.UserData.username, jsonData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            UIController.Instance.UserData = apiResponse?.data;
+            onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);

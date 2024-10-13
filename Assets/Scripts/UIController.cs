@@ -37,6 +37,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject models;
     [SerializeField] private GameObject model;
     [SerializeField] private GameObject profile;
+    [SerializeField] private GameObject myData;
     [SerializeField] private GameObject favorites;
     [SerializeField] private GameObject footer;
     [SerializeField] private GameObject header;
@@ -79,6 +80,7 @@ public class UIController : MonoBehaviour
                 {"Models", models},
                 {"Model", model},
                 {"Profile", profile},
+                {"MyData", myData},
                 {"Favorites", favorites}
             };
 
@@ -91,6 +93,7 @@ public class UIController : MonoBehaviour
                 {"Models", true},
                 {"Model", false},
                 {"Profile", true},
+                {"MyData", true},
                 {"Favorites", true}
             };
 
@@ -103,6 +106,7 @@ public class UIController : MonoBehaviour
                 {"Models", true},
                 {"Model", false},
                 {"Profile", false},
+                {"MyData", false},
                 {"Favorites", false}
             };
 
