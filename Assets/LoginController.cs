@@ -29,7 +29,6 @@ public class LoginController : MonoBehaviour
 
     public void OnSignIn() {
         Debug.Log("Calling SignIn");
-        GoogleSignIn.DefaultInstance.EnableDebugLogging(true);
         GoogleSignIn.Configuration = configuration;
         GoogleSignIn.Configuration.UseGameSignIn = false;
         GoogleSignIn.Configuration.RequestIdToken = true;
