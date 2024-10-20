@@ -27,7 +27,7 @@ public class ApiController : MonoBehaviour
             else
             {
                 // Invocar el callback de error con el mensaje de error
-                onError?.Invoke(webRequest.error);
+                onError?.Invoke(webRequest.downloadHandler.text);
             }
         }
     }
@@ -47,7 +47,7 @@ public class ApiController : MonoBehaviour
             else
             {
                 // Invocar el callback de error con el mensaje de error
-                onError?.Invoke($"Error: {webRequest.error}");
+                onError?.Invoke(webRequest.downloadHandler.text);
             }
         }
     }
@@ -79,7 +79,7 @@ public class ApiController : MonoBehaviour
         else
         {
             // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(webRequest.error);
+            onError?.Invoke(webRequest.downloadHandler.text);
         }
     }
 
@@ -111,7 +111,7 @@ public class ApiController : MonoBehaviour
         else
         {
             // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(webRequest.error);
+            onError?.Invoke(webRequest.downloadHandler.text);
         }
     }
 
@@ -161,7 +161,7 @@ public class ApiController : MonoBehaviour
     }
 
     // Método que llamas para iniciar la solicitud
-    public void Register(RegisterData registerData, System.Action onSuccess)
+    public void Register(RegisterData registerData, System.Action onSuccess, System.Action<string> onError)
     {
 
         // Convertir el objeto a un string JSON
@@ -174,11 +174,12 @@ public class ApiController : MonoBehaviour
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            onError.Invoke(apiResponse.message);
         }));
     }
 
-    public void Login(LoginData loginData, System.Action onSuccess)
+    public void Login(LoginData loginData, System.Action onSuccess, System.Action<string> onError)
     {
         // Convertir el objeto a un string JSON
         string jsonData = JsonUtility.ToJson(loginData);
@@ -205,7 +206,8 @@ public class ApiController : MonoBehaviour
                     });
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            onError.Invoke(apiResponse.message);
         }));
     }
 
@@ -218,6 +220,7 @@ public class ApiController : MonoBehaviour
         StartCoroutine(PatchRequest(baseUrl + "/users/" + UIController.Instance.UserData.username, jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            Debug.Log(apiResponse?.data.ToString());
             UIController.Instance.UserData = apiResponse?.data;
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>

@@ -197,5 +197,10 @@ public class UIController : MonoBehaviour
         guestUser = true;
         ScreenHandler("Home");
     }
+
+    public void GoBack()
+    {
+        ScreenHandler(previousScreen);
+    }
 }
 
