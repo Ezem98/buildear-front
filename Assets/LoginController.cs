@@ -11,6 +11,7 @@ public class LoginController : MonoBehaviour
 {
     public TMP_InputField UsernameInputField;
     public TMP_InputField PasswordInputField;
+    [SerializeField] private TextMeshProUGUI ErrorMessage;
     [SerializeField] private ApiController ApiController;
     // Start is called before the first frame update
     private string ImageUrl;
@@ -82,7 +83,7 @@ public class LoginController : MonoBehaviour
             {
                 UsernameInputField.text = "";
                 PasswordInputField.text = "";
-            });
+            }, onError: (errorMessage) => { ErrorMessage.text = errorMessage; ErrorMessage.gameObject.SetActive(true); });
         }
     }
 }

@@ -24,6 +24,10 @@ public class FooterManager : MonoBehaviour
     }
     void OnEnable()
     {
-
+        if (UIController.Instance.GuestUser)
+        {
+            buttonDictionary["Profile"].interactable = false;
+            buttonDictionary["Favorites"].interactable = false;
+        }
     }
 }

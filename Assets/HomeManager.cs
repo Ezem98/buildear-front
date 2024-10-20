@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Utilities.Extensions;
 
 
@@ -10,11 +11,20 @@ public class HomeManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI LoadingText;
     [SerializeField] private ModelButtonManager ModelButtonManager;
     [SerializeField] private ApiController ApiController;
+    [SerializeField] private Button ViewAllButton;
     // Start is called before the first frame update
     private void OnEnable()
     {
         if (UIController.Instance.MyModelsData != null)
             CreateButtons();
+
+        if (UIController.Instance.GuestUser)
+        {
+
+            LoadingText.text = "Para ver tus modelos en construcción, necesitas ser usuario de BuildeAR ¡Registrate!";
+            LoadingText.SetActive(true);
+            ViewAllButton.interactable = false;
+        }
     }
 
     private void OnDisable()

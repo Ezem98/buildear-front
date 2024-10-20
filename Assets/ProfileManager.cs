@@ -8,6 +8,7 @@ public class ProfileManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI FullNameText;
     [SerializeField] private TextMeshProUGUI EmailText;
+    [SerializeField] private TextMeshProUGUI CompleteProfileText;
     [SerializeField] private Image ProfileImage;
     [SerializeField] private ApiController ApiController;
     // Start is called before the first frame update
