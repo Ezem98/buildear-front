@@ -1,7 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -10,6 +10,7 @@ public class BuildController : MonoBehaviour
     [SerializeField] public GameObject GuideResponse;
     [SerializeField] public GameObject LoadingModal;
     [SerializeField] public GameObject ChatButton;
+    [SerializeField] public GameObject ChatModal;
     [SerializeField] public TextMeshProUGUI StepTitle;
     [SerializeField] public TextMeshProUGUI StepDescription;
     [SerializeField] public TextMeshProUGUI StepCount;
@@ -95,5 +96,28 @@ public class BuildController : MonoBehaviour
         StepCount.text = "Paso " + CurrentStep.paso + "/" + Guide.pasos.Count;
     }
 
+    public void StartChat()
+    {
+        if (Guide != null)
+            HandleChatModal(true);
+        else
+        {
+            LoadingModal.GetComponentInChildren<TextMeshProUGUI>().text = "Para iniciar el chat es necesario generar la guía.";
+            LoadingModal.SetActive(true);
+            StartCoroutine(PassiveMe(5));
+        }
+    }
+
+    public void HandleChatModal(bool IsOpen)
+    {
+        ChatModal.SetActive(IsOpen);
+    }
+
+    IEnumerator PassiveMe(int secs)
+    {
+        yield return new WaitForSeconds(secs);
+        LoadingModal.SetActive(false);
+
+    }
 
 }
