@@ -14,12 +14,6 @@ public class ActionManager : MonoBehaviour
     public event Action OnAceptAction;
     public event Action OnMoveAction;
     public event Action OnCancelAction;
-    public event Action OnScaleRightAction;
-    public event Action OnDownScaleRightAction;
-    public event Action OnScaleLeftAction;
-    public event Action OnDownScaleLeftAction;
-    public event Action OnScaleUpAction;
-    public event Action OnDownScaleUpAction;
     public event Action OnCopyObject;
     public event Action OnDestroyObject;
     public event Action OnHideCanvas;
@@ -27,6 +21,12 @@ public class ActionManager : MonoBehaviour
     public event Action OnMoveLeftAction;
     public event Action OnMoveBackAction;
     public event Action OnMoveForwardAction;
+    public event Action OnChatAction;
+
+    public void ChatAction()
+    {
+        OnChatAction?.Invoke();
+    }
 
     public void RotateAction()
     {
@@ -80,31 +80,6 @@ public class ActionManager : MonoBehaviour
     {
         OnCancelAction?.Invoke();
     }
-
-    public void ScaleRightAction()
-    {
-        OnScaleRightAction?.Invoke();
-    }
-    public void DownScaleRightAction()
-    {
-        OnDownScaleRightAction?.Invoke();
-    }
-    public void ScaleLeftAction()
-    {
-        OnScaleLeftAction?.Invoke();
-    }
-    public void DownScaleLeftAction()
-    {
-        OnDownScaleLeftAction?.Invoke();
-    }
-    public void ScaleUpAction()
-    {
-        OnScaleUpAction?.Invoke();
-    }
-    public void DownScaleUpAction()
-    {
-        OnDownScaleUpAction?.Invoke();
-    }
     public void CopyObject()
     {
         OnCopyObject?.Invoke();
@@ -119,11 +94,4 @@ public class ActionManager : MonoBehaviour
     {
         OnHideCanvas?.Invoke();
     }
-
-    void Start()
-    {
-
-    }
-
-
 }
