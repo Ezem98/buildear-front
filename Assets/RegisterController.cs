@@ -8,6 +8,8 @@ public class RegisterController : MonoBehaviour
     public TMP_InputField UsernameInputField;
     public TMP_InputField PasswordInputField;
     public TMP_InputField EmailInputField;
+    [SerializeField] private TextMeshProUGUI ErrorMessage;
+
     [SerializeField] private ApiController ApiController;
 
     public void TryToRegister()
@@ -29,7 +31,7 @@ public class RegisterController : MonoBehaviour
                 UsernameInputField.text = "";
                 EmailInputField.text = "";
                 PasswordInputField.text = "";
-            });
+            }, onError: (errorMessage) => { Debug.Log(errorMessage); ErrorMessage.text = errorMessage; ErrorMessage.gameObject.SetActive(true); });
         }
     }
 }

@@ -1,8 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
-using System.Threading;
-using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
@@ -11,10 +8,12 @@ using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 public class UIController : MonoBehaviour
 {
     private bool loggedIn = false;
+    private bool guestUser = false;
     private string currentScreen = "Onboarding";
     private string previousScreen = "Onboarding";
     private int currentModelIndex;
     private int currentCategoryIndex;
+    private ModelData modelData;
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
     public int CurrentCategoryIndex { get => currentCategoryIndex; set => currentCategoryIndex = value; }
     public List<ModelData> ModelsData { get; set; }
@@ -22,8 +21,10 @@ public class UIController : MonoBehaviour
     public List<ModelData> FavoritesModelsData { get; set; }
     public List<ModelData> SearchModelsData { get; set; }
     public UserData UserData { get; set; }
+    public ModelData ModelData { get; set; }
     public bool ComesFromSearch { get; set; }
     public bool LoggedIn { get => loggedIn; set => loggedIn = value; }
+    public bool GuestUser { get => guestUser; set => guestUser = value; }
     public string CurrentScreen { get => currentScreen; set => currentScreen = value; }
     public string PreviousScreen { get => previousScreen; set => previousScreen = value; }
 
@@ -36,6 +37,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject models;
     [SerializeField] private GameObject model;
     [SerializeField] private GameObject profile;
+    [SerializeField] private GameObject myData;
     [SerializeField] private GameObject favorites;
     [SerializeField] private GameObject footer;
     [SerializeField] private GameObject header;
@@ -78,6 +80,7 @@ public class UIController : MonoBehaviour
                 {"Models", models},
                 {"Model", model},
                 {"Profile", profile},
+                {"MyData", myData},
                 {"Favorites", favorites}
             };
 
@@ -90,6 +93,7 @@ public class UIController : MonoBehaviour
                 {"Models", true},
                 {"Model", false},
                 {"Profile", true},
+                {"MyData", true},
                 {"Favorites", true}
             };
 
@@ -102,6 +106,7 @@ public class UIController : MonoBehaviour
                 {"Models", true},
                 {"Model", false},
                 {"Profile", false},
+                {"MyData", false},
                 {"Favorites", false}
             };
 
@@ -185,6 +190,17 @@ public class UIController : MonoBehaviour
     {
         currentCategoryIndex = categoryIndex;
         ScreenHandler("Models");
+    }
+
+    public void JoinAsGuest()
+    {
+        guestUser = true;
+        ScreenHandler("Home");
+    }
+
+    public void GoBack()
+    {
+        ScreenHandler(previousScreen);
     }
 }
 

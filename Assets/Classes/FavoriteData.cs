@@ -1,5 +1,3 @@
-using Newtonsoft.Json;
-
 [System.Serializable]
 public class FavoriteData
 {

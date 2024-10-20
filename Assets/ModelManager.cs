@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR.ARSubsystems;
 using Utilities.Extensions;
 
 public class ModelManager : MonoBehaviour
@@ -15,15 +13,21 @@ public class ModelManager : MonoBehaviour
     [SerializeField] private Button FavoriteButton;
     [SerializeField] private ApiController ApiController;
     private bool IsFav { get; set; }
-    private Dictionary<string, PlaneDetectionMode> detectionModeDictionary;
 
     // Start is called before the first frame update
     void OnEnable()
     {
-        Debug.Log(UIController.Instance.PreviousScreen);
+        if (UIController.Instance.GuestUser)
+            FavoriteButton.interactable = false;
+
         int modelId = UIController.Instance.CurrentModelIndex;
-        ModelData model = null;
-        if (UIController.Instance.PreviousScreen == "Home")
+        ModelData model = UIController.Instance.ModelData;
+        model = null;
+        if (UIController.Instance.SearchModelsData != null)
+        {
+            model = UIController.Instance.SearchModelsData.Find(m => m.id == modelId);
+        }
+        else if (UIController.Instance.PreviousScreen == "Home")
         {
             model = UIController.Instance.MyModelsData.Find(m => m.id == modelId);
         }
@@ -42,7 +46,6 @@ public class ModelManager : MonoBehaviour
         {
             TitleText.text = model.name;
             DescriptionText.text = model.description;
-            BuildController.Instance.ARPlaneManager.requestedDetectionMode = detectionModeDictionary[model.position];
             if (ApiController)
             {
                 ApiController.GetModelsUnderBuild(model.id.ToString(), onSuccess: (modelsData) =>
@@ -78,14 +81,8 @@ public class ModelManager : MonoBehaviour
                 }
             });
         }
-    }
 
-    private void Awake()
-    {
-        detectionModeDictionary = new() {
-            { "horizontal", PlaneDetectionMode.Horizontal },
-            { "vertical", PlaneDetectionMode.Vertical },
-        };
+        UIController.Instance.ModelData = model;
     }
 
     public void ToggleFavorite()

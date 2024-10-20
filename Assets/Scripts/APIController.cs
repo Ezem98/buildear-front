@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
-    //private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
     private readonly string baseUrl = "http://localhost:1234";
 
@@ -27,7 +27,7 @@ public class ApiController : MonoBehaviour
             else
             {
                 // Invocar el callback de error con el mensaje de error
-                onError?.Invoke(webRequest.error);
+                onError?.Invoke(webRequest.downloadHandler.text);
             }
         }
     }
@@ -47,7 +47,7 @@ public class ApiController : MonoBehaviour
             else
             {
                 // Invocar el callback de error con el mensaje de error
-                onError?.Invoke($"Error: {webRequest.error}");
+                onError?.Invoke(webRequest.downloadHandler.text);
             }
         }
     }
@@ -79,9 +79,42 @@ public class ApiController : MonoBehaviour
         else
         {
             // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(webRequest.error);
+            onError?.Invoke(webRequest.downloadHandler.text);
         }
     }
+
+    // Método para realizar el PUT
+    IEnumerator PatchRequest(string url, string jsonData, System.Action<string> onSuccess, System.Action<string> onError)
+    {
+        // Crear la solicitud PUT
+        UnityWebRequest webRequest = new UnityWebRequest(url, "PATCH");
+
+        // Convertir los datos a un formato de JSON o similar
+        byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(jsonData);
+
+        // Asignar los datos a la solicitud
+        webRequest.uploadHandler = new UploadHandlerRaw(jsonToSend);
+        webRequest.downloadHandler = new DownloadHandlerBuffer();
+
+        // Definir el tipo de contenido (importante para APIs que reciben JSON)
+        webRequest.SetRequestHeader("Content-Type", "application/json");
+
+        // Enviar la solicitud y esperar respuesta
+        yield return webRequest.SendWebRequest();
+
+        // Manejo de errores
+        if (webRequest.result == UnityWebRequest.Result.Success)
+        {
+            // Invocar el callback de éxito con la respuesta
+            onSuccess?.Invoke(webRequest.downloadHandler.text);
+        }
+        else
+        {
+            // Invocar el callback de error con el mensaje de error
+            onError?.Invoke(webRequest.downloadHandler.text);
+        }
+    }
+
 
     IEnumerator DownloadImage(string url, System.Action<UnityWebRequest> onSuccess, System.Action<string> onError)
     {
@@ -128,7 +161,7 @@ public class ApiController : MonoBehaviour
     }
 
     // Método que llamas para iniciar la solicitud
-    public void Register(RegisterData registerData, System.Action onSuccess)
+    public void Register(RegisterData registerData, System.Action onSuccess, System.Action<string> onError)
     {
 
         // Convertir el objeto a un string JSON
@@ -141,11 +174,12 @@ public class ApiController : MonoBehaviour
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            onError.Invoke(apiResponse.message);
         }));
     }
 
-    public void Login(LoginData loginData, System.Action onSuccess)
+    public void Login(LoginData loginData, System.Action onSuccess, System.Action<string> onError)
     {
         // Convertir el objeto a un string JSON
         string jsonData = JsonUtility.ToJson(loginData);
@@ -153,21 +187,42 @@ public class ApiController : MonoBehaviour
         StartCoroutine(PostRequest(baseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
-            if (apiResponse.successfully == false)
+            if (apiResponse.data == null)
             {
                 Debug.Log("Usuario o contraseña incorrectos");
                 return;
             }
             UIController.Instance.UserData = apiResponse.data;
             UIController.Instance.LoggedIn = true;
-            GetModelsByUserId(apiResponse.data.id, onSuccess: (modelData) =>
-                {
-                    UIController.Instance.ScreenHandler("Home");
-                    onSuccess?.Invoke();
-                }, onError: (error) =>
-                {
-                    Debug.Log(error);
-                });
+            if (UIController.Instance.UserData.completed_profile == (int)CompletedProfile.Incomplete)
+                UIController.Instance.ScreenHandler("Profile");
+            else GetModelsByUserId(apiResponse.data.id, onSuccess: (modelData) =>
+                    {
+                        UIController.Instance.ScreenHandler("Home");
+                        onSuccess?.Invoke();
+                    }, onError: (error) =>
+                    {
+                        Debug.Log(error);
+                    });
+        }, onError: (jsonResponse) =>
+        {
+            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            onError.Invoke(apiResponse.message);
+        }));
+    }
+
+    public void UpdateUserData(UpdateUserData updateUserData, System.Action onSuccess)
+    {
+
+        // Convertir el objeto a un string JSON
+        string jsonData = JsonUtility.ToJson(updateUserData);
+
+        StartCoroutine(PatchRequest(baseUrl + "/users/" + UIController.Instance.UserData.username, jsonData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            Debug.Log(apiResponse?.data.ToString());
+            UIController.Instance.UserData = apiResponse?.data;
+            onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
@@ -212,6 +267,13 @@ public class ApiController : MonoBehaviour
                 return;
             }
 
+            int EXPERIENCE_LEVEL = 1;
+
+            if (UIController.Instance.UserData != null)
+                EXPERIENCE_LEVEL = (int)UIController.Instance.UserData.experience_level;
+            else
+                EXPERIENCE_LEVEL = (int)ExperienceLevel.Intermediate;
+
             TutorialData tutorialData = new()
             {
                 modelCategory = (Categories)model.category_id,
@@ -221,7 +283,7 @@ public class ApiController : MonoBehaviour
                     height = model.height,
                     width = model.width,
                 },
-                experienceLevel = UIController.Instance.UserData.experience_level
+                experienceLevel = EXPERIENCE_LEVEL,
             };
             // Convertir el objeto a un string JSONa
             string jsonData = JsonUtility.ToJson(tutorialData);
@@ -249,13 +311,14 @@ public class ApiController : MonoBehaviour
                     current_step = 1
                 };
 
-                CreateUserModel(userModelData, onSuccess: (userModelData) =>
-                {
-                    Debug.Log("UserModel creado");
-                }, onError: (error) =>
-                {
-                    Debug.Log(error);
-                });
+                if (!UIController.Instance.GuestUser)
+                    CreateUserModel(userModelData, onSuccess: (userModelData) =>
+                    {
+                        Debug.Log("UserModel creado");
+                    }, onError: (error) =>
+                    {
+                        Debug.Log(error);
+                    });
 
             }, onError: (jsonResponse) =>
             {
