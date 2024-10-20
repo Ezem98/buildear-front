@@ -4,15 +4,8 @@ using UnityEngine;
 
 public class LineManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public LineRenderer lineRenderer;
+    void DrawLine(){
 
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
