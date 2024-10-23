@@ -1,8 +1,7 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MyDataManager : MonoBehaviour
 {
@@ -12,12 +11,22 @@ public class MyDataManager : MonoBehaviour
     [SerializeField] private TMP_InputField EmailText;
     [SerializeField] private TMP_InputField PasswordText;
     [SerializeField] private TMP_InputField NewPasswordText;
+    [SerializeField] private Slider Slider;
+    [SerializeField] private TextMeshProUGUI SliderValueText;
     [SerializeField] private ApiController ApiController;
+    private readonly Dictionary<int, string> experienceLevelDictionary = new(){
+        { 0, "Selecciona tu nivel de experiencia aproximado para continuar" },
+        { 1, "Principiante" },
+        { 2, "Intermedio" },
+        { 3, "Avanzado" },
+    };
+    private int experienceLevel = 0;
 
     // Start is called before the first frame update
     private void Start()
     {
         SetUserData();
+        Slider.onValueChanged.AddListener(HandleSliderValueChange);
     }
 
     private void SetUserData()
@@ -27,6 +36,10 @@ public class MyDataManager : MonoBehaviour
         SurnameText.text = userData.surname;
         UsernameText.text = userData.username;
         EmailText.text = userData.email;
+        Debug.Log("userData.experience_level: " + userData.experience_level);
+        experienceLevel = userData.experience_level;
+        SliderValueText.text = experienceLevelDictionary[experienceLevel];
+        Slider.value = experienceLevel;
     }
 
     public void TryUpdateUserInfo()
@@ -39,13 +52,19 @@ public class MyDataManager : MonoBehaviour
                 email = EmailText.text.ToLower(),
                 password = PasswordText.text,
                 newPassword = NewPasswordText.text,
-                experience_level = UIController.Instance.UserData.experience_level,
-                completed_profile = UIController.Instance.UserData.completed_profile,
+                experience_level = experienceLevel,
+                completed_profile = experienceLevel != 0 ? (int)CompletedProfile.Complete : UIController.Instance.UserData.completed_profile,
             };
             ApiController.UpdateUserData(updateUserData, onSuccess: () =>
             {
                 UIController.Instance.ScreenHandler("Profile");
             });
         }
+    }
+
+    public void HandleSliderValueChange(float value)
+    {
+        SliderValueText.text = experienceLevelDictionary[(int)value];
+        experienceLevel = (int)value;
     }
 }
