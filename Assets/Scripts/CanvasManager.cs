@@ -58,7 +58,6 @@ public class CanvasManager : MonoBehaviour
         ActionManager.OnMoveBackAction += MoveBackAction;
         ActionManager.OnMoveForwardAction += MoveForwardAction;
         ActionManager.OnHideCanvas += HideCanvas;
-        ActionManager.OnScaleRightAction += ScaleRight;
     }
 
     public void ActivateModelCanvas()

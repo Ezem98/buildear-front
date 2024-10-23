@@ -10,6 +10,13 @@ public class BuildController : MonoBehaviour
     [SerializeField] public GameObject GuideResponse;
     [SerializeField] public GameObject LoadingModal;
     [SerializeField] public GameObject ChatButton;
+    [SerializeField] public GameObject RulerManager;
+    [SerializeField] public GameObject RulerPlaceButton;
+    [SerializeField] public GameObject BackToSpawnModeButton;
+    [SerializeField] public GameObject Gyroscope;
+    [SerializeField] public GameObject ToolbarButton;
+    [SerializeField] public GameObject ObjectSpawner;
+    [SerializeField] public GameObject CameraPivot;
     [SerializeField] public TextMeshProUGUI StepTitle;
     [SerializeField] public TextMeshProUGUI StepDescription;
     [SerializeField] public TextMeshProUGUI StepCount;
@@ -18,6 +25,7 @@ public class BuildController : MonoBehaviour
         { "horizontal", PlaneDetectionMode.Horizontal },
         { "vertical", PlaneDetectionMode.Vertical },
     };
+    private PlaneDetectionMode previousDetectionMode;
 
     public Guide Guide { get; set; }
     public Paso CurrentStep { get; set; }
@@ -31,9 +39,22 @@ public class BuildController : MonoBehaviour
         // GameObject.Find("XR Origin (AR Rig)").SetActive(false);
     }
 
+    public void BackToSpawnMode()
+    {
+        RulerManager.SetActive(false);
+        RulerPlaceButton.SetActive(false);
+        BackToSpawnModeButton.SetActive(false);
+        CameraPivot.SetActive(false);
+        Gyroscope.SetActive(false);
+        ARPlaneManager.requestedDetectionMode = previousDetectionMode;
+        ObjectSpawner.SetActive(true);
+        ToolbarButton.SetActive(true);
+    }
+
     private void Awake()
     {
         ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+        previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
 
         if (_instance != null)
         {
@@ -95,5 +116,23 @@ public class BuildController : MonoBehaviour
         StepCount.text = "Paso " + CurrentStep.paso + "/" + Guide.pasos.Count;
     }
 
+    public void RulerAction()
+    {
+        RulerPlaceButton.SetActive(true);
+        RulerManager.SetActive(true);
+        BackToSpawnModeButton.SetActive(true);
+        CameraPivot.SetActive(true);
+        ObjectSpawner.SetActive(false);
+        ToolbarButton.SetActive(false);
+        ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
+        ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
+        UIAnimation.Instance.FadeOut();
+    }
+    public void GyroscopeAction()
+    {
+        Gyroscope.SetActive(true);
+        ToolbarButton.SetActive(false);
+        UIAnimation.Instance.FadeOut();
+    }
 
 }
