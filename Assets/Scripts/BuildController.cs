@@ -13,6 +13,8 @@ public class BuildController : MonoBehaviour
     [SerializeField] public GameObject RulerManager;
     [SerializeField] public GameObject RulerPlaceButton;
     [SerializeField] public GameObject BackToSpawnModeButton;
+    [SerializeField] public GameObject Gyroscope;
+    [SerializeField] public GameObject ToolbarButton;
     [SerializeField] public GameObject ObjectSpawner;
     [SerializeField] public GameObject CameraPivot;
     [SerializeField] public TextMeshProUGUI StepTitle;
@@ -43,8 +45,10 @@ public class BuildController : MonoBehaviour
         RulerPlaceButton.SetActive(false);
         BackToSpawnModeButton.SetActive(false);
         CameraPivot.SetActive(false);
+        Gyroscope.SetActive(false);
         ARPlaneManager.requestedDetectionMode = previousDetectionMode;
         ObjectSpawner.SetActive(true);
+        ToolbarButton.SetActive(true);
     }
 
     private void Awake()
@@ -119,8 +123,15 @@ public class BuildController : MonoBehaviour
         BackToSpawnModeButton.SetActive(true);
         CameraPivot.SetActive(true);
         ObjectSpawner.SetActive(false);
+        ToolbarButton.SetActive(false);
         ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
         ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
+        UIAnimation.Instance.FadeOut();
+    }
+    public void GyroscopeAction()
+    {
+        Gyroscope.SetActive(true);
+        ToolbarButton.SetActive(false);
         UIAnimation.Instance.FadeOut();
     }
 

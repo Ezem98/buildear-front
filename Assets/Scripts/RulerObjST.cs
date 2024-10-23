@@ -39,7 +39,6 @@ public class RulerObjST : MonoBehaviour
 
     public void ToggleDelete()
     {
-        Debug.Log("ToggleDelete");
         _deleteButton.gameObject.SetActive(!_deleteButton.gameObject.activeSelf);
     }
 
