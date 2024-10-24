@@ -141,8 +141,8 @@ public class BuildController : MonoBehaviour
         CameraPivot.SetActive(true);
         ObjectSpawner.SetActive(false);
         ToolbarButton.SetActive(false);
-        ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
-        ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
+        //ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
+        //ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
         UIAnimation.Instance.FadeOut();
     }
     public void GyroscopeAction()

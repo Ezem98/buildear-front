@@ -27,7 +27,7 @@ public class RulerManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (m_RaycastManager.Raycast(_centerVec, s_Hits, TrackableType.PlaneWithinPolygon))
+        if (m_RaycastManager.Raycast(_centerVec, s_Hits, TrackableType.AllTypes))
         {
 
             var hitPose = s_Hits[0].pose;

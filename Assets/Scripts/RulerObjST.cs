@@ -30,7 +30,7 @@ public class RulerObjST : MonoBehaviour
         Vector3 tVec = _objList[1].position - _objList[0].position;
         _textObj.position = _objList[0].position + tVec * 0.5f;
 
-        float tDis = tVec.magnitude * 10;
+        float tDis = tVec.magnitude * 100;
         string tDisText = string.Format("{0}cm", tDis.ToString("N2"));
         _text.text = tDisText;
 

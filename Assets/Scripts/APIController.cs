@@ -7,9 +7,9 @@ using System.Collections.Generic;
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
-    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+    private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
-    private readonly string baseUrl = "http://localhost:1234";
+    //private readonly string baseUrl = "http://localhost:1234";
 
     // Método para realizar el GET
     IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
