@@ -349,7 +349,6 @@ public class ARTemplateMenuManager : MonoBehaviour
             // Verificar si el clic fue sobre un elemento de la UI
             if (EventSystem.current.IsPointerOverGameObject())
             {
-                Debug.Log("Clic sobre UI, no ocultar el menú");
                 return;
             }
 

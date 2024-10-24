@@ -25,15 +25,8 @@ public class GyroscopeManager : MonoBehaviour
             gyro = Input.gyro;
             gyro.enabled = true;
         }
-        Debug.Log(" - GYROSCOPE - " + SystemInfo.supportsGyroscope);
-
-        // if (gyroSupported)
-        // {
-        //               // do stuff
-        //     yield break;
-        // }
     }
-    
+
     // Update is called once per frame
     void Update()
     {

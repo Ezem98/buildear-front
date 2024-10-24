@@ -13,10 +13,10 @@ public class UIController : MonoBehaviour
     private string previousScreen = "Onboarding";
     private int currentModelIndex;
     private int currentCategoryIndex;
-    private ModelData modelData;
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
     public int CurrentCategoryIndex { get => currentCategoryIndex; set => currentCategoryIndex = value; }
     public List<ModelData> ModelsData { get; set; }
+    public UserModelData UserModelData { get; set; }
     public List<ModelData> MyModelsData { get; set; }
     public List<ModelData> FavoritesModelsData { get; set; }
     public List<ModelData> SearchModelsData { get; set; }

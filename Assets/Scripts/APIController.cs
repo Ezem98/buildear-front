@@ -220,7 +220,6 @@ public class ApiController : MonoBehaviour
         StartCoroutine(PatchRequest(baseUrl + "/users/" + UIController.Instance.UserData.username, jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
-            Debug.Log(apiResponse?.data.ToString());
             UIController.Instance.UserData = apiResponse?.data;
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
@@ -246,7 +245,6 @@ public class ApiController : MonoBehaviour
         }
         else if (UIController.Instance.PreviousScreen == "Favorites")
         {
-            Debug.Log("FavoritesModelsData: " + UIController.Instance.FavoritesModelsData.Count);
             model = UIController.Instance.FavoritesModelsData.Find(x => x.id == modelId);
         }
 
@@ -256,21 +254,27 @@ public class ApiController : MonoBehaviour
         {
             if (userModelData != null)
             {
+                UIController.Instance.UserModelData = userModelData;
+
                 BuildController.Instance.Guide = userModelData.guideObject;
                 BuildController.Instance.CurrentStep = userModelData.guideObject.pasos[userModelData.current_step];
                 BuildController.Instance.LoadingModal.SetActive(false);
                 BuildController.Instance.GuideResponse.SetActive(true);
-                BuildController.Instance.ChatButton.SetActive(true);
                 BuildController.Instance.StepTitle.text = userModelData.guideObject.pasos[userModelData.current_step].titulo;
                 BuildController.Instance.StepDescription.text = userModelData.guideObject.pasos[userModelData.current_step].descripcion;
                 BuildController.Instance.StepCount.text = "Paso " + (userModelData.current_step + 1) + "/" + userModelData.guideObject.pasos.Count;
+                BuildController.Instance.MaterialListButton.interactable = true;
+                BuildController.Instance.GuideButton.interactable = true;
+                BuildController.Instance.FinishButton.interactable = true;
+                BuildController.Instance.CostText.text = $"{BuildController.Instance.Guide.costo} USD";
+                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.Guide.tiempo_insumido)}";
                 return;
             }
 
             int EXPERIENCE_LEVEL = 1;
 
             if (UIController.Instance.UserData != null)
-                EXPERIENCE_LEVEL = (int)UIController.Instance.UserData.experience_level;
+                EXPERIENCE_LEVEL = UIController.Instance.UserData.experience_level;
             else
                 EXPERIENCE_LEVEL = (int)ExperienceLevel.Intermediate;
 
@@ -297,21 +301,26 @@ public class ApiController : MonoBehaviour
 
                 BuildController.Instance.LoadingModal.SetActive(false);
                 BuildController.Instance.GuideResponse.SetActive(true);
-                BuildController.Instance.ChatButton.SetActive(true);
                 BuildController.Instance.StepTitle.text = apiResponse.data.pasos[0].titulo;
                 BuildController.Instance.StepDescription.text = apiResponse.data.pasos[0].descripcion;
                 BuildController.Instance.StepCount.text = "Paso 1/" + apiResponse.data.pasos.Count;
+                BuildController.Instance.MaterialListButton.interactable = true;
+                BuildController.Instance.GuideButton.interactable = true;
+                BuildController.Instance.FinishButton.interactable = true;
+                BuildController.Instance.CostText.text = BuildController.Instance.Guide.costo.ToString();
+                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.Guide.tiempo_insumido)}";
 
                 UserModelData userModelData = new()
                 {
                     user_id = UIController.Instance.UserData.id,
                     model_id = UIController.Instance.CurrentModelIndex,
                     guideObject = BuildController.Instance.Guide,
-                    completed = false,
+                    completed = (int)CompletedProfile.Incomplete,
                     current_step = 1
                 };
 
-                if (!UIController.Instance.GuestUser)
+                if (UIController.Instance.GuestUser == false)
+                {
                     CreateUserModel(userModelData, onSuccess: (userModelData) =>
                     {
                         Debug.Log("UserModel creado");
@@ -319,6 +328,7 @@ public class ApiController : MonoBehaviour
                     {
                         Debug.Log(error);
                     });
+                }
 
             }, onError: (jsonResponse) =>
             {
@@ -397,12 +407,10 @@ public class ApiController : MonoBehaviour
         // string jsonGuide = JsonUtility.ToJson(userModelData.guide);
         string jsonData = JsonUtility.ToJson(userModelData);
 
-        Debug.Log(jsonData.ToString());
-
         StartCoroutine(PostRequest(baseUrl + "/userModels", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserModelData> apiResponse = JsonUtility.FromJson<APIResponse<UserModelData>>(jsonResponse);
-            Debug.Log(apiResponse.data);
+            UIController.Instance.UserModelData = apiResponse?.data;
             onSuccess?.Invoke(apiResponse.data);
         }, onError: (jsonResponse) =>
         {
@@ -411,15 +419,30 @@ public class ApiController : MonoBehaviour
         }));
     }
 
+    public void UpdateUserModelData(UpdateUserModelData updateUserModelData, System.Action onSuccess)
+    {
+
+        // Convertir el objeto a un string JSON
+        string jsonData = JsonUtility.ToJson(updateUserModelData);
+
+        StartCoroutine(PatchRequest(baseUrl + "/userModels/" + UIController.Instance.UserModelData.id, jsonData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<UserModelData> apiResponse = JsonUtility.FromJson<APIResponse<UserModelData>>(jsonResponse);
+            UIController.Instance.UserModelData = apiResponse?.data;
+            onSuccess?.Invoke();
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+        }));
+    }
+
     public void SearchModels(string search)
     {
         StartCoroutine(GetRequest(baseUrl + "/models/search/" + search, onSuccess: (jsonResponse) =>
         {
             UIController.Instance.SearchModelsData?.Clear();
-            Debug.Log("Clear: " + UIController.Instance.SearchModelsData?.Count);
             APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
             UIController.Instance.SearchModelsData = apiResponse?.data;
-            Debug.Log("SearchModelsData: " + UIController.Instance.SearchModelsData.Count);
             UIController.Instance.ComesFromSearch = true;
             UIController.Instance.ScreenHandler("Models");
             // Deserializar la cadena JSON dentro del campo 'guide'
@@ -465,8 +488,6 @@ public class ApiController : MonoBehaviour
         // string jsonGuide = JsonUtility.ToJson(userModelData.guide);
         string jsonData = JsonUtility.ToJson(favoriteData);
 
-        Debug.Log(jsonData.ToString());
-
         StartCoroutine(PostRequest(baseUrl + "/favorites", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<FavoriteData> apiResponse = JsonUtility.FromJson<APIResponse<FavoriteData>>(jsonResponse);
@@ -492,7 +513,6 @@ public class ApiController : MonoBehaviour
 
     public void IsFavorite(FavoriteData favoriteData, System.Action<bool> onSuccess, System.Action<string> onError)
     {
-        Debug.Log(favoriteData.user_id + " " + favoriteData.model_id);
         StartCoroutine(GetRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
         {
             bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
@@ -509,7 +529,6 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/auth/google", onSuccess: (jsonResponse) =>
         {
-            Debug.Log("Salio bien ");
             // bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
             // onSuccess?.Invoke(apiResponse);
             // Deserializar la cadena JSON dentro del campo 'guide'

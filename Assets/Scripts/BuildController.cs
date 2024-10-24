@@ -2,25 +2,33 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
 public class BuildController : MonoBehaviour
 {
-    [SerializeField] public GameObject GuideResponse;
-    [SerializeField] public GameObject LoadingModal;
-    [SerializeField] public GameObject ChatButton;
-    [SerializeField] public GameObject RulerManager;
-    [SerializeField] public GameObject RulerPlaceButton;
-    [SerializeField] public GameObject BackToSpawnModeButton;
-    [SerializeField] public GameObject Gyroscope;
-    [SerializeField] public GameObject ToolbarButton;
-    [SerializeField] public GameObject ObjectSpawner;
-    [SerializeField] public GameObject CameraPivot;
-    [SerializeField] public TextMeshProUGUI StepTitle;
-    [SerializeField] public TextMeshProUGUI StepDescription;
-    [SerializeField] public TextMeshProUGUI StepCount;
-    [SerializeField] public ARPlaneManager ARPlaneManager;
+    public GameObject GuideResponse;
+    public GameObject LoadingModal;
+    public GameObject FinishModal;
+    public GameObject RulerManager;
+    public GameObject RulerPlaceButton;
+    public GameObject BackToSpawnModeButton;
+    public GameObject Gyroscope;
+    public GameObject MaterialList;
+    public Button MaterialListButton;
+    public Button GuideButton;
+    public Button FinishButton;
+    public GameObject ToolbarButton;
+    public GameObject ObjectSpawner;
+    public GameObject CameraPivot;
+    public TextMeshProUGUI StepTitle;
+    public TextMeshProUGUI StepDescription;
+    public TextMeshProUGUI StepCount;
+    public TextMeshProUGUI CostText;
+    public TextMeshProUGUI TimeText;
+    public ARPlaneManager ARPlaneManager;
+    public ApiController ApiController;
     private readonly Dictionary<string, PlaneDetectionMode> detectionModeDictionary = new() {
         { "horizontal", PlaneDetectionMode.Horizontal },
         { "vertical", PlaneDetectionMode.Vertical },
@@ -46,6 +54,7 @@ public class BuildController : MonoBehaviour
         BackToSpawnModeButton.SetActive(false);
         CameraPivot.SetActive(false);
         Gyroscope.SetActive(false);
+        MaterialList.SetActive(false);
         ARPlaneManager.requestedDetectionMode = previousDetectionMode;
         ObjectSpawner.SetActive(true);
         ToolbarButton.SetActive(true);
@@ -55,6 +64,13 @@ public class BuildController : MonoBehaviour
     {
         ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
         previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+
+        if (Guide != null)
+        {
+            MaterialListButton.interactable = true;
+            GuideButton.interactable = true;
+            FinishButton.interactable = true;
+        }
 
         if (_instance != null)
         {
@@ -107,6 +123,7 @@ public class BuildController : MonoBehaviour
     public void HandleGuideResponse(bool IsOpen)
     {
         GuideResponse.SetActive(IsOpen);
+        UIAnimation.Instance.FadeOut();
     }
 
     private void UpdateStep()
@@ -133,6 +150,35 @@ public class BuildController : MonoBehaviour
         Gyroscope.SetActive(true);
         ToolbarButton.SetActive(false);
         UIAnimation.Instance.FadeOut();
+    }
+
+    public void MaterialListAction()
+    {
+        MaterialList.SetActive(true);
+        ToolbarButton.SetActive(false);
+        UIAnimation.Instance.FadeOut();
+    }
+
+    public void FinishAction()
+    {
+
+        UpdateUserModelData userModelData = new()
+        {
+            completed = (int)CompletedProfile.Complete,
+            current_step = CurrentStep.paso,
+        };
+        ApiController.UpdateUserModelData(userModelData, () =>
+        {
+            FinishModal.SetActive(true);
+            ToolbarButton.SetActive(false);
+            UIAnimation.Instance.FadeOut();
+        });
+    }
+
+    public void CloseFinishModal()
+    {
+        FinishModal.SetActive(false);
+        ToolbarButton.SetActive(true);
     }
 
 }

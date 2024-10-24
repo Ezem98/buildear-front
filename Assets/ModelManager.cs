@@ -8,6 +8,7 @@ public class ModelManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI TitleText;
     [SerializeField] private TextMeshProUGUI DescriptionText;
     [SerializeField] private TextMeshProUGUI UsersCountText;
+    [SerializeField] private TextMeshProUGUI SizeText;
     [SerializeField] private Image Image;
     [SerializeField] private FavoritesManager FavoritesManager;
     [SerializeField] private Button FavoriteButton;
@@ -33,12 +34,10 @@ public class ModelManager : MonoBehaviour
         }
         else if (UIController.Instance.PreviousScreen == "Models")
         {
-            Debug.Log("ModelsData: " + UIController.Instance.ModelsData?.Count);
             model = UIController.Instance.ModelsData.Find(m => m.id == modelId);
         }
         else if (UIController.Instance.PreviousScreen == "Favorites")
         {
-            Debug.Log("FavoritesModelsData: " + UIController.Instance.FavoritesModelsData.Count);
             model = UIController.Instance.FavoritesModelsData.Find(x => x.id == modelId);
         }
 
@@ -46,6 +45,7 @@ public class ModelManager : MonoBehaviour
         {
             TitleText.text = model.name;
             DescriptionText.text = model.description;
+            SizeText.text = $"{model.width / 100} x {model.height / 100} mts";
             if (ApiController)
             {
                 ApiController.GetModelsUnderBuild(model.id.ToString(), onSuccess: (modelsData) =>

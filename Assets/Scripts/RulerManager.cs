@@ -63,7 +63,6 @@ public class RulerManager : MonoBehaviour
         {
             if (_nowRulerObj == null)
             {
-                Debug.Log(_rulerObj);
                 GameObject tObj = Instantiate(_rulerObj) as GameObject;
                 tObj.transform.SetParent(_rulerPool);
                 tObj.transform.position = Vector3.zero;

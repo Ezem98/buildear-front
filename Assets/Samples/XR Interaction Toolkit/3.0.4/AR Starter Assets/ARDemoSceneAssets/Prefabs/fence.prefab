@@ -740,6 +740,11 @@ PrefabInstance:
       propertyPath: m_PresetInfoIsWorld
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3033872540115849971, guid: cd70d674ad95bc5419577e84be8e3038,
+        type: 3}
+      propertyPath: m_Name
+      value: ChatIcon
+      objectReference: {fileID: 0}
     - target: {fileID: 3177090901179836087, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
       propertyPath: m_LocalScale.x

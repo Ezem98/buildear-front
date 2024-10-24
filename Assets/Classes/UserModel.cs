@@ -6,7 +6,7 @@ public class UserModelData
     public int id;
     public int user_id;
     public int model_id;
-    public bool completed;
+    public int completed;
     public int current_step;
     // Cambiamos 'guide' a string para la primera deserialización
     public string guide;

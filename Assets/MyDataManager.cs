@@ -36,7 +36,6 @@ public class MyDataManager : MonoBehaviour
         SurnameText.text = userData.surname;
         UsernameText.text = userData.username;
         EmailText.text = userData.email;
-        Debug.Log("userData.experience_level: " + userData.experience_level);
         experienceLevel = userData.experience_level;
         SliderValueText.text = experienceLevelDictionary[experienceLevel];
         Slider.value = experienceLevel;
