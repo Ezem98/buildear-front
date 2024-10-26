@@ -3035,7 +3035,8 @@ MonoBehaviour:
   - {fileID: 7120341757781046214, guid: e8624ac54ea0beb43bca34c2ade04c18, type: 3}
   - {fileID: 6233406405702043462, guid: 10510a158c2f0024a8cd2af42bbf50f4, type: 3}
   - {fileID: 6483867353324697693, guid: 6e3d36641b9890349b4ffe69ef0b0405, type: 3}
-  m_ObjectPrefabsIndex: 030000000100000005000000040000000200000006000000
+  - {fileID: 2670507392640162176, guid: 70f5902e96bdfaf4d9474c670e41dd29, type: 3}
+  m_ObjectPrefabsIndex: 03000000010000000500000004000000020000000600000007000000
   m_SpawnVisualizationPrefab: {fileID: 0}
   m_SpawnOptionId: -1
   m_OnlySpawnInView: 1
@@ -4787,12 +4788,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2845b2d743ef2064685cfe79f1921cc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pitchText: {fileID: 0}
-  rollText: {fileID: 0}
-  yawText: {fileID: 0}
-  pitchSlider: {fileID: 0}
-  rollSlider: {fileID: 0}
-  yawSlider: {fileID: 0}
+  pitchText: {fileID: 1602580266}
+  rollText: {fileID: 42994579}
+  yawText: {fileID: 846118574}
+  pitchSlider: {fileID: 787281811}
+  rollSlider: {fileID: 1615566015}
+  yawSlider: {fileID: 573101406}
   tolerance: 2
 --- !u!1 &690328644
 GameObject:
@@ -11139,7 +11140,7 @@ MonoBehaviour:
   m_RepeatRate: 0.1
   m_TrackedDeviceDragThresholdMultiplier: 2
   m_TrackedScrollDeltaMultiplier: 5
-  m_ActiveInputMode: 1
+  m_ActiveInputMode: 2
   m_EnableXRInput: 1
   m_EnableMouseInput: 1
   m_EnableTouchInput: 1

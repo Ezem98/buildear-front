@@ -127,6 +127,12 @@ public class UIController : MonoBehaviour
         SceneManager.sceneLoaded += (scene, mode) => OnSceneLoaded();
     }
 
+    void Update()
+    {
+        if (objectSpawner != null)
+            objectSpawner.objectSpawned += OnObjectSpawned;
+    }
+
     public void ScreenHandler(string newScreenName)
     {
         previousScreen = currentScreen;
@@ -161,7 +167,15 @@ public class UIController : MonoBehaviour
         }
     }
 
-
+    public void OnObjectSpawned(GameObject spawnedObject)
+    {
+        Debug.Log("Objeto spawn: " + spawnedObject.name);
+        if (spawnedObject != null && ModelData?.category_id == (int)Categories.Opening && ModelData?.position == "vertical")
+        {
+            Debug.Log("Rotando objeto");
+            spawnedObject.transform.rotation = Quaternion.Euler(0, 90, 0);
+        }
+    }
 
     public void SceneHandler(string newSceneName)
     {
