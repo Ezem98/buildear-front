@@ -43,8 +43,8 @@ public class BuildController : MonoBehaviour
     public void BackToUI()
     {
         UIController.Instance.SceneHandler("UI");
-        // GameObject.Find("UI").SetActive(false);
-        // GameObject.Find("XR Origin (AR Rig)").SetActive(false);
+        GameObject.Find("UI").SetActive(false);
+        GameObject.Find("XR Origin (AR Rig)").SetActive(false);
     }
 
     public void BackToSpawnMode()

@@ -36,7 +36,7 @@ public class CanvasManager : MonoBehaviour
     private bool isMovingLeft = false;
     private bool isMovingForward = false;
     private bool isMovingBack = false;
-    
+
     public string GetActiveMenu()
     {
         return activeMenu;
@@ -212,12 +212,21 @@ public class CanvasManager : MonoBehaviour
 
     public void CopyObject()
     {
-        Vector3 direction = objectReference.transform.forward;
-        Vector3 newPosition = objectReference.transform.position - direction;
-        //Debug.Log("ActionManager del objectReference: "+ objectReference.GetComponent<ActionManager>());
+        Vector3 newPosition;
+        Vector3 direction;
+        if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
+        {
+            direction = objectReference.transform.up / 2;
+            newPosition = objectReference.transform.position - direction;
+        }
+        else
+        {
+
+            direction = objectReference.transform.forward;
+            newPosition = objectReference.transform.position - direction;
+        }
         objectCopiedReference = Instantiate(objectReference, newPosition, objectReference.transform.rotation);
-        //Debug.Log("ActionManager del objectCopied: "+ objectCopiedReference.GetComponent<ActionManager>());
-        var objectCopiedCanvas = objectCopiedReference.GetComponent<CanvasManager>();
+        CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponent<CanvasManager>();
         HideCanvas();
         objectCopiedCanvas.ActivateModelCanvas();
     }
@@ -225,36 +234,48 @@ public class CanvasManager : MonoBehaviour
     public void MoveRightAction()
     {
         SetMoveFlag("right");
-        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+        if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
+        {
             objectReference.transform.Translate(Vector3.left * Time.deltaTime);
-        }else{
+        }
+        else
+        {
             objectReference.transform.Translate(Vector3.right * Time.deltaTime);
         }
     }
     public void MoveLeftAction()
     {
         SetMoveFlag("left");
-        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+        if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
+        {
             objectReference.transform.Translate(Vector3.right * Time.deltaTime);
-        }else{
+        }
+        else
+        {
             objectReference.transform.Translate(Vector3.left * Time.deltaTime);
         }
     }
     public void MoveBackAction()
     {
         SetMoveFlag("back");
-        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+        if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
+        {
             objectReference.transform.Translate(Vector3.up * Time.deltaTime);
-        }else{
+        }
+        else
+        {
             objectReference.transform.Translate(Vector3.back * Time.deltaTime);
         }
     }
     public void MoveForwardAction()
     {
         SetMoveFlag("forward");
-        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+        if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
+        {
             objectReference.transform.Translate(Vector3.down * Time.deltaTime);
-        }else{
+        }
+        else
+        {
             objectReference.transform.Translate(Vector3.forward * Time.deltaTime);
         }
     }
