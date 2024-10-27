@@ -232,7 +232,7 @@ public class ApiController : MonoBehaviour
     {
         // Crear un objeto con los datos del tutorial
         int modelId = UIController.Instance.CurrentModelIndex;
-        int userId = UIController.Instance.UserData?.id??-1;
+        int userId = UIController.Instance.UserData?.id ?? -1;
 
         ModelData model = null;
         if (UIController.Instance.PreviousScreen == "Home")
@@ -309,17 +309,17 @@ public class ApiController : MonoBehaviour
                 BuildController.Instance.CostText.text = BuildController.Instance.Guide.costo.ToString();
                 BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.Guide.tiempo_insumido)}";
 
-                UserModelData userModelData = new()
-                {
-                    user_id = UIController.Instance.UserData.id,
-                    model_id = UIController.Instance.CurrentModelIndex,
-                    guideObject = BuildController.Instance.Guide,
-                    completed = (int)CompletedProfile.Incomplete,
-                    current_step = 1
-                };
-
                 if (UIController.Instance.GuestUser == false)
                 {
+                    UserModelData userModelData = new()
+                    {
+                        user_id = UIController.Instance.UserData.id,
+                        model_id = UIController.Instance.CurrentModelIndex,
+                        guideObject = BuildController.Instance.Guide,
+                        completed = (int)CompletedProfile.Incomplete,
+                        current_step = 1
+                    };
+
                     CreateUserModel(userModelData, onSuccess: (userModelData) =>
                     {
                         Debug.Log("UserModel creado");
