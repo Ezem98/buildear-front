@@ -67,19 +67,25 @@ public class ModelManager : MonoBehaviour
                 }, onError: (error) => Debug.Log(error));
                 ApiController.GetModelImage(model.model_image, onSuccess: (image) => Image.sprite = image, onError: (error) => Debug.Log(error));
             }
-            IsFavorite(() =>
+            if(UIController.Instance.GuestUser)
             {
-                if (IsFav)
+                FavoriteButton.interactable = false;
+            }else{
+                IsFavorite(() =>
                 {
-                    FavoriteButton.transform.GetChild(0).SetActive(false);
-                    FavoriteButton.transform.GetChild(1).SetActive(true);
-                }
-                else
-                {
-                    FavoriteButton.transform.GetChild(0).SetActive(true);
-                    FavoriteButton.transform.GetChild(1).SetActive(false);
-                }
-            });
+                    FavoriteButton.interactable = true;
+                    if (IsFav)
+                    {
+                        FavoriteButton.transform.GetChild(0).SetActive(false);
+                        FavoriteButton.transform.GetChild(1).SetActive(true);
+                    }
+                    else
+                    {
+                        FavoriteButton.transform.GetChild(0).SetActive(true);
+                        FavoriteButton.transform.GetChild(1).SetActive(false);
+                    }
+                });
+            }
         }
 
         UIController.Instance.ModelData = model;

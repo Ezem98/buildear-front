@@ -232,7 +232,7 @@ public class ApiController : MonoBehaviour
     {
         // Crear un objeto con los datos del tutorial
         int modelId = UIController.Instance.CurrentModelIndex;
-        int userId = UIController.Instance.UserData.id;
+        int userId = UIController.Instance.UserData?.id??-1;
 
         ModelData model = null;
         if (UIController.Instance.PreviousScreen == "Home")
@@ -249,8 +249,7 @@ public class ApiController : MonoBehaviour
         }
 
         BuildController.Instance.LoadingModal.SetActive(true);
-
-        GetUerModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
+        GetUserModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
         {
             if (userModelData != null)
             {
@@ -338,7 +337,6 @@ public class ApiController : MonoBehaviour
         {
             Debug.Log(error);
         });
-
     }
 
     public void GetModelsByCategoryId(int categoryId, System.Action onSuccess)
@@ -382,7 +380,7 @@ public class ApiController : MonoBehaviour
         }));
     }
 
-    public void GetUerModel(string userId, string modelId, System.Action<UserModelData> onSuccess, System.Action<string> onError)
+    public void GetUserModel(string userId, string modelId, System.Action<UserModelData> onSuccess, System.Action<string> onError)
     {
         StartCoroutine(GetRequest(baseUrl + "/userModels/" + userId + "/" + modelId, onSuccess: (jsonResponse) =>
         {

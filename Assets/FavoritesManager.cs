@@ -29,6 +29,7 @@ public class FavoritesManager : MonoBehaviour
     private void OnEnable()
     {
         LoadingText.SetActive(true);
+        if(!UIController.Instance.GuestUser)
         ApiController.GetFavoritesModels(UIController.Instance.UserData.id, onSuccess: (models) =>
         {
             CreateButtons();

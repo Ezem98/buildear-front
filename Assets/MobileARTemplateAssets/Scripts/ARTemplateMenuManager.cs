@@ -9,6 +9,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
+using Utilities.Extensions;
 
 /// <summary>
 /// Handles dismissing the object menu when clicking out the UI bounds, and showing the
@@ -357,14 +358,16 @@ public class ARTemplateMenuManager : MonoBehaviour
             {
                 //Entra si ya hay un objeto spawneado
                 if (m_CurrentInteractable) // Le pegue a un objeto
-                {
+                {   
+                    
                     //Toque el current
                     if (hit.transform.gameObject == m_CurrentInteractable)
                     {
                         if (m_lastObjectInteractable && m_lastObjectInteractable != m_CurrentInteractable)
                         {
                             if (actionsMenuEnabled)
-                            {
+                            {   
+                                UIController.Instance.objectSpawner.SetActive(true);
                                 CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                                 cmLast.HideCanvas();
                                 actionsMenuEnabled = false;
@@ -372,11 +375,13 @@ public class ARTemplateMenuManager : MonoBehaviour
                         }
                         else
                         {
+                            UIController.Instance.objectSpawner.SetActive(true);
                             actionsMenuEnabled = false;
                         }
                         m_lastObjectInteractable = m_CurrentInteractable;
                         if (!actionsMenuEnabled)
                         {
+                            UIController.Instance.objectSpawner.SetActive(false);
                             CanvasManager cmCurrent = m_CurrentInteractable.GetComponent<CanvasManager>();
                             cmCurrent.ActivateModelCanvas();
                             actionsMenuEnabled = true;
@@ -389,6 +394,7 @@ public class ARTemplateMenuManager : MonoBehaviour
                     actionsMenuEnabled = false;
                     if (m_lastObjectInteractable)
                     {
+                        UIController.Instance.objectSpawner.SetActive(true);
                         CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                         cmLast.HideCanvas();
                     }
@@ -401,6 +407,7 @@ public class ARTemplateMenuManager : MonoBehaviour
                 {
                     if (actionsMenuEnabled)
                     {
+                        UIController.Instance.objectSpawner.SetActive(true);
                         CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                         cmLast.HideCanvas();
                         actionsMenuEnabled = false;

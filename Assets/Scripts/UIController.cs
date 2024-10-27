@@ -169,12 +169,15 @@ public class UIController : MonoBehaviour
 
     public void OnObjectSpawned(GameObject spawnedObject)
     {
-        Debug.Log("Objeto spawn: " + spawnedObject.name);
         if (spawnedObject != null && ModelData?.category_id == (int)Categories.Opening && ModelData?.position == "vertical")
         {
-            Debug.Log("Rotando objeto");
             spawnedObject.transform.rotation = Quaternion.Euler(0, 90, 0);
         }
+        else if (spawnedObject != null && ModelData?.category_id == (int)Categories.Floor){
+            spawnedObject.transform.rotation = Quaternion.Euler(-90, 90, 0);
+            spawnedObject.transform.position = new Vector3(spawnedObject.transform.position.x,0.01f, spawnedObject.transform.position.z);
+        }
+
     }
 
     public void SceneHandler(string newSceneName)

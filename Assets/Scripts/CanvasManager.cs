@@ -8,6 +8,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using OpenAI;
 using OpenAI.Threads;
 using System.Linq;
+using Utilities.Extensions;
 
 
 public class CanvasManager : MonoBehaviour
@@ -35,6 +36,7 @@ public class CanvasManager : MonoBehaviour
     private bool isMovingLeft = false;
     private bool isMovingForward = false;
     private bool isMovingBack = false;
+    
     public string GetActiveMenu()
     {
         return activeMenu;
@@ -103,7 +105,7 @@ public class CanvasManager : MonoBehaviour
         modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        activeMenu = menu[2]; // rotateActions
+        activeMenu = menu[1]; // rotateActions
     }
 
     public void ActivateMoveCanvas()
@@ -123,7 +125,7 @@ public class CanvasManager : MonoBehaviour
         modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        activeMenu = menu[3]; // moveActions
+        activeMenu = menu[2]; // moveActions
     }
 
     public void HideCanvas()
@@ -223,22 +225,38 @@ public class CanvasManager : MonoBehaviour
     public void MoveRightAction()
     {
         SetMoveFlag("right");
-        objectReference.transform.Translate(Vector3.right * Time.deltaTime);
+        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+            objectReference.transform.Translate(Vector3.left * Time.deltaTime);
+        }else{
+            objectReference.transform.Translate(Vector3.right * Time.deltaTime);
+        }
     }
     public void MoveLeftAction()
     {
         SetMoveFlag("left");
-        objectReference.transform.Translate(Vector3.left * Time.deltaTime);
+        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+            objectReference.transform.Translate(Vector3.right * Time.deltaTime);
+        }else{
+            objectReference.transform.Translate(Vector3.left * Time.deltaTime);
+        }
     }
     public void MoveBackAction()
     {
         SetMoveFlag("back");
-        objectReference.transform.Translate(Vector3.back * Time.deltaTime);
+        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+            objectReference.transform.Translate(Vector3.up * Time.deltaTime);
+        }else{
+            objectReference.transform.Translate(Vector3.back * Time.deltaTime);
+        }
     }
     public void MoveForwardAction()
     {
         SetMoveFlag("forward");
-        objectReference.transform.Translate(Vector3.forward * Time.deltaTime);
+        if(UIController.Instance.ModelData?.category_id == (int)Categories.Floor){
+            objectReference.transform.Translate(Vector3.down * Time.deltaTime);
+        }else{
+            objectReference.transform.Translate(Vector3.forward * Time.deltaTime);
+        }
     }
 
     public void SetMoveFlag(string direction)
@@ -291,6 +309,7 @@ public class CanvasManager : MonoBehaviour
     {
         HideCanvas();
         Destroy(objectReference);
+        UIController.Instance.objectSpawner.SetActive(true);
     }
     void Update()
     {
