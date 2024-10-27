@@ -11,6 +11,7 @@ public class UIController : MonoBehaviour
     private bool guestUser = false;
     private string currentScreen = "Onboarding";
     private string previousScreen = "Onboarding";
+    private Stack<string> navigationStack = new();
     private int currentModelIndex;
     private int currentCategoryIndex;
     public int CurrentModelIndex { get => currentModelIndex; set => currentModelIndex = value; }
@@ -59,6 +60,7 @@ public class UIController : MonoBehaviour
     void Awake()
     {
         TouchSimulation.Enable();
+        navigationStack.Push("Onboarding");
         if (_instance != null)
         {
             Destroy(gameObject); // Si ya existe una instancia, destruir este objetoassss
@@ -135,6 +137,7 @@ public class UIController : MonoBehaviour
 
     public void ScreenHandler(string newScreenName)
     {
+        navigationStack.Push(currentScreen);
         previousScreen = currentScreen;
         screenDictionary[currentScreen].SetActive(false);
         screenDictionary[newScreenName].SetActive(true);
@@ -173,9 +176,10 @@ public class UIController : MonoBehaviour
         {
             spawnedObject.transform.rotation = Quaternion.Euler(0, 90, 0);
         }
-        else if (spawnedObject != null && ModelData?.category_id == (int)Categories.Floor){
+        else if (spawnedObject != null && ModelData?.category_id == (int)Categories.Floor)
+        {
             spawnedObject.transform.rotation = Quaternion.Euler(-90, 90, 0);
-            spawnedObject.transform.position = new Vector3(spawnedObject.transform.position.x,0.01f, spawnedObject.transform.position.z);
+            spawnedObject.transform.position = new Vector3(spawnedObject.transform.position.x, 0.01f, spawnedObject.transform.position.z);
         }
 
     }
@@ -217,7 +221,18 @@ public class UIController : MonoBehaviour
 
     public void GoBack()
     {
-        ScreenHandler(previousScreen);
+        string newScreenName = navigationStack.Pop();
+        if (newScreenName == "Login")
+        {
+            newScreenName = "Home";
+        }
+        previousScreen = currentScreen;
+        screenDictionary[currentScreen].SetActive(false);
+        screenDictionary[newScreenName].SetActive(true);
+        footer.SetActive(footerDictionary[newScreenName]);
+        header.SetActive(headerDictionary[newScreenName]);
+        currentScreen = newScreenName;
+
     }
 }
 
