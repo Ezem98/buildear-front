@@ -535,5 +535,22 @@ public class ApiController : MonoBehaviour
             Debug.Log(jsonResponse);
         }));
     }
+
+    public void SendMessageToAI(ChatMessageData chatMessageData, System.Action<string> onSuccess, System.Action<string> onError)
+    {
+
+        string jsonData = JsonUtility.ToJson(chatMessageData);
+        StartCoroutine(PostRequest(baseUrl + "/openai/message", jsonData, onSuccess: (jsonResponse) =>
+        {
+            Debug.Log("Devolver mensaje");
+            APIResponse<string> apiResponse = JsonConvert.DeserializeObject<APIResponse<string>>(jsonResponse);
+            onSuccess?.Invoke(apiResponse.data);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
+        }));
+    }
 }
 

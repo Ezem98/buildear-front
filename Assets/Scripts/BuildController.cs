@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -29,6 +30,8 @@ public class BuildController : MonoBehaviour
     public TextMeshProUGUI TimeText;
     public ARPlaneManager ARPlaneManager;
     public ApiController ApiController;
+    [SerializeField] public GameObject ChatButton;
+    [SerializeField] public GameObject ChatModal;
     private readonly Dictionary<string, PlaneDetectionMode> detectionModeDictionary = new() {
         { "horizontal", PlaneDetectionMode.Horizontal },
         { "vertical", PlaneDetectionMode.Vertical },
@@ -179,6 +182,30 @@ public class BuildController : MonoBehaviour
     {
         FinishModal.SetActive(false);
         ToolbarButton.SetActive(true);
+    }
+    
+    public void StartChat()
+    {
+        if (Guide != null)
+            HandleChatModal(true);
+        else
+        {
+            LoadingModal.GetComponentInChildren<TextMeshProUGUI>().text = "Para iniciar el chat es necesario generar la guía.";
+            LoadingModal.SetActive(true);
+            StartCoroutine(PassiveMe(5));
+        }
+    }
+
+    public void HandleChatModal(bool IsOpen)
+    {
+        ChatModal.SetActive(IsOpen);
+    }
+
+    IEnumerator PassiveMe(int secs)
+    {
+        yield return new WaitForSeconds(secs);
+        LoadingModal.SetActive(false);
+
     }
 
 }

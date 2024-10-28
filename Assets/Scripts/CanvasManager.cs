@@ -19,8 +19,6 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private GameObject moveActions;
     [SerializeField] private ActionManager ActionManager;
     [SerializeField] private GameObject objectReference;
-    // [SerializeField] private Resize resize;
-    // [SerializeField] private Transform objectTransform;
     [SerializeField] private float rotationSpeed = 45f;
     private GameObject objectCopiedReference;
     private Quaternion previousRotation;
@@ -58,6 +56,7 @@ public class CanvasManager : MonoBehaviour
         ActionManager.OnMoveBackAction += MoveBackAction;
         ActionManager.OnMoveForwardAction += MoveForwardAction;
         ActionManager.OnHideCanvas += HideCanvas;
+        ActionManager.OnChatAction += StartChat;
     }
 
     public void ActivateModelCanvas()
@@ -358,5 +357,10 @@ public class CanvasManager : MonoBehaviour
         {
             MoveBackAction();
         }
+    }
+
+    public void StartChat()
+    {
+        BuildController.Instance.StartChat();
     }
 }

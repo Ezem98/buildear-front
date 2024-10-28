@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,6 +20,9 @@ public class ProfileManager : MonoBehaviour
         UserData userData = UIController.Instance.UserData;
         FullNameText.text = StringUtils.ToPascalCase($"{userData.name} {userData.surname}");
         EmailText.text = userData.email;
+        if (userData.completed_profile == (int)CompletedProfile.Incomplete)
+            CompleteProfileText.gameObject.SetActive(true);
+        else CompleteProfileText.gameObject.SetActive(false);
         ApiController.GetModelImage(userData.image, onSuccess: (image) => ProfileImage.sprite = image, onError: (error) => Debug.Log(error));
     }
 
