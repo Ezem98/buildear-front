@@ -122,8 +122,4 @@ public class ModelManager : MonoBehaviour
         });
     }
 
-    public void GoBack()
-    {
-        UIController.Instance.ScreenHandler(UIController.Instance.PreviousScreen);
-    }
 }
