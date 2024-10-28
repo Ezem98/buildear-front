@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
+using UnityEngine.UI;
 
 
 public class UIController : MonoBehaviour
@@ -42,10 +43,13 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject favorites;
     [SerializeField] private GameObject footer;
     [SerializeField] private GameObject header;
+    [SerializeField] private GameObject buildUI;
+    [SerializeField] private GameObject XRComponent;
+    [SerializeField] private GameObject UIManager;
     private Dictionary<string, GameObject> screenDictionary;
     private Dictionary<string, bool> footerDictionary;
     private Dictionary<string, bool> headerDictionary;
-    ObjectSpawner m_ObjectSpawner;
+    public ObjectSpawner m_ObjectSpawner;
 
     /// <summary>
     /// The behavior to use to spawn objects.
@@ -71,8 +75,6 @@ public class UIController : MonoBehaviour
             DontDestroyOnLoad(gameObject); // Mantener la instancia en todas las escenas
         }
 
-        if (SceneManager.GetActiveScene().name == "UI")
-        {
             screenDictionary = new(){
                 {"Onboarding", onBoarding},
                 {"Register", register},
@@ -83,7 +85,8 @@ public class UIController : MonoBehaviour
                 {"Model", model},
                 {"Profile", profile},
                 {"MyData", myData},
-                {"Favorites", favorites}
+                {"Favorites", favorites},
+                {"BuildUI", buildUI}
             };
 
             footerDictionary = new(){
@@ -96,7 +99,8 @@ public class UIController : MonoBehaviour
                 {"Model", false},
                 {"Profile", true},
                 {"MyData", true},
-                {"Favorites", true}
+                {"Favorites", true},
+                {"BuildUI", false}
             };
 
             headerDictionary = new(){
@@ -109,7 +113,8 @@ public class UIController : MonoBehaviour
                 {"Model", false},
                 {"Profile", false},
                 {"MyData", false},
-                {"Favorites", false}
+                {"Favorites", false},
+                {"BuildUI", false}
             };
 
 
@@ -121,12 +126,6 @@ public class UIController : MonoBehaviour
             {
                 ScreenHandler("Onboarding");
             }
-        }
-    }
-
-    void Start()
-    {
-        SceneManager.sceneLoaded += (scene, mode) => OnSceneLoaded();
     }
 
     void Update()
@@ -200,11 +199,18 @@ public class UIController : MonoBehaviour
         SceneManager.LoadScene(newSceneName);
     }
 
-    void OnSceneLoaded()
-    {
-        if (objectSpawner == null) objectSpawner = FindObjectOfType<ObjectSpawner>();
-        if (objectSpawner != null) objectSpawner.spawnOptionId = currentModelIndex;
-        else Debug.Log("No se encontró el ObjectSpawner");
+    public void EnableBuildMode(){
+        
+        UIManager.SetActive(false);
+        buildUI.SetActive(true);
+        Debug.Log("objectSpawner.spawnOptionId: " + objectSpawner.spawnOptionId);
+        objectSpawner.spawnOptionId = currentModelIndex;
+        Debug.Log("objectSpawner seteado: " + objectSpawner.spawnOptionId);
+    }
+
+    public void DisableBuildMode(){
+        UIManager.SetActive(true);
+        buildUI.SetActive(false);
     }
 
     public void ChangeCategory(int categoryIndex)
@@ -221,10 +227,16 @@ public class UIController : MonoBehaviour
 
     public void GoBack()
     {
+        Debug.Log("Antes del pop: "+navigationStack.Count);
         string newScreenName = navigationStack.Pop();
+        Debug.Log("Despues del pop: "+navigationStack.Count);
+        Debug.Log("newScreenName: " + newScreenName);
         if (newScreenName == "Login")
         {
             newScreenName = "Home";
+        } else if (currentScreen == "BuildUI")
+        {
+            DisableBuildMode();
         }
         previousScreen = currentScreen;
         screenDictionary[currentScreen].SetActive(false);
@@ -232,7 +244,8 @@ public class UIController : MonoBehaviour
         footer.SetActive(footerDictionary[newScreenName]);
         header.SetActive(headerDictionary[newScreenName]);
         currentScreen = newScreenName;
-
+        Debug.Log("currentScreen: " + currentScreen);
+        Debug.Log("previousScreen: " + previousScreen);
     }
 }
 
