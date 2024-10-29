@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   modelActions: {fileID: 5195389194455206822}
-  resizeActions: {fileID: 3508726404937098491}
+  resizeActions: {fileID: 0}
   rotateActions: {fileID: 3625940384969753416}
   moveActions: {fileID: 4217675889367799541}
   ActionManager: {fileID: 8867161354304716004}
@@ -429,15 +429,15 @@ MonoBehaviour:
   m_VelocityScale: 1
   m_AngularVelocityDamping: 1
   m_AngularVelocityScale: 1
-  m_TrackPosition: 1
+  m_TrackPosition: 0
   m_SmoothPosition: 0
   m_SmoothPositionAmount: 8
   m_TightenPosition: 0.1
-  m_TrackRotation: 1
+  m_TrackRotation: 0
   m_SmoothRotation: 0
   m_SmoothRotationAmount: 8
   m_TightenRotation: 0.1
-  m_TrackScale: 1
+  m_TrackScale: 0
   m_SmoothScale: 0
   m_SmoothScaleAmount: 8
   m_TightenScale: 0.1
@@ -743,7 +743,7 @@ PrefabInstance:
     - target: {fileID: 3033872540115849971, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
       propertyPath: m_Name
-      value: ChatIcon
+      value: ResizeIcon
       objectReference: {fileID: 0}
     - target: {fileID: 3177090901179836087, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
@@ -774,16 +774,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 5132284406578706638}
+      objectReference: {fileID: 8867161354304716004}
     - target: {fileID: 4456738135493230922, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: StartChat
+      value: ResizeAction
+      objectReference: {fileID: 0}
+    - target: {fileID: 4456738135493230922, guid: cd70d674ad95bc5419577e84be8e3038,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: ActionManager, Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets
       objectReference: {fileID: 0}
     - target: {fileID: 5066201008854164599, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
       propertyPath: m_Name
-      value: Chat
+      value: Resize
       objectReference: {fileID: 0}
     - target: {fileID: 5283186986325410782, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
@@ -870,7 +875,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 6b199073a33a83147979ee579f7ce109,
+      objectReference: {fileID: 21300000, guid: a6079d05d98949f4fab5de7cd4b03cc0,
         type: 3}
     - target: {fileID: 8229968890238773066, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
@@ -1398,11 +1403,21 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 8867161354304716004}
+    - target: {fileID: 819389956992926871, guid: 39f0894739be144459887cc5922faf11,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: DownScaleUp
+      objectReference: {fileID: 0}
     - target: {fileID: 1223890537780803061, guid: 39f0894739be144459887cc5922faf11,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 8867161354304716004}
+    - target: {fileID: 1223890537780803061, guid: 39f0894739be144459887cc5922faf11,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: DownScaleSide
+      objectReference: {fileID: 0}
     - target: {fileID: 3166820845409354953, guid: 39f0894739be144459887cc5922faf11,
         type: 3}
       propertyPath: m_LocalScale.x
@@ -1438,11 +1453,21 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 8867161354304716004}
+    - target: {fileID: 3743215322067703162, guid: 39f0894739be144459887cc5922faf11,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SideScale
+      objectReference: {fileID: 0}
     - target: {fileID: 3959219325659607186, guid: 39f0894739be144459887cc5922faf11,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 8867161354304716004}
+    - target: {fileID: 3959219325659607186, guid: 39f0894739be144459887cc5922faf11,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: DownScaleSide
+      objectReference: {fileID: 0}
     - target: {fileID: 4464493893365714175, guid: 39f0894739be144459887cc5922faf11,
         type: 3}
       propertyPath: m_LocalScale.x
@@ -1493,6 +1518,11 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 8867161354304716004}
+    - target: {fileID: 5392996915329153544, guid: 39f0894739be144459887cc5922faf11,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SideScale
+      objectReference: {fileID: 0}
     - target: {fileID: 6134876706346487687, guid: 39f0894739be144459887cc5922faf11,
         type: 3}
       propertyPath: m_Pivot.x
@@ -1648,6 +1678,11 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 8867161354304716004}
+    - target: {fileID: 9041937351221839521, guid: 39f0894739be144459887cc5922faf11,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ScaleUp
+      objectReference: {fileID: 0}
     - target: {fileID: 9091110209169231800, guid: 39f0894739be144459887cc5922faf11,
         type: 3}
       propertyPath: m_LocalScale.x

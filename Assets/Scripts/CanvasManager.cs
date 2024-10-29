@@ -15,6 +15,7 @@ public class CanvasManager : MonoBehaviour
 {
 
     [SerializeField] private GameObject modelActions;
+    [SerializeField] private GameObject resizeActions;
     [SerializeField] private GameObject rotateActions;
     [SerializeField] private GameObject moveActions;
     [SerializeField] private ActionManager ActionManager;
@@ -26,8 +27,10 @@ public class CanvasManager : MonoBehaviour
     // private GameObject pivotContainer;
     // public float lengthToAdd = 0.01f;
     // private float resizeAmount = 0.01f;
-    List<string> menu = new() { "modelActions", "rotateActions", "moveActions" };
+    List<string> menu = new() { "modelActions", "rotateActions", "moveActions", "resizeActions"};
     private string activeMenu;
+    private string direction;
+    private float resizeAmount = 0.01f;
     private bool isRotatingRight = false;
     private bool isRotatingLeft = false;
     private bool isMovingRight = false;
@@ -46,6 +49,7 @@ public class CanvasManager : MonoBehaviour
 
     void Start()
     {
+        ActionManager.OnResizeAction += ActivateResizeCanvas;
         ActionManager.OnAceptAction += ActivateModelCanvas;
         ActionManager.OnMoveAction += ActivateMoveCanvas;
         ActionManager.OnCancelAction += CancelAction;
@@ -57,8 +61,30 @@ public class CanvasManager : MonoBehaviour
         ActionManager.OnMoveForwardAction += MoveForwardAction;
         ActionManager.OnHideCanvas += HideCanvas;
         ActionManager.OnChatAction += StartChat;
+        ActionManager.OnSideScale += SideScaleAction;
+        ActionManager.OnScaleUp += ScaleUpAction;
+        ActionManager.OnDownScaleSide += DownScaleSideAction;
+        ActionManager.OnDownScaleUp += DownScaleUpAction;
+
     }
 
+    public void SideScaleAction()
+    {
+        ScaleObject("x", "up");
+    }
+    public void DownScaleSideAction()
+    {
+        ScaleObject("x", "down");
+    }
+    public void ScaleUpAction()
+    {
+        ScaleObject("y", "up");
+    }
+    public void DownScaleUpAction()
+    {
+        ScaleObject("y", "down");
+    }
+    
     public void ActivateModelCanvas()
     {
         modelActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
@@ -68,6 +94,17 @@ public class CanvasManager : MonoBehaviour
         modelActions.transform.GetChild(4).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         modelActions.transform.GetChild(5).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
 
+        if (activeMenu == "resizeActions")
+        {
+            resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(7).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+        }
         if (activeMenu == "rotateActions")
         {
             rotateActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
@@ -88,7 +125,26 @@ public class CanvasManager : MonoBehaviour
         }
         activeMenu = menu[0]; // modelActions
     }
+    public void ActivateResizeCanvas()
+    {
+        Debug.Log("Entre a resize.");
+        resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
+        resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
+        resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
+        resizeActions.transform.GetChild(3).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
+        resizeActions.transform.GetChild(4).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
+        resizeActions.transform.GetChild(5).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
+        resizeActions.transform.GetChild(6).transform.DOScale(new Vector3(1, 1, 1), 0.5f);
+        resizeActions.transform.GetChild(7).transform.DOScale(new Vector3(1, 1, 1), 0.5f);
 
+        modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+        modelActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+        modelActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+        modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+        modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+        modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+        activeMenu = menu[3]; // resizeActions
+    }
     public void ActivateRotateCanvas()
     {
         previousRotation = objectReference.transform.rotation;
@@ -137,6 +193,17 @@ public class CanvasManager : MonoBehaviour
             modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
             modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
             modelActions.transform.GetChild(5).transform.DOScale(Vector3.zero, 0.3f);
+        }
+        if (activeMenu == "resizeActions")
+        {
+            resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
+            resizeActions.transform.GetChild(7).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
         }
         if (activeMenu == "rotateActions")
         {
@@ -312,6 +379,27 @@ public class CanvasManager : MonoBehaviour
         }
     }
 
+    public void ScaleObject(string direction, string scaleDirection){
+        float factor = (scaleDirection == "up") ? resizeAmount : -resizeAmount;
+
+        if (direction == "x") {
+            if (transform.position.x >= 0) {
+                transform.position = new Vector3(transform.position.x + (factor / 2), transform.position.y, transform.position.z);
+            } else {
+                transform.position = new Vector3(transform.position.x - (factor / 2), transform.position.y, transform.position.z);
+            }
+            transform.localScale = new Vector3(transform.localScale.x + factor, transform.localScale.y, transform.localScale.z);
+        }
+
+        if (direction == "y") {
+            if (transform.position.y >= 0) {
+                transform.position = new Vector3(transform.position.x, transform.position.y + (factor / 2), transform.position.z);
+            } else {
+                transform.position = new Vector3(transform.position.x, transform.position.y - (factor / 2), transform.position.z);
+            }
+            transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y + factor, transform.localScale.z);
+        }
+    }
     public void CancelAction()
     {
         if (activeMenu == "rotateActions")

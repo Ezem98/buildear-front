@@ -22,7 +22,10 @@ public class ActionManager : MonoBehaviour
     public event Action OnMoveBackAction;
     public event Action OnMoveForwardAction;
     public event Action OnChatAction;
-
+    public event Action OnSideScale;
+    public event Action OnScaleUp;
+    public event Action OnDownScaleSide;
+    public event Action OnDownScaleUp;
     public void ChatAction()
     {
         OnChatAction?.Invoke();
@@ -89,9 +92,24 @@ public class ActionManager : MonoBehaviour
     {
         OnDestroyObject?.Invoke();
     }
-
     public void HideCanvas()
     {
         OnHideCanvas?.Invoke();
+    }
+    public void SideScale()
+    {
+        OnSideScale?.Invoke();
+    }
+    public void ScaleUp()
+    {
+        OnScaleUp?.Invoke();
+    }
+    public void DownScaleSide()
+    {
+        OnDownScaleSide?.Invoke();
+    }
+    public void DownScaleUp()
+    {
+        OnDownScaleUp?.Invoke();
     }
 }
