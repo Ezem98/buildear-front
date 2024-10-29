@@ -30,8 +30,8 @@ public class BuildController : MonoBehaviour
     public TextMeshProUGUI TimeText;
     public ARPlaneManager ARPlaneManager;
     public ApiController ApiController;
-    [SerializeField] public GameObject ChatButton;
-    [SerializeField] public GameObject ChatModal;
+    public Button ChatButton;
+    public GameObject ChatModal;
     private readonly Dictionary<string, PlaneDetectionMode> detectionModeDictionary = new() {
         { "horizontal", PlaneDetectionMode.Horizontal },
         { "vertical", PlaneDetectionMode.Vertical },
@@ -73,6 +73,7 @@ public class BuildController : MonoBehaviour
             MaterialListButton.interactable = true;
             GuideButton.interactable = true;
             FinishButton.interactable = true;
+            ChatButton.interactable = true;
         }
 
         if (_instance != null)
@@ -183,7 +184,7 @@ public class BuildController : MonoBehaviour
         FinishModal.SetActive(false);
         ToolbarButton.SetActive(true);
     }
-    
+
     public void StartChat()
     {
         if (Guide != null)
