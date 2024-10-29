@@ -89,6 +89,7 @@ public class LoginController : MonoBehaviour
       {
         UsernameInputField.text = "";
         PasswordInputField.text = "";
+        UIController.Instance.SaveData();
       }, onError: (errorMessage) => { ErrorMessage.text = errorMessage; ErrorMessage.gameObject.SetActive(true); });
     }
   }

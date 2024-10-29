@@ -75,7 +75,7 @@ public class UIController : MonoBehaviour
             DontDestroyOnLoad(gameObject); // Mantener la instancia en todas las escenas
         }
 
-            screenDictionary = new(){
+        screenDictionary = new(){
                 {"Onboarding", onBoarding},
                 {"Register", register},
                 {"Login", login},
@@ -89,7 +89,7 @@ public class UIController : MonoBehaviour
                 {"BuildUI", buildUI}
             };
 
-            footerDictionary = new(){
+        footerDictionary = new(){
                 {"Onboarding", false},
                 {"Register", false},
                 {"Login", false},
@@ -103,7 +103,7 @@ public class UIController : MonoBehaviour
                 {"BuildUI", false}
             };
 
-            headerDictionary = new(){
+        headerDictionary = new(){
                 {"Onboarding", false},
                 {"Register", false},
                 {"Login", false},
@@ -116,16 +116,19 @@ public class UIController : MonoBehaviour
                 {"Favorites", false},
                 {"BuildUI", false}
             };
+        LoadData();
+    }
 
-
-            if (loggedIn)
-            {
-                ScreenHandler("Home");
-            }
-            else
-            {
-                ScreenHandler("Onboarding");
-            }
+    void Start()
+    {
+        if (loggedIn)
+        {
+            ScreenHandler("Home");
+        }
+        else
+        {
+            ScreenHandler("Onboarding");
+        }
     }
 
     void Update()
@@ -199,8 +202,9 @@ public class UIController : MonoBehaviour
         SceneManager.LoadScene(newSceneName);
     }
 
-    public void EnableBuildMode(){
-        
+    public void EnableBuildMode()
+    {
+
         UIManager.SetActive(false);
         buildUI.SetActive(true);
         Debug.Log("objectSpawner.spawnOptionId: " + objectSpawner.spawnOptionId);
@@ -208,7 +212,8 @@ public class UIController : MonoBehaviour
         Debug.Log("objectSpawner seteado: " + objectSpawner.spawnOptionId);
     }
 
-    public void DisableBuildMode(){
+    public void DisableBuildMode()
+    {
         UIManager.SetActive(true);
         buildUI.SetActive(false);
     }
@@ -227,14 +232,15 @@ public class UIController : MonoBehaviour
 
     public void GoBack()
     {
-        Debug.Log("Antes del pop: "+navigationStack.Count);
+        Debug.Log("Antes del pop: " + navigationStack.Count);
         string newScreenName = navigationStack.Pop();
-        Debug.Log("Despues del pop: "+navigationStack.Count);
+        Debug.Log("Despues del pop: " + navigationStack.Count);
         Debug.Log("newScreenName: " + newScreenName);
         if (newScreenName == "Login")
         {
             newScreenName = "Home";
-        } else if (currentScreen == "BuildUI")
+        }
+        else if (currentScreen == "BuildUI")
         {
             DisableBuildMode();
         }
@@ -246,6 +252,17 @@ public class UIController : MonoBehaviour
         currentScreen = newScreenName;
         Debug.Log("currentScreen: " + currentScreen);
         Debug.Log("previousScreen: " + previousScreen);
+    }
+
+    public void SaveData()
+    {
+        PlayerPrefs.SetInt("loggedIn", 1); // Guardar un entero
+        PlayerPrefs.Save();
+    }
+
+    public void LoadData()
+    {
+        LoggedIn = PlayerPrefs.GetInt("loggedIn", 0) == 1;
     }
 }
 
