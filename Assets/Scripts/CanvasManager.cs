@@ -24,10 +24,11 @@ public class CanvasManager : MonoBehaviour
     private GameObject objectCopiedReference;
     private Quaternion previousRotation;
     private Vector3 previousPosition;
+    private Vector3 previousLocalScale;
     // private GameObject pivotContainer;
     // public float lengthToAdd = 0.01f;
     // private float resizeAmount = 0.01f;
-    List<string> menu = new() { "modelActions", "rotateActions", "moveActions", "resizeActions"};
+    List<string> menu = new() { "modelActions", "rotateActions", "moveActions", "resizeActions" };
     private string activeMenu;
     private string direction;
     private float resizeAmount = 0.01f;
@@ -84,7 +85,7 @@ public class CanvasManager : MonoBehaviour
     {
         ScaleObject("y", "down");
     }
-    
+
     public void ActivateModelCanvas()
     {
         modelActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
@@ -127,7 +128,8 @@ public class CanvasManager : MonoBehaviour
     }
     public void ActivateResizeCanvas()
     {
-        Debug.Log("Entre a resize.");
+        previousPosition = objectReference.transform.position;
+        previousLocalScale = objectReference.transform.localScale;
         resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
         resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
@@ -379,22 +381,31 @@ public class CanvasManager : MonoBehaviour
         }
     }
 
-    public void ScaleObject(string direction, string scaleDirection){
+    public void ScaleObject(string direction, string scaleDirection)
+    {
         float factor = (scaleDirection == "up") ? resizeAmount : -resizeAmount;
 
-        if (direction == "x") {
-            if (transform.position.x >= 0) {
+        if (direction == "x")
+        {
+            if (transform.position.x >= 0)
+            {
                 transform.position = new Vector3(transform.position.x + (factor / 2), transform.position.y, transform.position.z);
-            } else {
+            }
+            else
+            {
                 transform.position = new Vector3(transform.position.x - (factor / 2), transform.position.y, transform.position.z);
             }
             transform.localScale = new Vector3(transform.localScale.x + factor, transform.localScale.y, transform.localScale.z);
         }
 
-        if (direction == "y") {
-            if (transform.position.y >= 0) {
+        if (direction == "y")
+        {
+            if (transform.position.y >= 0)
+            {
                 transform.position = new Vector3(transform.position.x, transform.position.y + (factor / 2), transform.position.z);
-            } else {
+            }
+            else
+            {
                 transform.position = new Vector3(transform.position.x, transform.position.y - (factor / 2), transform.position.z);
             }
             transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y + factor, transform.localScale.z);
@@ -406,9 +417,14 @@ public class CanvasManager : MonoBehaviour
         {
             objectReference.transform.rotation = previousRotation; //Funciona
         }
-        if (activeMenu == "moveActions")
+        else if (activeMenu == "moveActions")
         {
             objectReference.transform.position = previousPosition; //Funciona
+        }
+        else if (activeMenu == "resizeActions")
+        {
+            objectReference.transform.position = previousPosition; //Funciona
+            objectReference.transform.localScale = previousLocalScale; //Funciona
         }
         ActivateModelCanvas();
     }
