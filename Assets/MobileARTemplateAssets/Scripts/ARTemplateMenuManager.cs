@@ -262,12 +262,21 @@ public class ARTemplateMenuManager : MonoBehaviour
     void OnDisable()
     {
         m_ShowObjectMenu = false;
+        m_CurrentInteractable.GetComponent<CanvasManager>().HideCanvas();
+        m_lastObjectInteractable.GetComponent<CanvasManager>().HideCanvas();
+        actionsMenuEnabled = true;
         m_CreateButton.onClick.RemoveListener(ShowMenu);
         m_CancelButton.onClick.RemoveListener(HideMenu);
         m_DeleteButton.onClick.RemoveListener(DeleteFocusedObject);
         m_PlaneManager.planesChanged -= OnPlaneChanged;
     }
 
+    void OnDestroy()
+    {
+        m_CurrentInteractable?.GetComponent<CanvasManager>().HideCanvas();
+        m_lastObjectInteractable?.GetComponent<CanvasManager>().HideCanvas();
+        actionsMenuEnabled = true;
+    }
     /// <summary>
     /// See <see cref="MonoBehaviour"/>.
     /// </summary>
@@ -358,15 +367,24 @@ public class ARTemplateMenuManager : MonoBehaviour
             {
                 //Entra si ya hay un objeto spawneado
                 if (m_CurrentInteractable) // Le pegue a un objeto
-                {   
-                    
+                {
+                    int currentObjectIndex = m_ObjectSpawner.objectPrefabs.FindIndex(go => go.name == m_CurrentInteractable.name.Split('(')[0].Trim());
+                    UIController.Instance.CurrentModelIndex = m_ObjectSpawner.objectPrefabsIndex[currentObjectIndex];
+                    Debug.Log("Count: " + BuildController.Instance.CurrentStepDictionary.Count);
+                    BuildController.Instance.StepTitle.text = BuildController.Instance.CurrentStepDictionary
+                    [UIController.Instance.CurrentModelIndex].titulo;
+                    BuildController.Instance.StepDescription.text = BuildController.Instance.CurrentStepDictionary
+                    [UIController.Instance.CurrentModelIndex].descripcion;
+                    BuildController.Instance.StepCount.text = "Paso " + BuildController.Instance.CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso + "/" + BuildController.Instance.GuidesDictionary
+                    [UIController.Instance.CurrentModelIndex].pasos.Count;
+
                     //Toque el current
                     if (hit.transform.gameObject == m_CurrentInteractable)
                     {
                         if (m_lastObjectInteractable && m_lastObjectInteractable != m_CurrentInteractable)
                         {
                             if (actionsMenuEnabled)
-                            {   
+                            {
                                 UIController.Instance.objectSpawner.SetActive(true);
                                 CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
                                 cmLast.HideCanvas();

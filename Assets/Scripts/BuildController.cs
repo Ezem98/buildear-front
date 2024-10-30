@@ -37,10 +37,15 @@ public class BuildController : MonoBehaviour
         { "vertical", PlaneDetectionMode.Vertical },
     };
     private PlaneDetectionMode previousDetectionMode;
+    private Dictionary<int, Guide> guidesDictionary = new();
+    public Dictionary<int, Guide> GuidesDictionary { get => guidesDictionary; set => guidesDictionary = value; }
+    private Dictionary<int, Paso> currentStepDictionary = new();
 
-    public Guide Guide { get; set; }
-    public Paso CurrentStep { get; set; }
-
+    public Dictionary<int, Paso> CurrentStepDictionary { get => currentStepDictionary; set => currentStepDictionary = value; }
+    private float costAmount = 0;
+    public float CostAmount { get => costAmount; set => costAmount = value; }
+    private int timeAmount = 0;
+    public int TimeAmount { get => timeAmount; set => timeAmount = value; }
     private static BuildController _instance;
 
     public void BackToUI()
@@ -68,7 +73,7 @@ public class BuildController : MonoBehaviour
         ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
         previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
 
-        if (Guide != null)
+        if (GuidesDictionary.GetValueOrDefault(UIController.Instance.CurrentModelIndex) != null)
         {
             MaterialListButton.interactable = true;
             GuideButton.interactable = true;
@@ -112,6 +117,8 @@ public class BuildController : MonoBehaviour
 
     public void StepForward()
     {
+        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
+        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (CurrentStep.paso == Guide.pasos.Count) return;
         CurrentStep = Guide.pasos.Find(x => x.paso == CurrentStep.paso + 1);
         UpdateStep();
@@ -119,6 +126,8 @@ public class BuildController : MonoBehaviour
 
     public void StepBackward()
     {
+        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
+        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (CurrentStep.paso == 1) return;
         CurrentStep = Guide.pasos.Find(x => x.paso == CurrentStep.paso - 1);
         UpdateStep();
@@ -132,6 +141,8 @@ public class BuildController : MonoBehaviour
 
     private void UpdateStep()
     {
+        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
+        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         StepTitle.text = CurrentStep.titulo;
         StepDescription.text = CurrentStep.descripcion;
         StepCount.text = "Paso " + CurrentStep.paso + "/" + Guide.pasos.Count;
@@ -145,8 +156,6 @@ public class BuildController : MonoBehaviour
         CameraPivot.SetActive(true);
         ObjectSpawner.SetActive(false);
         ToolbarButton.SetActive(false);
-        //ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Horizontal;
-        //ARPlaneManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
         UIAnimation.Instance.FadeOut();
     }
     public void GyroscopeAction()
@@ -165,7 +174,7 @@ public class BuildController : MonoBehaviour
 
     public void FinishAction()
     {
-
+        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
         UpdateUserModelData userModelData = new()
         {
             completed = (int)CompletedProfile.Complete,
@@ -187,6 +196,7 @@ public class BuildController : MonoBehaviour
 
     public void StartChat()
     {
+        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (Guide != null)
             HandleChatModal(true);
         else
@@ -194,6 +204,28 @@ public class BuildController : MonoBehaviour
             LoadingModal.GetComponentInChildren<TextMeshProUGUI>().text = "Para iniciar el chat es necesario generar la guía.";
             LoadingModal.SetActive(true);
             StartCoroutine(PassiveMe(5));
+        }
+    }
+
+    public void KnowMore()
+    {
+        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
+        if (Guide != null)
+        {
+            GuideResponse.SetActive(false);
+            ChatModal.SetActive(true);
+            ChatManager.Instance.CreateCustomUserChatMessage($"¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?");
+            ChatMessageData chatMessageData = new()
+            {
+                message = $"A continuación te paso la guía de pasos que me generaste para poder llevar a cabo mi construcción/colocación: {JsonUtility.ToJson(Guide)}. ¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?",
+            };
+            ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) =>
+            {
+                ChatManager.Instance.CreateAIChatMessage(response);
+            }, onError: (error) =>
+            {
+                ChatManager.Instance.CreateAIChatMessage("Lo siento, no pude encontrar información adicional sobre el paso que solicitaste.");
+            });
         }
     }
 
@@ -207,6 +239,16 @@ public class BuildController : MonoBehaviour
         yield return new WaitForSeconds(secs);
         LoadingModal.SetActive(false);
 
+    }
+
+    private void OnDisable()
+    {
+        UIController.Instance.SaveData();
+    }
+
+    private void OnDestroy()
+    {
+        UIController.Instance.SaveData();
     }
 
 }

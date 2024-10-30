@@ -14,4 +14,9 @@ public class HeaderManager : MonoBehaviour
             SearchInputField.text = "";
         }
     }
+
+    public void OnSuscribe()
+    {
+        UIController.Instance.ScreenHandler("Profile");
+    }
 }

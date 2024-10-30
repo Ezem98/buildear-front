@@ -122,9 +122,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 3592198831937649161}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 100, y: -22.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 160, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3367305898419215360
@@ -347,6 +347,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Username: {fileID: 7972401203252509822}
   Message: {fileID: 645989598175859831}
+  RectTransform: {fileID: 606030645696969890}
 --- !u!1 &7501000897640629068
 GameObject:
   m_ObjectHideFlags: 0
@@ -379,10 +380,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 3592198831937649161}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 100, y: -47.5}
-  m_SizeDelta: {x: 160, y: 25}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 160, y: 57.5859}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5764647819891447305
 CanvasRenderer:

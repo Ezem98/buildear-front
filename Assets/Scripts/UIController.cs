@@ -3,7 +3,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
-using UnityEngine.UI;
 
 
 public class UIController : MonoBehaviour
@@ -50,6 +49,7 @@ public class UIController : MonoBehaviour
     private Dictionary<string, bool> footerDictionary;
     private Dictionary<string, bool> headerDictionary;
     public ObjectSpawner m_ObjectSpawner;
+    public ApiController ApiController;
 
     /// <summary>
     /// The behavior to use to spawn objects.
@@ -123,7 +123,14 @@ public class UIController : MonoBehaviour
     {
         if (loggedIn)
         {
-            ScreenHandler("Home");
+            Debug.Log("Logged in: " + UserData.username);
+            ApiController.GetModelsByUserId(UserData.id, onSuccess: (modelData) =>
+                    {
+                        ScreenHandler("Home");
+                    }, onError: (error) =>
+                    {
+                        Debug.Log(error);
+                    });
         }
         else
         {
@@ -174,13 +181,8 @@ public class UIController : MonoBehaviour
 
     public void OnObjectSpawned(GameObject spawnedObject)
     {
-        // if (spawnedObject != null && ModelData?.category_id == (int)Categories.Opening && ModelData?.position == "vertical")
-        // {
-        //     spawnedObject.transform.rotation = Quaternion.Euler(0, 90, 0);
-        // }
         if (spawnedObject != null && ModelData?.category_id == (int)Categories.Floor)
         {
-            // spawnedObject.transform.rotation = Quaternion.Euler(-90, 90, 0);
             spawnedObject.transform.position = new Vector3(spawnedObject.transform.position.x, 0.01f, spawnedObject.transform.position.z);
         }
 
@@ -207,9 +209,7 @@ public class UIController : MonoBehaviour
 
         UIManager.SetActive(false);
         buildUI.SetActive(true);
-        Debug.Log("objectSpawner.spawnOptionId: " + objectSpawner.spawnOptionId);
         objectSpawner.spawnOptionId = currentModelIndex;
-        Debug.Log("objectSpawner seteado: " + objectSpawner.spawnOptionId);
     }
 
     public void DisableBuildMode()
@@ -256,13 +256,33 @@ public class UIController : MonoBehaviour
 
     public void SaveData()
     {
-        PlayerPrefs.SetInt("loggedIn", 1); // Guardar un entero
+        PlayerPrefs.SetInt("loggedIn", 1);
+        PlayerPrefs.SetInt("spawnOptionId", objectSpawner.spawnOptionId);
+        string userJsonData = JsonUtility.ToJson(UserData);
+        PlayerPrefs.SetString("userData", userJsonData);
+        string modelJsonData = JsonUtility.ToJson(UserData);
+        PlayerPrefs.SetString("modelData", modelJsonData);
         PlayerPrefs.Save();
     }
 
     public void LoadData()
     {
         LoggedIn = PlayerPrefs.GetInt("loggedIn", 0) == 1;
+        objectSpawner.spawnOptionId = PlayerPrefs.GetInt("spawnOptionId", -1);
+        string userJsonData = PlayerPrefs.GetString("userData", "{}");
+        UserData = JsonUtility.FromJson<UserData>(userJsonData);
+        string modelJsonData = PlayerPrefs.GetString("modelData", "{}");
+        ModelData = JsonUtility.FromJson<ModelData>(modelJsonData);
+    }
+
+    private void OnDisable()
+    {
+        SaveData();
+    }
+
+    private void OnDestroy()
+    {
+        SaveData();
     }
 }
 

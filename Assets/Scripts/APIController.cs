@@ -233,20 +233,11 @@ public class ApiController : MonoBehaviour
         // Crear un objeto con los datos del tutorial
         int modelId = UIController.Instance.CurrentModelIndex;
         int userId = UIController.Instance.UserData?.id ?? -1;
+        Debug.Log("Model ID: " + modelId);
+        Debug.Log("User ID: " + userId);
 
-        ModelData model = null;
-        if (UIController.Instance.PreviousScreen == "Home")
-        {
-            model = UIController.Instance.MyModelsData.Find(m => m.id == modelId);
-        }
-        else if (UIController.Instance.PreviousScreen == "Models")
-        {
-            model = UIController.Instance.ModelsData.Find(m => m.id == modelId);
-        }
-        else if (UIController.Instance.PreviousScreen == "Favorites")
-        {
-            model = UIController.Instance.FavoritesModelsData.Find(x => x.id == modelId);
-        }
+
+        ModelData model = UIController.Instance.ModelData;
 
         BuildController.Instance.LoadingModal.SetActive(true);
         GetUserModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
@@ -255,8 +246,12 @@ public class ApiController : MonoBehaviour
             {
                 UIController.Instance.UserModelData = userModelData;
 
-                BuildController.Instance.Guide = userModelData.guideObject;
-                BuildController.Instance.CurrentStep = userModelData.guideObject.pasos[userModelData.current_step];
+                // BuildController.Instance.Guide = userModelData.guideObject;
+                BuildController.Instance.GuidesDictionary[modelId] = userModelData.guideObject;
+
+                // BuildController.Instance.CurrentStep = userModelData.guideObject.pasos[userModelData.current_step];
+                BuildController.Instance.CurrentStepDictionary[modelId] = userModelData.guideObject.pasos[userModelData.current_step];
+
                 BuildController.Instance.LoadingModal.SetActive(false);
                 BuildController.Instance.GuideResponse.SetActive(true);
                 BuildController.Instance.StepTitle.text = userModelData.guideObject.pasos[userModelData.current_step].titulo;
@@ -265,17 +260,23 @@ public class ApiController : MonoBehaviour
                 BuildController.Instance.MaterialListButton.interactable = true;
                 BuildController.Instance.GuideButton.interactable = true;
                 BuildController.Instance.FinishButton.interactable = true;
-                BuildController.Instance.CostText.text = $"{BuildController.Instance.Guide.costo} USD";
-                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.Guide.tiempo_insumido)}";
+                BuildController.Instance.CostAmount += userModelData.guideObject.costo;
+                BuildController.Instance.TimeAmount += userModelData.guideObject.tiempo_insumido;
+                BuildController.Instance.CostText.text = $"{BuildController.Instance.CostAmount} USD";
+                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.TimeAmount)}";
                 return;
             }
 
-            int EXPERIENCE_LEVEL = 1;
+            int EXPERIENCE_LEVEL = (int)ExperienceLevel.Intermediate;
 
             if (UIController.Instance.UserData != null)
                 EXPERIENCE_LEVEL = UIController.Instance.UserData.experience_level;
-            else
-                EXPERIENCE_LEVEL = (int)ExperienceLevel.Intermediate;
+
+            Debug.Log("Generando tutorial para el modelo: " + modelId);
+            Debug.Log("Model name: " + model.name);
+            Debug.Log("Model height: " + model.height);
+            Debug.Log("Model width: " + model.width);
+            Debug.Log("Model category: " + model.category_id);
 
             TutorialData tutorialData = new()
             {
@@ -295,8 +296,8 @@ public class ApiController : MonoBehaviour
             {
                 APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
 
-                BuildController.Instance.Guide = apiResponse?.data;
-                BuildController.Instance.CurrentStep = apiResponse?.data.pasos[0];
+                BuildController.Instance.GuidesDictionary.Add(modelId, apiResponse?.data);
+                BuildController.Instance.CurrentStepDictionary[modelId] = apiResponse?.data.pasos[0];
 
                 BuildController.Instance.LoadingModal.SetActive(false);
                 BuildController.Instance.GuideResponse.SetActive(true);
@@ -306,19 +307,23 @@ public class ApiController : MonoBehaviour
                 BuildController.Instance.MaterialListButton.interactable = true;
                 BuildController.Instance.GuideButton.interactable = true;
                 BuildController.Instance.FinishButton.interactable = true;
-                BuildController.Instance.CostText.text = BuildController.Instance.Guide.costo.ToString();
-                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.Guide.tiempo_insumido)}";
+                BuildController.Instance.CostAmount += apiResponse.data.costo;
+                BuildController.Instance.TimeAmount += apiResponse.data.tiempo_insumido;
+                BuildController.Instance.CostText.text = $"{BuildController.Instance.CostAmount} USD";
+                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.TimeAmount)}";
 
-                if (UIController.Instance.GuestUser == false)
+                if (!UIController.Instance.GuestUser)
                 {
                     UserModelData userModelData = new()
                     {
                         user_id = UIController.Instance.UserData.id,
                         model_id = UIController.Instance.CurrentModelIndex,
-                        guideObject = BuildController.Instance.Guide,
+                        guideObject = BuildController.Instance.GuidesDictionary[modelId],
                         completed = (int)CompletedProfile.Incomplete,
                         current_step = 1
                     };
+
+                    Debug.Log("Creando UserModel");
 
                     CreateUserModel(userModelData, onSuccess: (userModelData) =>
                     {

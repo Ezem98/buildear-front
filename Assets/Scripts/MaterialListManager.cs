@@ -26,9 +26,9 @@ public class MaterialListManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (BuildController.Instance.Guide != null)
+        if (BuildController.Instance.GuidesDictionary[UIController.Instance.CurrentModelIndex] != null)
         {
-            Guide guide = BuildController.Instance.Guide;
+            Guide guide = BuildController.Instance.GuidesDictionary[UIController.Instance.CurrentModelIndex];
             CreateMaterialItems(guide.materiales);
         }
     }

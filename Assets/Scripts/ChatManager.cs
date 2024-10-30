@@ -57,11 +57,7 @@ public class ChatManager : MonoBehaviour
 
     public void CreateUserChatMessage()
     {
-        MessageManager userMessage = Instantiate(UserMessageManager, MessagesContainer.transform);
-        Debug.Log("userMessage: " + userMessage?.Username?.text);
-        userMessage.Username.text = UIController.Instance.UserData.username;
-        userMessage.Message.text = MessageInputField.text;
-        Debug.Log("Create user chat message: " + MessageInputField.text);
+        CreateCustomUserChatMessage(MessageInputField.text);
         if (ApiController)
         {
 
@@ -70,6 +66,13 @@ public class ChatManager : MonoBehaviour
             ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) => CreateAIChatMessage(response), onError: (error) => Debug.Log(error));
         }
 
+    }
+
+    public void CreateCustomUserChatMessage(string message)
+    {
+        MessageManager userMessage = Instantiate(UserMessageManager, MessagesContainer.transform);
+        userMessage.Username.text = UIController.Instance.UserData.username;
+        userMessage.Message.text = message;
     }
 
     public void CreateAIChatMessage(string message)

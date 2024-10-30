@@ -34,12 +34,8 @@ public class FooterManager : MonoBehaviour
             buttonDictionary["Favorites"].interactable = false;
             buildButton.interactable = false;
         }
-        else if (UIController.Instance.MyModelsData?.Count > 0)
+        else if (UIController.Instance.objectSpawner.spawnOptionId != -1 && UIController.Instance.ModelData != null)
         {
-            ModelData modelData = UIController.Instance.MyModelsData.Last();
-            UIController.Instance.CurrentModelIndex = modelData.id;
-            UIController.Instance.objectSpawner.spawnOptionId = modelData.id;
-            UIController.Instance.ModelData = modelData;
             buildButton.interactable = true;
         }
     }
