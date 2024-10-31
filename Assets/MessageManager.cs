@@ -7,6 +7,7 @@ public class MessageManager : MonoBehaviour
     [SerializeField] public TextMeshProUGUI Username;
     [SerializeField] public TextMeshProUGUI Message;
     [SerializeField] public RectTransform RectTransform;
+    [SerializeField] public Vector2 padding;
 
     void Start()
     {
@@ -17,5 +18,6 @@ public class MessageManager : MonoBehaviour
     {
         LayoutRebuilder.ForceRebuildLayoutImmediate(RectTransform);
     }
+
 
 }

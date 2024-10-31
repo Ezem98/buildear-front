@@ -37,8 +37,15 @@ public class ChatItemManager : MonoBehaviour
     {
         MessageManager AImessage = Instantiate(AIMessageManager, MessagesContainer.transform);
         AImessage.Message.text = message;
+        SetSize(AImessage.Message, AImessage.RectTransform, AImessage.padding);
     }
 
+    public void SetSize(TextMeshProUGUI message, RectTransform RectTransform, Vector2 padding)
+    {
+        message.ForceMeshUpdate();
+        Vector2 textSize = message.GetRenderedValues(false);
+        RectTransform.sizeDelta = textSize + padding;
+    }
     public void CreateMessagesButtons(int conversationId)
     {
         ApiController.GetConversationMessages(conversationId, onSuccess: (response) =>
