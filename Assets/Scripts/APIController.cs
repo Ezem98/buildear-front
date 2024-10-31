@@ -8,7 +8,7 @@ using OpenAI.Chat;
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
-    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
+    //private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
     private readonly string baseUrl = "http://localhost:1234";
 
@@ -278,11 +278,11 @@ public class ApiController : MonoBehaviour
             if (UIController.Instance.UserData != null)
                 EXPERIENCE_LEVEL = UIController.Instance.UserData.experience_level;
 
-            Debug.Log("Generando tutorial para el modelo: " + modelId);
-            Debug.Log("Model name: " + model.name);
-            Debug.Log("Model height: " + model.height);
-            Debug.Log("Model width: " + model.width);
-            Debug.Log("Model category: " + model.category_id);
+            // Debug.Log("Generando tutorial para el modelo: " + modelId);
+            // Debug.Log("Model name: " + model.name);
+            // Debug.Log("Model height: " + model.height);
+            // Debug.Log("Model width: " + model.width);
+            // Debug.Log("Model category: " + model.category_id);
 
             TutorialData tutorialData = new()
             {
@@ -297,6 +297,8 @@ public class ApiController : MonoBehaviour
             };
             // Convertir el objeto a un string JSONa
             string jsonData = JsonUtility.ToJson(tutorialData);
+
+            Debug.Log("experience level: " + EXPERIENCE_LEVEL);
 
             StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
             {

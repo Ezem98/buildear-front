@@ -70,10 +70,15 @@ public class BuildController : MonoBehaviour
         ToolbarButton.SetActive(true);
     }
 
-    private void Awake()
-    {
+    private void OnEnable(){
         ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
         previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+    }
+
+    private void Awake()
+    {
+        // ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+        // previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
 
         if (GuidesDictionary.GetValueOrDefault(UIController.Instance.CurrentModelIndex) != null)
         {
@@ -229,14 +234,34 @@ public class BuildController : MonoBehaviour
         Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (Guide != null)
         {
-            ConversationPostData conversationPostData = new()
-            {
-                user_id = UIController.Instance.UserData.id,
-            };
-            ApiController.SaveConversation(conversationPostData, onSuccess: (response) =>
-            {
-                Debug.Log("Conversation id: " + response.id);
-                UIController.Instance.CurrentConversationId = response.id;
+            if(!UIController.Instance.GuestUser){
+
+            
+                ConversationPostData conversationPostData = new()
+                {
+                    user_id = UIController.Instance.UserData.id,
+                };
+                ApiController.SaveConversation(conversationPostData, onSuccess: (response) =>
+                {
+                    Debug.Log("Conversation id: " + response.id);
+                    UIController.Instance.CurrentConversationId = response.id;
+                    GuideResponse.SetActive(false);
+                    ChatModal.SetActive(true);
+                    ChatManager.Instance.CreateCustomUserChatMessage($"¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?");
+                    ChatMessageData chatMessageData = new()
+                    {
+                        message = $"A continuación te paso la guía de pasos que me generaste para poder llevar a cabo mi construcción/colocación: {JsonUtility.ToJson(Guide)}. ¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?",
+                    };
+                    ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) =>
+                    {
+                        ChatManager.Instance.CreateAIChatMessage(response);
+                    }, onError: (error) =>
+                    {
+                        ChatManager.Instance.CreateAIChatMessage("Lo siento, no pude encontrar información adicional sobre el paso que solicitaste.");
+                    });
+                }, onError: (error) => Debug.Log(error));
+            }else{
+                UIController.Instance.CurrentConversationId = -1;
                 GuideResponse.SetActive(false);
                 ChatModal.SetActive(true);
                 ChatManager.Instance.CreateCustomUserChatMessage($"¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?");
@@ -251,8 +276,7 @@ public class BuildController : MonoBehaviour
                 {
                     ChatManager.Instance.CreateAIChatMessage("Lo siento, no pude encontrar información adicional sobre el paso que solicitaste.");
                 });
-            }, onError: (error) => Debug.Log(error));
-
+            }
         }
     }
 
@@ -270,21 +294,24 @@ public class BuildController : MonoBehaviour
 
     private void OnDisable()
     {
-        UIController.Instance.SaveData();
-        Debug.Log("Data Saved");
-        ConversationMessagePostData conversationMessagePostData = new() { conversation_id = UIController.Instance.CurrentConversationId, messages = ChatMessages };
-        ApiController.SaveMessages(conversationMessagePostData, onSuccess: (messages) =>
-                        {
-                            ChatMessages.Clear();
-                        }, onError: (error) =>
-                        {
-                            Debug.Log(error);
-                        });
+        if(!UIController.Instance.GuestUser){
+            UIController.Instance.SaveData();
+            Debug.Log("Data Saved");
+            ConversationMessagePostData conversationMessagePostData = new() { conversation_id = UIController.Instance.CurrentConversationId, messages = ChatMessages };
+            ApiController.SaveMessages(conversationMessagePostData, onSuccess: (messages) =>
+                            {
+                                ChatMessages.Clear();
+                            }, onError: (error) =>
+                            {
+                                Debug.Log(error);
+                            });
+        }
     }
 
     private void OnDestroy()
     {
-        UIController.Instance.SaveData();
+        if(!UIController.Instance.GuestUser)
+            UIController.Instance.SaveData();
     }
 
 }

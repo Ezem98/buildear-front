@@ -69,10 +69,12 @@ public class ChatManager : MonoBehaviour
 
     public void CreateCustomUserChatMessage(string message)
     {
-        ConversationMessageData conversationMessageData = new() { sender = UIController.Instance.UserData.username, message = message, conversation_id = UIController.Instance.CurrentConversationId };
-        BuildController.Instance.ChatMessages.Add(conversationMessageData);
+        if(!UIController.Instance.GuestUser){
+            ConversationMessageData conversationMessageData = new() { sender = UIController.Instance.UserData.username, message = message, conversation_id = UIController.Instance.CurrentConversationId };
+            BuildController.Instance.ChatMessages.Add(conversationMessageData);
+        }
         MessageManager userMessage = Instantiate(UserMessageManager, MessagesContainer.transform);
-        userMessage.Username.text = UIController.Instance.UserData.username;
+        userMessage.Username.text = UIController.Instance.UserData?.username ?? "Invitado";
         userMessage.Message.text = message;
     }
 
@@ -80,8 +82,10 @@ public class ChatManager : MonoBehaviour
     {
         MessageManager AImessage = Instantiate(AIMessageManager, MessagesContainer.transform);
         AImessage.Message.text = message;
-        ConversationMessageData conversationMessageData = new() { sender = "BuildeAR Assistant", message = message, conversation_id = UIController.Instance.CurrentConversationId };
-        BuildController.Instance.ChatMessages.Add(conversationMessageData);
+        if(!UIController.Instance.GuestUser){
+            ConversationMessageData conversationMessageData = new() { sender = "BuildeAR Assistant", message = message, conversation_id = UIController.Instance.CurrentConversationId };
+            BuildController.Instance.ChatMessages.Add(conversationMessageData);
+        }
     }
 
     private void DestroyMessages()
