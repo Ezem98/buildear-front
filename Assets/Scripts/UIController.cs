@@ -21,13 +21,18 @@ public class UIController : MonoBehaviour
     public List<ModelData> MyModelsData { get; set; }
     public List<ModelData> FavoritesModelsData { get; set; }
     public List<ModelData> SearchModelsData { get; set; }
+    private List<ConversationData> conversationsData = new();
+    public List<ConversationData> ConversationsData { get => conversationsData; set => conversationsData = value; }
     public UserData UserData { get; set; }
     public ModelData ModelData { get; set; }
+    private int currentConversationId = -1;
+    public int CurrentConversationId { get => currentConversationId; set => currentConversationId = value; }
     public bool ComesFromSearch { get; set; }
     public bool LoggedIn { get => loggedIn; set => loggedIn = value; }
     public bool GuestUser { get => guestUser; set => guestUser = value; }
     public string CurrentScreen { get => currentScreen; set => currentScreen = value; }
     public string PreviousScreen { get => previousScreen; set => previousScreen = value; }
+
 
     [SerializeField] private GameObject canvas;
     [SerializeField] private GameObject onBoarding;
@@ -45,6 +50,8 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject buildUI;
     [SerializeField] private GameObject XRComponent;
     [SerializeField] private GameObject UIManager;
+    [SerializeField] private GameObject ChatHistory;
+    [SerializeField] private GameObject ChatHistoryItem;
     private Dictionary<string, GameObject> screenDictionary;
     private Dictionary<string, bool> footerDictionary;
     private Dictionary<string, bool> headerDictionary;
@@ -86,7 +93,9 @@ public class UIController : MonoBehaviour
                 {"Profile", profile},
                 {"MyData", myData},
                 {"Favorites", favorites},
-                {"BuildUI", buildUI}
+                {"BuildUI", buildUI},
+                {"ChatHistory", ChatHistory},
+                {"ChatHistoryItem", ChatHistoryItem}
             };
 
         footerDictionary = new(){
@@ -100,7 +109,9 @@ public class UIController : MonoBehaviour
                 {"Profile", true},
                 {"MyData", true},
                 {"Favorites", true},
-                {"BuildUI", false}
+                {"BuildUI", false},
+                {"ChatHistory", true},
+                {"ChatHistoryItem", true}
             };
 
         headerDictionary = new(){
@@ -114,7 +125,9 @@ public class UIController : MonoBehaviour
                 {"Profile", false},
                 {"MyData", false},
                 {"Favorites", false},
-                {"BuildUI", false}
+                {"BuildUI", false},
+                {"ChatHistory", false},
+                {"ChatHistoryItem", false}
             };
         LoadData();
     }
@@ -257,22 +270,42 @@ public class UIController : MonoBehaviour
     public void SaveData()
     {
         PlayerPrefs.SetInt("loggedIn", 1);
-        PlayerPrefs.SetInt("spawnOptionId", objectSpawner.spawnOptionId);
-        string userJsonData = JsonUtility.ToJson(UserData);
-        PlayerPrefs.SetString("userData", userJsonData);
-        string modelJsonData = JsonUtility.ToJson(UserData);
-        PlayerPrefs.SetString("modelData", modelJsonData);
+        if (objectSpawner != null)
+            PlayerPrefs.SetInt("spawnOptionId", objectSpawner.spawnOptionId);
+        if (UserData != null)
+        {
+            string userJsonData = JsonUtility.ToJson(UserData);
+            PlayerPrefs.SetString("userData", userJsonData);
+        }
+        if (ModelData != null)
+        {
+            string modelJsonData = JsonUtility.ToJson(ModelData);
+            PlayerPrefs.SetString("modelData", modelJsonData);
+        }
+        if (ConversationsData != null)
+        {
+            string conversationsJsonData = JsonUtility.ToJson(ConversationsData);
+            PlayerPrefs.SetString("conversationsData", conversationsJsonData);
+        }
+        if (currentConversationId != -1)
+        {
+            PlayerPrefs.SetInt("currentConversationId", currentConversationId);
+        }
         PlayerPrefs.Save();
     }
 
     public void LoadData()
     {
         LoggedIn = PlayerPrefs.GetInt("loggedIn", 0) == 1;
-        objectSpawner.spawnOptionId = PlayerPrefs.GetInt("spawnOptionId", -1);
+        if (objectSpawner != null)
+            objectSpawner.spawnOptionId = PlayerPrefs.GetInt("spawnOptionId", -1);
         string userJsonData = PlayerPrefs.GetString("userData", "{}");
         UserData = JsonUtility.FromJson<UserData>(userJsonData);
         string modelJsonData = PlayerPrefs.GetString("modelData", "{}");
         ModelData = JsonUtility.FromJson<ModelData>(modelJsonData);
+        string conversationsJsonData = PlayerPrefs.GetString("conversationsData", "{}");
+        ConversationsData = JsonUtility.FromJson<List<ConversationData>>(conversationsJsonData);
+        currentConversationId = PlayerPrefs.GetInt("currentConversationId", -1);
     }
 
     private void OnDisable()

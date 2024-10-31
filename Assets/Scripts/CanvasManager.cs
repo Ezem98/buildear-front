@@ -387,28 +387,28 @@ public class CanvasManager : MonoBehaviour
 
         if (direction == "x")
         {
-            if (transform.position.x >= 0)
+            if (objectReference.transform.position.x >= 0)
             {
-                transform.position = new Vector3(transform.position.x + (factor / 2), transform.position.y, transform.position.z);
+                objectReference.transform.position = new Vector3(objectReference.transform.position.x + (factor / 2), objectReference.transform.position.y, objectReference.transform.position.z);
             }
             else
             {
-                transform.position = new Vector3(transform.position.x - (factor / 2), transform.position.y, transform.position.z);
+                objectReference.transform.position = new Vector3(objectReference.transform.position.x - (factor / 2), objectReference.transform.position.y, objectReference.transform.position.z);
             }
-            transform.localScale = new Vector3(transform.localScale.x + factor, transform.localScale.y, transform.localScale.z);
+            objectReference.transform.localScale = new Vector3(objectReference.transform.localScale.x + factor, objectReference.transform.localScale.y, objectReference.transform.localScale.z);
         }
 
         if (direction == "y")
         {
-            if (transform.position.y >= 0)
+            if (objectReference.transform.position.y >= 0)
             {
-                transform.position = new Vector3(transform.position.x, transform.position.y + (factor / 2), transform.position.z);
+                objectReference.transform.position = new Vector3(objectReference.transform.position.x, objectReference.transform.position.y + (factor / 2), objectReference.transform.position.z);
             }
             else
             {
-                transform.position = new Vector3(transform.position.x, transform.position.y - (factor / 2), transform.position.z);
+                objectReference.transform.position = new Vector3(objectReference.transform.position.x, objectReference.transform.position.y - (factor / 2), objectReference.transform.position.z);
             }
-            transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y + factor, transform.localScale.z);
+            objectReference.transform.localScale = new Vector3(objectReference.transform.localScale.x, objectReference.transform.localScale.y + factor, objectReference.transform.localScale.z);
         }
     }
     public void CancelAction()

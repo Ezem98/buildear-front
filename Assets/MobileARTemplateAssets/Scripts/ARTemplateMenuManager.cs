@@ -262,8 +262,8 @@ public class ARTemplateMenuManager : MonoBehaviour
     void OnDisable()
     {
         m_ShowObjectMenu = false;
-        m_CurrentInteractable.GetComponent<CanvasManager>().HideCanvas();
-        m_lastObjectInteractable.GetComponent<CanvasManager>().HideCanvas();
+        m_CurrentInteractable?.GetComponent<CanvasManager>().HideCanvas();
+        m_lastObjectInteractable?.GetComponent<CanvasManager>().HideCanvas();
         actionsMenuEnabled = true;
         m_CreateButton.onClick.RemoveListener(ShowMenu);
         m_CancelButton.onClick.RemoveListener(HideMenu);
@@ -368,15 +368,19 @@ public class ARTemplateMenuManager : MonoBehaviour
                 //Entra si ya hay un objeto spawneado
                 if (m_CurrentInteractable) // Le pegue a un objeto
                 {
+                    Debug.Log("Current Interactable: " + m_CurrentInteractable.name);
+                    Debug.Log("Count object spawner: " + m_ObjectSpawner.objectPrefabs.Count);
                     int currentObjectIndex = m_ObjectSpawner.objectPrefabs.FindIndex(go => go.name == m_CurrentInteractable.name.Split('(')[0].Trim());
+                    Debug.Log("Current Object Index: " + currentObjectIndex);
                     UIController.Instance.CurrentModelIndex = m_ObjectSpawner.objectPrefabsIndex[currentObjectIndex];
-                    Debug.Log("Count: " + BuildController.Instance.CurrentStepDictionary.Count);
-                    BuildController.Instance.StepTitle.text = BuildController.Instance.CurrentStepDictionary
-                    [UIController.Instance.CurrentModelIndex].titulo;
-                    BuildController.Instance.StepDescription.text = BuildController.Instance.CurrentStepDictionary
-                    [UIController.Instance.CurrentModelIndex].descripcion;
-                    BuildController.Instance.StepCount.text = "Paso " + BuildController.Instance.CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso + "/" + BuildController.Instance.GuidesDictionary
-                    [UIController.Instance.CurrentModelIndex].pasos.Count;
+                    if (BuildController.Instance.CurrentStepDictionary.TryGetValue(currentObjectIndex, out Paso step))
+                    {
+                        Paso currentStep = BuildController.Instance.CurrentStepDictionary[currentObjectIndex];
+                        BuildController.Instance.StepTitle.text = currentStep.titulo;
+                        BuildController.Instance.StepDescription.text = currentStep.descripcion;
+                        BuildController.Instance.StepCount.text = "Paso " + currentStep.paso + "/" + BuildController.Instance.GuidesDictionary
+                        [currentObjectIndex].pasos.Count;
+                    }
 
                     //Toque el current
                     if (hit.transform.gameObject == m_CurrentInteractable)

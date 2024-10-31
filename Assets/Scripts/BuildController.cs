@@ -46,6 +46,8 @@ public class BuildController : MonoBehaviour
     public float CostAmount { get => costAmount; set => costAmount = value; }
     private int timeAmount = 0;
     public int TimeAmount { get => timeAmount; set => timeAmount = value; }
+    private List<ConversationMessageData> chatMessages = new();
+    public List<ConversationMessageData> ChatMessages { get => chatMessages; set => chatMessages = value; }
     private static BuildController _instance;
 
     public void BackToUI()
@@ -117,19 +119,23 @@ public class BuildController : MonoBehaviour
 
     public void StepForward()
     {
+        Debug.Log("StepForward");
         Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
         Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (CurrentStep.paso == Guide.pasos.Count) return;
         CurrentStep = Guide.pasos.Find(x => x.paso == CurrentStep.paso + 1);
+        CurrentStepDictionary[UIController.Instance.CurrentModelIndex] = CurrentStep;
         UpdateStep();
     }
 
     public void StepBackward()
     {
+        Debug.Log("StepBackward");
         Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
         Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (CurrentStep.paso == 1) return;
         CurrentStep = Guide.pasos.Find(x => x.paso == CurrentStep.paso - 1);
+        CurrentStepDictionary[UIController.Instance.CurrentModelIndex] = CurrentStep;
         UpdateStep();
     }
 
@@ -198,7 +204,18 @@ public class BuildController : MonoBehaviour
     {
         Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (Guide != null)
-            HandleChatModal(true);
+        {
+            ConversationPostData conversationPostData = new()
+            {
+                user_id = UIController.Instance.UserData.id,
+            };
+            ApiController.SaveConversation(conversationPostData, onSuccess: (response) =>
+            {
+                Debug.Log("Conversation id: " + response.id);
+                UIController.Instance.CurrentConversationId = response.id;
+                HandleChatModal(true);
+            }, onError: (error) => Debug.Log(error));
+        }
         else
         {
             LoadingModal.GetComponentInChildren<TextMeshProUGUI>().text = "Para iniciar el chat es necesario generar la guía.";
@@ -212,20 +229,30 @@ public class BuildController : MonoBehaviour
         Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (Guide != null)
         {
-            GuideResponse.SetActive(false);
-            ChatModal.SetActive(true);
-            ChatManager.Instance.CreateCustomUserChatMessage($"¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?");
-            ChatMessageData chatMessageData = new()
+            ConversationPostData conversationPostData = new()
             {
-                message = $"A continuación te paso la guía de pasos que me generaste para poder llevar a cabo mi construcción/colocación: {JsonUtility.ToJson(Guide)}. ¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?",
+                user_id = UIController.Instance.UserData.id,
             };
-            ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) =>
+            ApiController.SaveConversation(conversationPostData, onSuccess: (response) =>
             {
-                ChatManager.Instance.CreateAIChatMessage(response);
-            }, onError: (error) =>
-            {
-                ChatManager.Instance.CreateAIChatMessage("Lo siento, no pude encontrar información adicional sobre el paso que solicitaste.");
-            });
+                Debug.Log("Conversation id: " + response.id);
+                UIController.Instance.CurrentConversationId = response.id;
+                GuideResponse.SetActive(false);
+                ChatModal.SetActive(true);
+                ChatManager.Instance.CreateCustomUserChatMessage($"¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?");
+                ChatMessageData chatMessageData = new()
+                {
+                    message = $"A continuación te paso la guía de pasos que me generaste para poder llevar a cabo mi construcción/colocación: {JsonUtility.ToJson(Guide)}. ¿Puedes darme información más detallada sobre el paso {CurrentStepDictionary[UIController.Instance.CurrentModelIndex].paso}?",
+                };
+                ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) =>
+                {
+                    ChatManager.Instance.CreateAIChatMessage(response);
+                }, onError: (error) =>
+                {
+                    ChatManager.Instance.CreateAIChatMessage("Lo siento, no pude encontrar información adicional sobre el paso que solicitaste.");
+                });
+            }, onError: (error) => Debug.Log(error));
+
         }
     }
 
@@ -244,6 +271,15 @@ public class BuildController : MonoBehaviour
     private void OnDisable()
     {
         UIController.Instance.SaveData();
+        Debug.Log("Data Saved");
+        ConversationMessagePostData conversationMessagePostData = new() { conversation_id = UIController.Instance.CurrentConversationId, messages = ChatMessages };
+        ApiController.SaveMessages(conversationMessagePostData, onSuccess: (messages) =>
+                        {
+                            ChatMessages.Clear();
+                        }, onError: (error) =>
+                        {
+                            Debug.Log(error);
+                        });
     }
 
     private void OnDestroy()

@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using OpenAI.Chat;
 
 public class ApiController : MonoBehaviour
 {
@@ -247,10 +248,15 @@ public class ApiController : MonoBehaviour
                 UIController.Instance.UserModelData = userModelData;
 
                 // BuildController.Instance.Guide = userModelData.guideObject;
-                BuildController.Instance.GuidesDictionary[modelId] = userModelData.guideObject;
+                if (BuildController.Instance.GuidesDictionary.ContainsKey(modelId))
+                    BuildController.Instance.GuidesDictionary[modelId] = userModelData.guideObject;
+                else
+                    BuildController.Instance.GuidesDictionary.Add(modelId, userModelData.guideObject);
 
-                // BuildController.Instance.CurrentStep = userModelData.guideObject.pasos[userModelData.current_step];
-                BuildController.Instance.CurrentStepDictionary[modelId] = userModelData.guideObject.pasos[userModelData.current_step];
+                if (BuildController.Instance.CurrentStepDictionary.ContainsKey(modelId))
+                    BuildController.Instance.CurrentStepDictionary[modelId] = userModelData.guideObject.pasos[userModelData.current_step];
+                else
+                    BuildController.Instance.CurrentStepDictionary.Add(modelId, userModelData.guideObject.pasos[userModelData.current_step]);
 
                 BuildController.Instance.LoadingModal.SetActive(false);
                 BuildController.Instance.GuideResponse.SetActive(true);
@@ -297,7 +303,7 @@ public class ApiController : MonoBehaviour
                 APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
 
                 BuildController.Instance.GuidesDictionary.Add(modelId, apiResponse?.data);
-                BuildController.Instance.CurrentStepDictionary[modelId] = apiResponse?.data.pasos[0];
+                BuildController.Instance.CurrentStepDictionary.Add(modelId, apiResponse?.data.pasos[0]);
 
                 BuildController.Instance.LoadingModal.SetActive(false);
                 BuildController.Instance.GuideResponse.SetActive(true);
@@ -549,6 +555,67 @@ public class ApiController : MonoBehaviour
         {
             Debug.Log("Devolver mensaje");
             APIResponse<string> apiResponse = JsonConvert.DeserializeObject<APIResponse<string>>(jsonResponse);
+            onSuccess?.Invoke(apiResponse.data);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void SaveConversation(ConversationPostData conversationPostData, System.Action<ConversationData> onSuccess, System.Action<string> onError)
+    {
+        string conversationData = JsonUtility.ToJson(conversationPostData);
+        StartCoroutine(PostRequest(baseUrl + "/conversation", conversationData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<ConversationData> apiResponse = JsonConvert.DeserializeObject<APIResponse<ConversationData>>(jsonResponse);
+            onSuccess?.Invoke(apiResponse.data);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void SaveMessages(ConversationMessagePostData conversationMessagesPostData, System.Action<List<ConversationMessageData>> onSuccess, System.Action<string> onError)
+    {
+        string conversationMessagesData = JsonUtility.ToJson(conversationMessagesPostData);
+        StartCoroutine(PostRequest(baseUrl + "/conversationMessage/all", conversationMessagesData, onSuccess: (jsonResponse) =>
+        {
+            Debug.Log("Crear mensajes de la conver");
+            APIResponse<List<ConversationMessageData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ConversationMessageData>>>(jsonResponse);
+            onSuccess?.Invoke(apiResponse.data);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void GetConversationMessages(int conversationId, System.Action<List<ConversationMessageData>> onSuccess, System.Action<string> onError)
+    {
+        StartCoroutine(GetRequest(baseUrl + "/conversationMessage/conversation/" + conversationId, onSuccess: (jsonResponse) =>
+        {
+            Debug.Log("Devolver mensajes de la conver: " + jsonResponse);
+            APIResponse<List<ConversationMessageData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ConversationMessageData>>>(jsonResponse);
+            onSuccess?.Invoke(apiResponse.data);
+            // Deserializar la cadena JSON dentro del campo 'guide'
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            onError?.Invoke(jsonResponse);
+        }));
+    }
+
+    public void GetUserConversations(int userId, System.Action<List<ConversationData>> onSuccess, System.Action<string> onError)
+    {
+        Debug.Log("GetUserConversations: " + userId);
+        StartCoroutine(GetRequest(baseUrl + "/conversation/user/" + userId, onSuccess: (jsonResponse) =>
+        {
+            Debug.Log("Devolver convers: " + jsonResponse);
+            APIResponse<List<ConversationData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ConversationData>>>(jsonResponse);
             onSuccess?.Invoke(apiResponse.data);
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
