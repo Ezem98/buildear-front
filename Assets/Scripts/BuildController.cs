@@ -70,9 +70,13 @@ public class BuildController : MonoBehaviour
         ToolbarButton.SetActive(true);
     }
 
-    private void OnEnable(){
-        ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
-        previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+    private void OnEnable()
+    {
+        if (ARPlaneManager != null)
+        {
+            ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+            previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+        }
     }
 
     private void Awake()
@@ -234,9 +238,10 @@ public class BuildController : MonoBehaviour
         Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
         if (Guide != null)
         {
-            if(!UIController.Instance.GuestUser){
+            if (!UIController.Instance.GuestUser)
+            {
 
-            
+
                 ConversationPostData conversationPostData = new()
                 {
                     user_id = UIController.Instance.UserData.id,
@@ -260,7 +265,9 @@ public class BuildController : MonoBehaviour
                         ChatManager.Instance.CreateAIChatMessage("Lo siento, no pude encontrar información adicional sobre el paso que solicitaste.");
                     });
                 }, onError: (error) => Debug.Log(error));
-            }else{
+            }
+            else
+            {
                 UIController.Instance.CurrentConversationId = -1;
                 GuideResponse.SetActive(false);
                 ChatModal.SetActive(true);
@@ -294,7 +301,8 @@ public class BuildController : MonoBehaviour
 
     private void OnDisable()
     {
-        if(!UIController.Instance.GuestUser){
+        if (!UIController.Instance.GuestUser)
+        {
             UIController.Instance.SaveData();
             Debug.Log("Data Saved");
             ConversationMessagePostData conversationMessagePostData = new() { conversation_id = UIController.Instance.CurrentConversationId, messages = ChatMessages };
@@ -310,7 +318,7 @@ public class BuildController : MonoBehaviour
 
     private void OnDestroy()
     {
-        if(!UIController.Instance.GuestUser)
+        if (!UIController.Instance.GuestUser)
             UIController.Instance.SaveData();
     }
 
