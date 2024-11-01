@@ -471,7 +471,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Username: {fileID: 4571388234403578716}
   Message: {fileID: 451771075601626280}
-  RectTransform: {fileID: 0}
+  RectTransform: {fileID: 5440167167071191586}
   padding: {x: 0, y: 100}
 --- !u!1 &8434379326216272332
 GameObject:
