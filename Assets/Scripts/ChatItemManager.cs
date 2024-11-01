@@ -31,6 +31,7 @@ public class ChatItemManager : MonoBehaviour
         MessageManager userMessage = Instantiate(UserMessageManager, MessagesContainer.transform);
         userMessage.Username.text = UIController.Instance.UserData.username;
         userMessage.Message.text = message;
+        SetSize(userMessage.Message, userMessage.RectTransform, userMessage.padding);
     }
 
     public void CreateAIChatMessage(string message)

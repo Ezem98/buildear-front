@@ -14,7 +14,7 @@ public class MessageManager : MonoBehaviour
         AdjustMessageSize();
     }
 
-    void AdjustMessageSize()
+    public void AdjustMessageSize()
     {
         LayoutRebuilder.ForceRebuildLayoutImmediate(RectTransform);
     }

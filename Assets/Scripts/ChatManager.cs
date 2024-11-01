@@ -69,23 +69,34 @@ public class ChatManager : MonoBehaviour
 
     public void CreateCustomUserChatMessage(string message)
     {
-        if(!UIController.Instance.GuestUser){
+        if (!UIController.Instance.GuestUser)
+        {
             ConversationMessageData conversationMessageData = new() { sender = UIController.Instance.UserData.username, message = message, conversation_id = UIController.Instance.CurrentConversationId };
             BuildController.Instance.ChatMessages.Add(conversationMessageData);
         }
         MessageManager userMessage = Instantiate(UserMessageManager, MessagesContainer.transform);
         userMessage.Username.text = UIController.Instance.UserData?.username ?? "Invitado";
         userMessage.Message.text = message;
+        SetSize(userMessage.Message, userMessage.RectTransform, userMessage.padding);
     }
 
     public void CreateAIChatMessage(string message)
     {
         MessageManager AImessage = Instantiate(AIMessageManager, MessagesContainer.transform);
         AImessage.Message.text = message;
-        if(!UIController.Instance.GuestUser){
+        SetSize(AImessage.Message, AImessage.RectTransform, AImessage.padding);
+        if (!UIController.Instance.GuestUser)
+        {
             ConversationMessageData conversationMessageData = new() { sender = "BuildeAR Assistant", message = message, conversation_id = UIController.Instance.CurrentConversationId };
             BuildController.Instance.ChatMessages.Add(conversationMessageData);
         }
+    }
+
+    public void SetSize(TextMeshProUGUI message, RectTransform RectTransform, Vector2 padding)
+    {
+        message.ForceMeshUpdate();
+        Vector2 textSize = message.GetRenderedValues(false);
+        RectTransform.sizeDelta = textSize + padding;
     }
 
     private void DestroyMessages()

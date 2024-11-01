@@ -367,7 +367,7 @@ MonoBehaviour:
   m_Spacing: 10
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 0
+  m_ChildControlWidth: 1
   m_ChildControlHeight: 0
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
@@ -13922,7 +13922,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &595971758
 RectTransform:
   m_ObjectHideFlags: 0
@@ -49013,6 +49013,7 @@ MonoBehaviour:
   LoadingModal: {fileID: 911797487}
   FinishModal: {fileID: 1980716108}
   RulerManager: {fileID: 256876333}
+  GreetingPrompt: {fileID: 595971757}
   RulerPlaceButton: {fileID: 1602264934}
   BackToSpawnModeButton: {fileID: 148510564}
   Gyroscope: {fileID: 1159280902}
@@ -49031,6 +49032,8 @@ MonoBehaviour:
   ARPlaneManager: {fileID: 151853166}
   ApiController: {fileID: 1315186298}
   ChatButton: {fileID: 1454461375}
+  ChatCloseButton: {fileID: 1114486724}
+  ChatInputField: {fileID: 1753163606}
   ChatModal: {fileID: 1094948951}
 --- !u!1 &2101756734
 GameObject:

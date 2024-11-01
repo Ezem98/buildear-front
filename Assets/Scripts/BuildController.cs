@@ -13,6 +13,7 @@ public class BuildController : MonoBehaviour
     public GameObject LoadingModal;
     public GameObject FinishModal;
     public GameObject RulerManager;
+    public GameObject GreetingPrompt;
     public GameObject RulerPlaceButton;
     public GameObject BackToSpawnModeButton;
     public GameObject Gyroscope;
@@ -31,6 +32,8 @@ public class BuildController : MonoBehaviour
     public ARPlaneManager ARPlaneManager;
     public ApiController ApiController;
     public Button ChatButton;
+    public Button ChatCloseButton;
+    public TMP_InputField ChatInputField;
     public GameObject ChatModal;
     private readonly Dictionary<string, PlaneDetectionMode> detectionModeDictionary = new() {
         { "horizontal", PlaneDetectionMode.Horizontal },
@@ -76,6 +79,10 @@ public class BuildController : MonoBehaviour
         {
             ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
             previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+        }
+        if (UIController.Instance.UserData?.completed_profile == (int)CompletedProfile.Incomplete || UIController.Instance.GuestUser)
+        {
+            GreetingPrompt.SetActive(true);
         }
     }
 
@@ -240,8 +247,8 @@ public class BuildController : MonoBehaviour
         {
             if (!UIController.Instance.GuestUser)
             {
-
-
+                ChatCloseButton.interactable = false;
+                ChatInputField.interactable = false;
                 ConversationPostData conversationPostData = new()
                 {
                     user_id = UIController.Instance.UserData.id,
@@ -260,9 +267,13 @@ public class BuildController : MonoBehaviour
                     ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) =>
                     {
                         ChatManager.Instance.CreateAIChatMessage(response);
+                        ChatCloseButton.interactable = true;
+                        ChatInputField.interactable = true;
                     }, onError: (error) =>
                     {
                         ChatManager.Instance.CreateAIChatMessage("Lo siento, no pude encontrar información adicional sobre el paso que solicitaste.");
+                        ChatCloseButton.interactable = true;
+                        ChatInputField.interactable = true;
                     });
                 }, onError: (error) => Debug.Log(error));
             }
@@ -305,14 +316,17 @@ public class BuildController : MonoBehaviour
         {
             UIController.Instance.SaveData();
             Debug.Log("Data Saved");
-            ConversationMessagePostData conversationMessagePostData = new() { conversation_id = UIController.Instance.CurrentConversationId, messages = ChatMessages };
-            ApiController.SaveMessages(conversationMessagePostData, onSuccess: (messages) =>
-                            {
-                                ChatMessages.Clear();
-                            }, onError: (error) =>
-                            {
-                                Debug.Log(error);
-                            });
+            if (UIController.Instance.CurrentConversationId != -1 && ChatMessages.Count > 0 && ApiController != null)
+            {
+                ConversationMessagePostData conversationMessagePostData = new() { conversation_id = UIController.Instance.CurrentConversationId, messages = ChatMessages };
+                ApiController.SaveMessages(conversationMessagePostData, onSuccess: (messages) =>
+                                {
+                                    ChatMessages.Clear();
+                                }, onError: (error) =>
+                                {
+                                    Debug.Log(error);
+                                });
+            }
         }
     }
 
