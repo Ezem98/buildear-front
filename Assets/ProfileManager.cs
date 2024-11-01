@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class ProfileManager : MonoBehaviour
@@ -10,8 +11,12 @@ public class ProfileManager : MonoBehaviour
     [SerializeField] private Image ProfileImage;
     [SerializeField] private ApiController ApiController;
     // Start is called before the first frame update
-    void Start()
+    void OnEnable()
     {
+        SetProfileData();
+    }
+
+    void Start(){
         SetProfileData();
     }
 
