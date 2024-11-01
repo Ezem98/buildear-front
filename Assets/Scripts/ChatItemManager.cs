@@ -11,7 +11,7 @@ public class ChatItemManager : MonoBehaviour
     [SerializeField] private ApiController ApiController;
     [SerializeField] private TextMeshProUGUI DateTimeText;
 
-    private void Start()
+    private void OnEnable()
     {
         if (UIController.Instance.CurrentConversationId != -1)
         {

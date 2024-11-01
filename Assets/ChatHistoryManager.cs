@@ -17,6 +17,7 @@ public class ChatHistoryManager : MonoBehaviour
         ApiController.GetUserConversations(UIController.Instance.UserData.id, onSuccess: (conversationData) =>
             {
                 Debug.Log("Count: " + conversationData?.Count);
+                UIController.Instance.ConversationsData.Clear();
                 UIController.Instance.ConversationsData = conversationData;
                 TextCount.text = $"Conversaciones finalizadas: <b>{conversationData.Count}</b>";
                 ChatList.CreateButtons();

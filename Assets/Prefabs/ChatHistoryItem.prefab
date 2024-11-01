@@ -121,19 +121,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4443900640233839237}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: ScreenHandler
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: MyData
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1 &1427072642201783055
 GameObject:
   m_ObjectHideFlags: 0
@@ -145,7 +133,6 @@ GameObject:
   - component: {fileID: 4277271205720880541}
   - component: {fileID: 1447360205173864974}
   - component: {fileID: 5694990910715915118}
-  - component: {fileID: 8974842387171861196}
   m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
@@ -214,20 +201,6 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 31/10/2024 02:30
---- !u!114 &8974842387171861196
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1427072642201783055}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c4b9f36317eca74b9d67a5263d1d13e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Button: {fileID: 814144686754383479}
-  DateTime: {fileID: 5694990910715915118}
 --- !u!1 &3188739548040367873
 GameObject:
   m_ObjectHideFlags: 0
