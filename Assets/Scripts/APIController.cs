@@ -277,7 +277,8 @@ public class ApiController : MonoBehaviour
 
             int EXPERIENCE_LEVEL = 0;
 
-            if (UIController.Instance.UserData != null){
+            if (UIController.Instance.UserData != null)
+            {
                 Debug.Log("User experience level: " + UIController.Instance.UserData.experience_level);
                 EXPERIENCE_LEVEL = UIController.Instance.UserData.experience_level;
 
@@ -298,7 +299,7 @@ public class ApiController : MonoBehaviour
                     height = model.height,
                     width = model.width,
                 },
-                experienceLevel = EXPERIENCE_LEVEL!=0 ? EXPERIENCE_LEVEL : (int)ExperienceLevel.Intermediate,
+                experienceLevel = EXPERIENCE_LEVEL != 0 ? EXPERIENCE_LEVEL : (int)ExperienceLevel.Intermediate,
             };
             // Convertir el objeto a un string JSONa
             string jsonData = JsonUtility.ToJson(tutorialData);

@@ -23,7 +23,7 @@ public class MyDataManager : MonoBehaviour
     private int experienceLevel = 0;
 
     // Start is called before the first frame update
-    private void Start()
+    private void OnEnable()
     {
         SetUserData();
         Slider.onValueChanged.AddListener(HandleSliderValueChange);
