@@ -268,10 +268,8 @@ public class ApiController : MonoBehaviour
                 BuildController.Instance.MaterialListButton.interactable = true;
                 BuildController.Instance.GuideButton.interactable = true;
                 BuildController.Instance.FinishButton.interactable = true;
-                BuildController.Instance.CostAmount += userModelData.guideObject.costo;
-                BuildController.Instance.TimeAmount += userModelData.guideObject.tiempo_insumido;
-                BuildController.Instance.CostText.text = $"{BuildController.Instance.CostAmount} USD";
-                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.TimeAmount)}";
+                BuildController.Instance.CalculateAmount();
+                BuildController.Instance.CalculateTime();
                 return;
             }
 
@@ -321,10 +319,8 @@ public class ApiController : MonoBehaviour
                 BuildController.Instance.MaterialListButton.interactable = true;
                 BuildController.Instance.GuideButton.interactable = true;
                 BuildController.Instance.FinishButton.interactable = true;
-                BuildController.Instance.CostAmount += apiResponse.data.costo;
-                BuildController.Instance.TimeAmount += apiResponse.data.tiempo_insumido;
-                BuildController.Instance.CostText.text = $"{BuildController.Instance.CostAmount} USD";
-                BuildController.Instance.TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(BuildController.Instance.TimeAmount)}";
+                BuildController.Instance.CalculateAmount();
+                BuildController.Instance.CalculateTime();
 
                 if (!UIController.Instance.GuestUser)
                 {

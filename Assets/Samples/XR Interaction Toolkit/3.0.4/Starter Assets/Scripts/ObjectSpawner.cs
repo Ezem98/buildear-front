@@ -44,6 +44,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         [Tooltip("The list of prefabs available to spawn.")]
         List<int> m_ObjectPrefabsIndex = new();
 
+        private Dictionary<int, int> countDictionary = new();
+        public Dictionary<int, int> CountDictionary { get => countDictionary; set => countDictionary = value; }
+
         /// <summary>
         /// The list of prefabs available to spawn.
         /// </summary>
@@ -245,7 +248,18 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             }
 
             objectSpawned?.Invoke(newObject);
+            if (countDictionary.ContainsKey(objectIndex)) countDictionary[objectIndex]++;
+            else countDictionary.Add(objectIndex, 1);
             return true;
+        }
+
+        public void ReduceCount(int index)
+        {
+            if (countDictionary.ContainsKey(index))
+            {
+                if (countDictionary[index] > 0)
+                    countDictionary[index]--;
+            }
         }
     }
 }

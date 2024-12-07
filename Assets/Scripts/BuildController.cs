@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 public class BuildController : MonoBehaviour
 {
@@ -327,6 +328,43 @@ public class BuildController : MonoBehaviour
                                     Debug.Log(error);
                                 });
             }
+        }
+    }
+
+    public void CalculateAmount()
+    {
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        if (objectSpawner != null)
+        {
+            Dictionary<int, int> countDictionary = objectSpawner.CountDictionary;
+            foreach (KeyValuePair<int, Guide> entry in guidesDictionary)
+            {
+                int modelId = entry.Key;
+                Guide guide = entry.Value;
+                costAmount = 0;
+                Debug.Log("Count: " + countDictionary[modelId]);
+                costAmount += guide.costo * countDictionary[modelId];
+            }
+            if (costAmount == 0) CostText.text = "--.--";
+            else CostText.text = $"{costAmount} USD";
+        }
+    }
+
+    public void CalculateTime()
+    {
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        if (objectSpawner != null)
+        {
+            Dictionary<int, int> countDictionary = objectSpawner.CountDictionary;
+            foreach (KeyValuePair<int, Guide> entry in guidesDictionary)
+            {
+                int modelId = entry.Key;
+                Guide guide = entry.Value;
+                timeAmount = 0;
+                timeAmount += guide.tiempo_insumido * countDictionary[modelId];
+            }
+            if (timeAmount == 0) TimeText.text = "--.--";
+            else TimeText.text = $"{StringUtils.ConvertMinutesToTimeString(timeAmount)}";
         }
     }
 

@@ -305,6 +305,8 @@ public class ARTemplateMenuManager : MonoBehaviour
     /// </summary>
     void Update()
     {
+        BuildController.Instance.CalculateAmount();
+        BuildController.Instance.CalculateTime();
 
         if (m_InitializingDebugMenu)
         {

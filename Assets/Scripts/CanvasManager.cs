@@ -434,6 +434,9 @@ public class CanvasManager : MonoBehaviour
         HideCanvas();
         Destroy(objectReference);
         UIController.Instance.objectSpawner.SetActive(true);
+        UIController.Instance.objectSpawner.ReduceCount(UIController.Instance.CurrentModelIndex);
+        BuildController.Instance.CalculateAmount();
+        BuildController.Instance.CalculateTime();
     }
     void Update()
     {
