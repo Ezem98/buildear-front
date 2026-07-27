@@ -10,7 +10,7 @@ public class ApiController : MonoBehaviour
     // URL de tu API
     // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
-    [SerializeField] private string baseUrl = "http://localhost:1234/api/v1";
+    [SerializeField] private string baseUrl = "https://buildear-backend-production.up.railway.app/api/v1";
 
     private void ApplyAuthorization(UnityWebRequest webRequest)
     {
