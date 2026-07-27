@@ -54,7 +54,10 @@ public class ChatItemManager : MonoBehaviour
             BuildController.Instance.ChatMessages = response;
             foreach (ConversationMessageData chatMessage in response)
             {
-                if (chatMessage.sender == UIController.Instance.UserData.username)
+                if (
+                    chatMessage.sender == "user"
+                    || chatMessage.sender == UIController.Instance.UserData.username
+                )
                 {
                     CreateUserChatMessage(chatMessage.message);
                 }

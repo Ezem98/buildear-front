@@ -2,21 +2,54 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using OpenAI.Chat;
 
 public class ApiController : MonoBehaviour
 {
     // URL de tu API
     // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
-    private readonly string baseUrl = "http://localhost:1234";
+    [SerializeField] private string baseUrl = "http://localhost:1234/api/v1";
+
+    private void ApplyAuthorization(UnityWebRequest webRequest)
+    {
+        string accessToken = UIController.Instance?.AccessToken;
+        if (!string.IsNullOrWhiteSpace(accessToken))
+        {
+            webRequest.SetRequestHeader("Authorization", "Bearer " + accessToken);
+        }
+    }
+
+    public static string ErrorMessage(string jsonResponse, string fallback)
+    {
+        try
+        {
+            JObject payload = JObject.Parse(jsonResponse);
+            return payload["error"]?["message"]?.ToString()
+                ?? payload["message"]?.ToString()
+                ?? fallback;
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+
+    private void HandleExpiredSession(UnityWebRequest webRequest)
+    {
+        if (webRequest.responseCode == 401 && !webRequest.url.EndsWith("/auth/login"))
+        {
+            UIController.Instance.ClearSession();
+        }
+    }
 
     // Método para realizar el GET
     IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
     {
         using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
         {
+            ApplyAuthorization(webRequest);
             // Enviar la solicitud y esperar respuesta
             yield return webRequest.SendWebRequest();
 
@@ -27,6 +60,7 @@ public class ApiController : MonoBehaviour
             }
             else
             {
+                HandleExpiredSession(webRequest);
                 // Invocar el callback de error con el mensaje de error
                 onError?.Invoke(webRequest.downloadHandler.text);
             }
@@ -37,6 +71,7 @@ public class ApiController : MonoBehaviour
     {
         using (UnityWebRequest webRequest = UnityWebRequest.Delete(url))
         {
+            ApplyAuthorization(webRequest);
             // Enviar la solicitud y esperar respuesta
             yield return webRequest.SendWebRequest();
 
@@ -47,6 +82,7 @@ public class ApiController : MonoBehaviour
             }
             else
             {
+                HandleExpiredSession(webRequest);
                 // Invocar el callback de error con el mensaje de error
                 onError?.Invoke(webRequest.downloadHandler.text);
             }
@@ -67,6 +103,7 @@ public class ApiController : MonoBehaviour
 
         // Definir el tipo de contenido (importante para APIs que reciben JSON)
         webRequest.SetRequestHeader("Content-Type", "application/json");
+        ApplyAuthorization(webRequest);
 
         // Enviar la solicitud y esperar respuesta
         yield return webRequest.SendWebRequest();
@@ -79,6 +116,7 @@ public class ApiController : MonoBehaviour
         }
         else
         {
+            HandleExpiredSession(webRequest);
             // Invocar el callback de error con el mensaje de error
             onError?.Invoke(webRequest.downloadHandler.text);
         }
@@ -99,6 +137,7 @@ public class ApiController : MonoBehaviour
 
         // Definir el tipo de contenido (importante para APIs que reciben JSON)
         webRequest.SetRequestHeader("Content-Type", "application/json");
+        ApplyAuthorization(webRequest);
 
         // Enviar la solicitud y esperar respuesta
         yield return webRequest.SendWebRequest();
@@ -111,6 +150,7 @@ public class ApiController : MonoBehaviour
         }
         else
         {
+            HandleExpiredSession(webRequest);
             // Invocar el callback de error con el mensaje de error
             onError?.Invoke(webRequest.downloadHandler.text);
         }
@@ -187,17 +227,23 @@ public class ApiController : MonoBehaviour
 
         StartCoroutine(PostRequest(baseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
-            if (apiResponse.data == null)
+            APIResponse<AuthData> apiResponse = JsonConvert.DeserializeObject<APIResponse<AuthData>>(jsonResponse);
+            if (apiResponse?.data?.user == null || string.IsNullOrWhiteSpace(apiResponse.data.access_token))
             {
                 Debug.Log("Usuario o contraseña incorrectos");
+                onError?.Invoke("No se pudo iniciar sesión.");
                 return;
             }
-            UIController.Instance.UserData = apiResponse.data;
+            UIController.Instance.UserData = apiResponse.data.user;
+            UIController.Instance.AccessToken = apiResponse.data.access_token;
+            UIController.Instance.AccessTokenExpiresAt = apiResponse.data.expires_at;
             UIController.Instance.LoggedIn = true;
             if (UIController.Instance.UserData.completed_profile == (int)CompletedProfile.Incomplete)
+            {
                 UIController.Instance.ScreenHandler("Profile");
-            else GetModelsByUserId(apiResponse.data.id, onSuccess: (modelData) =>
+                onSuccess?.Invoke();
+            }
+            else GetModelsByUserId(apiResponse.data.user.id, onSuccess: (modelData) =>
                     {
                         UIController.Instance.ScreenHandler("Home");
                         onSuccess?.Invoke();
@@ -207,8 +253,19 @@ public class ApiController : MonoBehaviour
                     });
         }, onError: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
-            onError.Invoke(apiResponse?.message);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo iniciar sesión."));
+        }));
+    }
+
+    public void Logout(System.Action onComplete)
+    {
+        StartCoroutine(PostRequest(baseUrl + "/auth/logout", "{}", onSuccess: (_) =>
+        {
+            onComplete?.Invoke();
+        }, onError: (_) =>
+        {
+            // La sesión local debe cerrarse incluso si la red no está disponible.
+            onComplete?.Invoke();
         }));
     }
 
@@ -233,125 +290,98 @@ public class ApiController : MonoBehaviour
 
     public void GenerateBuildTutorial()
     {
-        // Crear un objeto con los datos del tutorial
+        if (UIController.Instance.GuestUser || !UIController.Instance.HasValidSession())
+        {
+            BuildController.Instance.ShowTemporaryMessage("Iniciá sesión para generar y guardar una guía.");
+            return;
+        }
+
         int modelId = UIController.Instance.CurrentModelIndex;
-        int userId = UIController.Instance.UserData?.id ?? -1;
-        Debug.Log("Model ID: " + modelId);
-        Debug.Log("User ID: " + userId);
-
-
+        int userId = UIController.Instance.UserData.id;
         ModelData model = UIController.Instance.ModelData;
+        if (model == null)
+        {
+            BuildController.Instance.ShowTemporaryMessage("No se pudo identificar el modelo seleccionado.");
+            return;
+        }
 
-        BuildController.Instance.LoadingModal.SetActive(true);
+        BuildController.Instance.ShowLoading("Preparando tu guía...");
         GetUserModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
         {
-            if (userModelData != null)
+            if (userModelData?.guideObject?.pasos != null && userModelData.guideObject.pasos.Count > 0)
             {
                 UIController.Instance.UserModelData = userModelData;
-
-                // BuildController.Instance.Guide = userModelData.guideObject;
-                if (BuildController.Instance.GuidesDictionary.ContainsKey(modelId))
-                    BuildController.Instance.GuidesDictionary[modelId] = userModelData.guideObject;
-                else
-                    BuildController.Instance.GuidesDictionary.Add(modelId, userModelData.guideObject);
-
-                if (BuildController.Instance.CurrentStepDictionary.ContainsKey(modelId))
-                    BuildController.Instance.CurrentStepDictionary[modelId] = userModelData.guideObject.pasos[userModelData.current_step];
-                else
-                    BuildController.Instance.CurrentStepDictionary.Add(modelId, userModelData.guideObject.pasos[userModelData.current_step]);
-
-                BuildController.Instance.LoadingModal.SetActive(false);
-                BuildController.Instance.GuideResponse.SetActive(true);
-                BuildController.Instance.StepTitle.text = userModelData.guideObject.pasos[userModelData.current_step].titulo;
-                BuildController.Instance.StepDescription.text = userModelData.guideObject.pasos[userModelData.current_step].descripcion;
-                BuildController.Instance.StepCount.text = "Paso " + (userModelData.current_step + 1) + "/" + userModelData.guideObject.pasos.Count;
-                BuildController.Instance.MaterialListButton.interactable = true;
-                BuildController.Instance.GuideButton.interactable = true;
-                BuildController.Instance.FinishButton.interactable = true;
-                BuildController.Instance.CalculateAmount();
-                BuildController.Instance.CalculateTime();
+                int savedStep = userModelData.current_step > 0 ? userModelData.current_step : 1;
+                ShowGuide(modelId, userModelData.guideObject, savedStep);
                 return;
             }
 
-            int EXPERIENCE_LEVEL = 0;
-
-            if (UIController.Instance.UserData != null)
-            {
-                Debug.Log("User experience level: " + UIController.Instance.UserData.experience_level);
-                EXPERIENCE_LEVEL = UIController.Instance.UserData.experience_level;
-
-            }
-
-            // Debug.Log("Generando tutorial para el modelo: " + modelId);
-            // Debug.Log("Model name: " + model.name);
-            // Debug.Log("Model height: " + model.height);
-            // Debug.Log("Model width: " + model.width);
-            // Debug.Log("Model category: " + model.category_id);
-
-            TutorialData tutorialData = new()
-            {
-                modelCategory = (Categories)model.category_id,
-                modelName = model.name,
-                modelSize = new()
-                {
-                    height = model.height,
-                    width = model.width,
-                },
-                experienceLevel = EXPERIENCE_LEVEL != 0 ? EXPERIENCE_LEVEL : (int)ExperienceLevel.Intermediate,
-            };
-            // Convertir el objeto a un string JSONa
-            string jsonData = JsonUtility.ToJson(tutorialData);
-
-            Debug.Log("experience level: " + EXPERIENCE_LEVEL);
-
-            StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
-            {
-                APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
-
-                BuildController.Instance.GuidesDictionary.Add(modelId, apiResponse?.data);
-                BuildController.Instance.CurrentStepDictionary.Add(modelId, apiResponse?.data.pasos[0]);
-
-                BuildController.Instance.LoadingModal.SetActive(false);
-                BuildController.Instance.GuideResponse.SetActive(true);
-                BuildController.Instance.StepTitle.text = apiResponse.data.pasos[0].titulo;
-                BuildController.Instance.StepDescription.text = apiResponse.data.pasos[0].descripcion;
-                BuildController.Instance.StepCount.text = "Paso 1/" + apiResponse.data.pasos.Count;
-                BuildController.Instance.MaterialListButton.interactable = true;
-                BuildController.Instance.GuideButton.interactable = true;
-                BuildController.Instance.FinishButton.interactable = true;
-                BuildController.Instance.CalculateAmount();
-                BuildController.Instance.CalculateTime();
-
-                if (!UIController.Instance.GuestUser)
-                {
-                    UserModelData userModelData = new()
-                    {
-                        user_id = UIController.Instance.UserData.id,
-                        model_id = UIController.Instance.CurrentModelIndex,
-                        guideObject = BuildController.Instance.GuidesDictionary[modelId],
-                        completed = (int)CompletedProfile.Incomplete,
-                        current_step = 1
-                    };
-
-                    Debug.Log("Creando UserModel");
-
-                    CreateUserModel(userModelData, onSuccess: (userModelData) =>
-                    {
-                        Debug.Log("UserModel creado");
-                    }, onError: (error) =>
-                    {
-                        Debug.Log(error);
-                    });
-                }
-
-            }, onError: (jsonResponse) =>
-            {
-                Debug.Log(jsonResponse);
-            }));
+            RequestGeneratedGuide(modelId, model);
         }, onError: (error) =>
         {
             Debug.Log(error);
+            BuildController.Instance.LoadingModal.SetActive(false);
+            BuildController.Instance.ShowTemporaryMessage(ErrorMessage(error, "No se pudo consultar la guía guardada."));
         });
+    }
+
+    private void RequestGeneratedGuide(int modelId, ModelData model)
+    {
+        int experienceLevel = UIController.Instance.UserData?.experience_level ?? 0;
+        TutorialData tutorialData = new()
+        {
+            model_id = modelId,
+            modelCategory = (Categories)model.category_id,
+            modelName = model.name,
+            modelSize = new()
+            {
+                height = model.height,
+                width = model.width,
+            },
+            experienceLevel = experienceLevel != 0 ? experienceLevel : (int)ExperienceLevel.Intermediate,
+        };
+
+        string jsonData = JsonUtility.ToJson(tutorialData);
+        StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
+        {
+            APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
+            if (apiResponse?.data?.pasos == null || apiResponse.data.pasos.Count == 0)
+            {
+                BuildController.Instance.LoadingModal.SetActive(false);
+                BuildController.Instance.ShowTemporaryMessage("La guía recibida no contiene pasos válidos.");
+                return;
+            }
+
+            if (apiResponse.user_model != null)
+            {
+                apiResponse.user_model.guideObject = apiResponse.data;
+                UIController.Instance.UserModelData = apiResponse.user_model;
+            }
+            ShowGuide(modelId, apiResponse.data, 1);
+        }, onError: (jsonResponse) =>
+        {
+            Debug.Log(jsonResponse);
+            BuildController.Instance.LoadingModal.SetActive(false);
+            BuildController.Instance.ShowTemporaryMessage(ErrorMessage(jsonResponse, "No se pudo generar la guía. Intentá nuevamente."));
+        }));
+    }
+
+    private void ShowGuide(int modelId, Guide guide, int requestedStep)
+    {
+        Paso currentStep = guide.pasos.Find(step => step.paso == requestedStep) ?? guide.pasos[0];
+        BuildController.Instance.GuidesDictionary[modelId] = guide;
+        BuildController.Instance.CurrentStepDictionary[modelId] = currentStep;
+        BuildController.Instance.LoadingModal.SetActive(false);
+        BuildController.Instance.GuideResponse.SetActive(true);
+        BuildController.Instance.StepTitle.text = currentStep.titulo;
+        BuildController.Instance.StepDescription.text = currentStep.descripcion;
+        BuildController.Instance.StepCount.text = "Paso " + currentStep.paso + "/" + guide.pasos.Count;
+        BuildController.Instance.MaterialListButton.interactable = true;
+        BuildController.Instance.GuideButton.interactable = true;
+        BuildController.Instance.FinishButton.interactable = true;
+        BuildController.Instance.ChatButton.interactable = true;
+        BuildController.Instance.CalculateAmount();
+        BuildController.Instance.CalculateTime();
     }
 
     public void GetModelsByCategoryId(int categoryId, System.Action onSuccess)
@@ -553,18 +583,27 @@ public class ApiController : MonoBehaviour
 
     public void SendMessageToAI(ChatMessageData chatMessageData, System.Action<string> onSuccess, System.Action<string> onError)
     {
-
-        string jsonData = JsonUtility.ToJson(chatMessageData);
+        string jsonData = JsonConvert.SerializeObject(
+            chatMessageData,
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }
+        );
         StartCoroutine(PostRequest(baseUrl + "/openai/message", jsonData, onSuccess: (jsonResponse) =>
         {
-            Debug.Log("Devolver mensaje");
             APIResponse<string> apiResponse = JsonConvert.DeserializeObject<APIResponse<string>>(jsonResponse);
+            if (apiResponse == null || string.IsNullOrWhiteSpace(apiResponse.data))
+            {
+                onError?.Invoke("La respuesta del asistente está vacía.");
+                return;
+            }
+            if (apiResponse.conversation_id > 0)
+            {
+                UIController.Instance.CurrentConversationId = apiResponse.conversation_id;
+            }
             onSuccess?.Invoke(apiResponse.data);
-            // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
-            onError?.Invoke(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo obtener una respuesta."));
         }));
     }
 

@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine;
@@ -26,7 +28,11 @@ public class UIController : MonoBehaviour
     public UserData UserData { get; set; }
     public ModelData ModelData { get; set; }
     private int currentConversationId = -1;
+    private string accessToken;
+    private string accessTokenExpiresAt;
     public int CurrentConversationId { get => currentConversationId; set => currentConversationId = value; }
+    public string AccessToken { get => accessToken; set => accessToken = value; }
+    public string AccessTokenExpiresAt { get => accessTokenExpiresAt; set => accessTokenExpiresAt = value; }
     public bool ComesFromSearch { get; set; }
     public bool LoggedIn { get => loggedIn; set => loggedIn = value; }
     public bool GuestUser { get => guestUser; set => guestUser = value; }
@@ -269,7 +275,18 @@ public class UIController : MonoBehaviour
 
     public void SaveData()
     {
-        PlayerPrefs.SetInt("loggedIn", 1);
+        PlayerPrefs.SetInt("loggedIn", loggedIn ? 1 : 0);
+        if (!loggedIn)
+        {
+            PlayerPrefs.DeleteKey("accessToken");
+            PlayerPrefs.DeleteKey("accessTokenExpiresAt");
+            PlayerPrefs.DeleteKey("userData");
+        }
+        else
+        {
+            PlayerPrefs.SetString("accessToken", accessToken ?? "");
+            PlayerPrefs.SetString("accessTokenExpiresAt", accessTokenExpiresAt ?? "");
+        }
         if (objectSpawner != null)
             PlayerPrefs.SetInt("spawnOptionId", objectSpawner.spawnOptionId);
         if (UserData != null)
@@ -297,15 +314,57 @@ public class UIController : MonoBehaviour
     public void LoadData()
     {
         LoggedIn = PlayerPrefs.GetInt("loggedIn", 0) == 1;
+        accessToken = PlayerPrefs.GetString("accessToken", "");
+        accessTokenExpiresAt = PlayerPrefs.GetString("accessTokenExpiresAt", "");
+        if (LoggedIn && !HasValidSession())
+        {
+            ClearSession();
+        }
         if (objectSpawner != null)
             objectSpawner.spawnOptionId = PlayerPrefs.GetInt("spawnOptionId", -1);
         string userJsonData = PlayerPrefs.GetString("userData", "{}");
         UserData = JsonUtility.FromJson<UserData>(userJsonData);
+        if (!LoggedIn || UserData == null || UserData.id <= 0)
+        {
+            if (LoggedIn) ClearSession();
+            UserData = null;
+        }
         string modelJsonData = PlayerPrefs.GetString("modelData", "{}");
         ModelData = JsonUtility.FromJson<ModelData>(modelJsonData);
         string conversationsJsonData = PlayerPrefs.GetString("conversationsData", "{}");
         ConversationsData = JsonUtility.FromJson<List<ConversationData>>(conversationsJsonData);
         currentConversationId = PlayerPrefs.GetInt("currentConversationId", -1);
+    }
+
+    public bool HasValidSession()
+    {
+        if (string.IsNullOrWhiteSpace(accessToken)) return false;
+        if (string.IsNullOrWhiteSpace(accessTokenExpiresAt)) return true;
+
+        return DateTime.TryParse(
+            accessTokenExpiresAt,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out DateTime expiresAt
+        ) && expiresAt > DateTime.UtcNow;
+    }
+
+    public void ClearSession()
+    {
+        loggedIn = false;
+        accessToken = null;
+        accessTokenExpiresAt = null;
+        currentConversationId = -1;
+        UserData = null;
+        MyModelsData = null;
+        FavoritesModelsData = null;
+        ConversationsData = new();
+        PlayerPrefs.DeleteKey("accessToken");
+        PlayerPrefs.DeleteKey("accessTokenExpiresAt");
+        PlayerPrefs.DeleteKey("userData");
+        PlayerPrefs.DeleteKey("currentConversationId");
+        PlayerPrefs.SetInt("loggedIn", 0);
+        PlayerPrefs.Save();
     }
 
     private void OnDisable()

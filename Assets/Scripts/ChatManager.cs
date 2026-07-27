@@ -11,6 +11,7 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private MessageManager AIMessageManager;
     [SerializeField] private Button SendButton;
     [SerializeField] private ApiController ApiController;
+    private bool isSending;
 
     private static ChatManager _instance;
     void Awake()
@@ -57,23 +58,53 @@ public class ChatManager : MonoBehaviour
 
     public void CreateUserChatMessage()
     {
-        CreateCustomUserChatMessage(MessageInputField.text);
-        if (ApiController)
+        if (isSending || ApiController == null) return;
+
+        string message = MessageInputField.text.Trim();
+        if (string.IsNullOrWhiteSpace(message)) return;
+        if (!UIController.Instance.HasValidSession())
         {
-            ChatMessageData chatMessageData = new() { message = MessageInputField.text };
-            MessageInputField.text = "";
-            ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) => CreateAIChatMessage(response), onError: (error) => Debug.Log(error));
+            CreateAIChatMessage("Tu sesión venció. Iniciá sesión nuevamente para continuar.");
+            return;
         }
 
+        CreateCustomUserChatMessage(message);
+        MessageInputField.text = "";
+        SetSending(true);
+        int? currentStepNumber = null;
+        if (
+            BuildController.Instance.CurrentStepDictionary.TryGetValue(
+                UIController.Instance.CurrentModelIndex,
+                out Paso currentStep
+            )
+        )
+        {
+            currentStepNumber = currentStep.paso;
+        }
+        ChatMessageData chatMessageData = new()
+        {
+            message = message,
+            conversation_id = UIController.Instance.CurrentConversationId > 0
+                ? UIController.Instance.CurrentConversationId
+                : (int?)null,
+            model_id = UIController.Instance.CurrentModelIndex > 0
+                ? UIController.Instance.CurrentModelIndex
+                : (int?)null,
+            current_step = currentStepNumber,
+        };
+        ApiController.SendMessageToAI(chatMessageData, onSuccess: (response) =>
+        {
+            CreateAIChatMessage(response);
+            SetSending(false);
+        }, onError: (error) =>
+        {
+            CreateAIChatMessage(error);
+            SetSending(false);
+        });
     }
 
     public void CreateCustomUserChatMessage(string message)
     {
-        if (!UIController.Instance.GuestUser)
-        {
-            ConversationMessageData conversationMessageData = new() { sender = UIController.Instance.UserData.username, message = message, conversation_id = UIController.Instance.CurrentConversationId };
-            BuildController.Instance.ChatMessages.Add(conversationMessageData);
-        }
         MessageManager userMessage = Instantiate(UserMessageManager, MessagesContainer.transform);
         userMessage.Username.text = UIController.Instance.UserData?.username ?? "Invitado";
         userMessage.Message.text = message;
@@ -85,10 +116,16 @@ public class ChatManager : MonoBehaviour
         MessageManager AImessage = Instantiate(AIMessageManager, MessagesContainer.transform);
         AImessage.Message.text = message;
         SetSize(AImessage.Message, AImessage.RectTransform, AImessage.padding);
-        if (!UIController.Instance.GuestUser)
+    }
+
+    private void SetSending(bool sending)
+    {
+        isSending = sending;
+        SendButton.interactable = !sending;
+        MessageInputField.interactable = !sending;
+        if (!sending)
         {
-            ConversationMessageData conversationMessageData = new() { sender = "BuildeAR Assistant", message = message, conversation_id = UIController.Instance.CurrentConversationId };
-            BuildController.Instance.ChatMessages.Add(conversationMessageData);
+            MessageInputField.ActivateInputField();
         }
     }
 

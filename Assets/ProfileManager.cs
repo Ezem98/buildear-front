@@ -39,11 +39,20 @@ public class ProfileManager : MonoBehaviour
 
     public void Logout()
     {
-        UIController.Instance.LoggedIn = false;
-        UIController.Instance.UserData = null;
-        UIController.Instance.MyModelsData = null;
-        UIController.Instance.ModelsData = null;
-        UIController.Instance.FavoritesModelsData = null;
-        UIController.Instance.ScreenHandler("Onboarding");
+        void ClearLocalSession()
+        {
+            UIController.Instance.ClearSession();
+            UIController.Instance.ModelsData = null;
+            UIController.Instance.ScreenHandler("Onboarding");
+        }
+
+        if (ApiController != null && UIController.Instance.HasValidSession())
+        {
+            ApiController.Logout(ClearLocalSession);
+        }
+        else
+        {
+            ClearLocalSession();
+        }
     }
 }
