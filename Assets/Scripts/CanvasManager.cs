@@ -9,6 +9,7 @@ using OpenAI;
 using OpenAI.Threads;
 using System.Linq;
 using Utilities.Extensions;
+using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 
 public class CanvasManager : MonoBehaviour
@@ -280,6 +281,13 @@ public class CanvasManager : MonoBehaviour
 
     public void CopyObject()
     {
+        SpawnedModelMetadata sourceMetadata = objectReference.GetComponent<SpawnedModelMetadata>();
+        if (sourceMetadata == null)
+        {
+            Debug.LogError("The selected object has no model metadata and cannot be copied safely.", objectReference);
+            return;
+        }
+
         Vector3 newPosition;
         Vector3 direction;
         if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
@@ -294,6 +302,19 @@ public class CanvasManager : MonoBehaviour
             newPosition = objectReference.transform.position - direction;
         }
         objectCopiedReference = Instantiate(objectReference, newPosition, objectReference.transform.rotation);
+        SpawnedModelMetadata copiedMetadata = objectCopiedReference.GetComponent<SpawnedModelMetadata>();
+        if (copiedMetadata == null)
+            copiedMetadata = objectCopiedReference.AddComponent<SpawnedModelMetadata>();
+        copiedMetadata.Initialize(sourceMetadata.ModelId);
+
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        if (objectSpawner != null)
+        {
+            objectSpawner.IncrementCount(sourceMetadata.ModelId);
+            BuildController.Instance.CalculateAmount();
+            BuildController.Instance.CalculateTime();
+        }
+
         CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponent<CanvasManager>();
         HideCanvas();
         objectCopiedCanvas.ActivateModelCanvas();
@@ -431,10 +452,20 @@ public class CanvasManager : MonoBehaviour
     // Update is called once per frame
     public void DestroyObject()
     {
+        SpawnedModelMetadata metadata = objectReference.GetComponent<SpawnedModelMetadata>();
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+
         HideCanvas();
         Destroy(objectReference);
-        UIController.Instance.objectSpawner.SetActive(true);
-        UIController.Instance.objectSpawner.ReduceCount(UIController.Instance.CurrentModelIndex);
+        if (objectSpawner != null)
+        {
+            objectSpawner.SetActive(true);
+            if (metadata != null)
+                objectSpawner.ReduceCount(metadata.ModelId);
+            else
+                Debug.LogWarning("The deleted object had no model metadata; its count could not be updated.");
+        }
+
         BuildController.Instance.CalculateAmount();
         BuildController.Instance.CalculateTime();
     }
