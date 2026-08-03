@@ -18,7 +18,7 @@
     "com.unity.xr.arcore": "5.1.4",
     "com.unity.xr.arfoundation": "5.1.4",
     "com.unity.xr.arkit": "5.1.4",
-    "com.unity.xr.interaction.toolkit": "3.0.4",
+    "com.unity.xr.interaction.toolkit": "3.0.8",
     "com.unity.xr.management": "4.4.1",
     "com.utilities.async": "https://github.com/RageAgainstThePixel/com.utilities.async.git#upm",
     "com.utilities.audio": "https://github.com/RageAgainstThePixel/com.utilities.audio.git#upm",
