@@ -41,6 +41,16 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(wall, Is.Not.Null);
             Assert.That(wall.localPosition.x, Is.EqualTo(-5f));
             Assert.That(wall.localScale.z, Is.EqualTo(10f));
+
+            bool hasMovementExtents = TryGetVector3PropertyOnRootComponents(
+                environment,
+                "m_CameraMovementBounds",
+                "m_Extent",
+                out Vector3 movementExtents
+            );
+            Assert.That(hasMovementExtents, Is.True);
+            Assert.That(movementExtents.x, Is.EqualTo(5f));
+            Assert.That(movementExtents.z, Is.EqualTo(5f));
         }
 
         private static Transform FindChild(Transform root, string childName)
@@ -52,6 +62,31 @@ namespace BuildeAR.Tests.EditMode
             }
 
             return null;
+        }
+
+        private static bool TryGetVector3PropertyOnRootComponents(
+            GameObject root,
+            string propertyName,
+            string relativePropertyName,
+            out Vector3 value
+        )
+        {
+            foreach (Component component in root.GetComponents<Component>())
+            {
+                if (component == null)
+                    continue;
+
+                SerializedObject serializedComponent = new(component);
+                SerializedProperty property = serializedComponent.FindProperty(propertyName);
+                if (property != null)
+                {
+                    value = property.FindPropertyRelative(relativePropertyName).vector3Value;
+                    return true;
+                }
+            }
+
+            value = default;
+            return false;
         }
     }
 }

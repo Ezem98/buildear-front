@@ -33,6 +33,26 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 7618165371811446966, guid: c7b92c392902f4043a03a64032c02fe1,
+        type: 3}
+      propertyPath: m_CameraMovementBounds.m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7618165371811446966, guid: c7b92c392902f4043a03a64032c02fe1,
+        type: 3}
+      propertyPath: m_CameraMovementBounds.m_Center.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7618165371811446966, guid: c7b92c392902f4043a03a64032c02fe1,
+        type: 3}
+      propertyPath: m_CameraMovementBounds.m_Extent.x
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7618165371811446966, guid: c7b92c392902f4043a03a64032c02fe1,
+        type: 3}
+      propertyPath: m_CameraMovementBounds.m_Extent.z
+      value: 5
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
