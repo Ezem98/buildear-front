@@ -329,7 +329,6 @@ public class BuildController : MonoBehaviour
         ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
         if (objectSpawner == null)
         {
-            Debug.LogWarning("[BuildeAR Cost] No se pudo calcular el total porque no hay un ObjectSpawner configurado.");
             return;
         }
 
@@ -341,19 +340,12 @@ public class BuildController : MonoBehaviour
             Guide guide = entry.Value;
             if (countDictionary.TryGetValue(modelId, out int count))
             {
-                float subtotal = guide.costo * count;
-                costAmount += subtotal;
-                Debug.Log($"[BuildeAR Cost] Modelo {modelId}: costo unitario={guide.costo:0.00} USD, cantidad={count}, subtotal={subtotal:0.00} USD.");
-            }
-            else
-            {
-                Debug.LogWarning($"[BuildeAR Cost] El modelo {modelId} tiene guía con costo={guide.costo:0.00} USD, pero no tiene cantidad registrada.");
+                costAmount += guide.costo * count;
             }
         }
 
         if (costAmount <= 0) CostText.text = "Sin estimación";
         else CostText.text = $"≈ {costAmount:0.00} USD";
-        Debug.Log($"[BuildeAR Cost] Total calculado={costAmount:0.00} USD. Texto mostrado='{CostText.text}'.");
     }
 
     public void CalculateTime()
