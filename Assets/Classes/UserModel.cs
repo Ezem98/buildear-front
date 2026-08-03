@@ -10,6 +10,7 @@ public class UserModelData
     public int current_step;
     // Cambiamos 'guide' a string para la primera deserialización
     public string guide;
+    public string prompt_version;
     // Esta variable contendrá el objeto deserializado
     [JsonIgnore]
     public Guide guideObject;
