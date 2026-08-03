@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace BuildeAR.Tests.EditMode
@@ -82,6 +83,29 @@ namespace BuildeAR.Tests.EditMode
 
             Assert.That(spawned, Is.False);
             Assert.That(spawner.CountDictionary, Is.Empty);
+        }
+
+        [Test]
+        public void TrySpawnObject_DisablesThrowForKinematicGrabInteractable()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = Track(new GameObject("Kinematic model prefab"));
+            Rigidbody rigidbody = prefab.AddComponent<Rigidbody>();
+            rigidbody.isKinematic = true;
+            XRGrabInteractable grabInteractable = prefab.AddComponent<XRGrabInteractable>();
+            grabInteractable.throwOnDetach = true;
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 42 };
+            spawner.spawnOptionId = 42;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            bool spawned = spawner.TrySpawnObject(Vector3.forward, Vector3.up);
+
+            Assert.That(spawned, Is.True);
+            XRGrabInteractable spawnedGrab = spawner.transform.GetChild(0).GetComponent<XRGrabInteractable>();
+            Assert.That(spawnedGrab.throwOnDetach, Is.False);
         }
 
         private ObjectSpawner CreateSpawner()

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Utilities;
 
 namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
@@ -256,6 +257,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             }
 
             var newObject = Instantiate(m_ObjectPrefabs[objectIndex]);
+            DisableThrowForKinematicGrabInteractables(newObject);
             var metadata = newObject.GetComponent<SpawnedModelMetadata>();
             if (metadata == null)
                 metadata = newObject.AddComponent<SpawnedModelMetadata>();
@@ -288,6 +290,16 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             IncrementCount(modelId);
             objectSpawned?.Invoke(newObject);
             return true;
+        }
+
+        static void DisableThrowForKinematicGrabInteractables(GameObject root)
+        {
+            foreach (var grabInteractable in root.GetComponentsInChildren<XRGrabInteractable>(true))
+            {
+                var rigidbody = grabInteractable.GetComponent<Rigidbody>();
+                if (rigidbody != null && rigidbody.isKinematic)
+                    grabInteractable.throwOnDetach = false;
+            }
         }
 
         public void IncrementCount(int modelId)
