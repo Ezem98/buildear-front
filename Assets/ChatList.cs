@@ -14,8 +14,8 @@ public class ChatList : MonoBehaviour
         LoadingText.SetActive(true);
         foreach (ConversationData conversation in UIController.Instance.ConversationsData)
         {
-            ChatHistoryItemManager chatHistoryItemButton = Instantiate(ChatHistoryItemManager, ChatItemsContainer.transform); ;
-            chatHistoryItemButton.DateTime.text = conversation.created_at;
+            ChatHistoryItemManager chatHistoryItemButton = Instantiate(ChatHistoryItemManager, ChatItemsContainer.transform);
+            chatHistoryItemButton.Initialize(conversation);
         }
 
         LoadingText.SetActive(false);

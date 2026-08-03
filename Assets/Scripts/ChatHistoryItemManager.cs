@@ -5,11 +5,33 @@ public class ChatHistoryItemManager : MonoBehaviour
 {
     [SerializeField] private Button Button;
     [SerializeField] public Text DateTime;
+    private int conversationId = -1;
 
-    private void Start()
+    public void Initialize(ConversationData conversation)
     {
-        Button.onClick.AddListener(() => UIController.Instance.ScreenHandler("ChatHistoryItem"));
+        conversationId = conversation.id;
+        DateTime.text = conversation.created_at;
     }
 
-    //#endregion
+    private void OnEnable()
+    {
+        Button.onClick.AddListener(OpenConversation);
+    }
+
+    private void OnDisable()
+    {
+        Button.onClick.RemoveListener(OpenConversation);
+    }
+
+    private void OpenConversation()
+    {
+        if (conversationId < 0)
+        {
+            Debug.LogError("The conversation history item has no conversation ID configured.", this);
+            return;
+        }
+
+        UIController.Instance.CurrentConversationId = conversationId;
+        UIController.Instance.ScreenHandler("ChatHistoryItem");
+    }
 }
