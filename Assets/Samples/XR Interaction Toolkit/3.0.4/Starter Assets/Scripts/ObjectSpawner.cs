@@ -312,7 +312,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 placementSettings.HideMenusInSnapGroup(true);
         }
 
-        static void SnapToNearbyObject(GameObject spawnedObject)
+        void SnapToNearbyObject(GameObject spawnedObject)
         {
             var snapSettings = spawnedObject.GetComponent<SurfacePlacementOffset>();
             var spawnedCollider = spawnedObject.GetComponent<BoxCollider>();
