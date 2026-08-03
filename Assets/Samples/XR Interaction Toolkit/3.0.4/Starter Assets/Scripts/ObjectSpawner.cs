@@ -337,12 +337,6 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 if (otherSettings == null)
                     continue;
 
-                if (otherSettings == snapSettings || !otherSettings.enableEdgeSnap ||
-                    otherSettings.snapGroup != snapSettings.snapGroup)
-                {
-                    continue;
-                }
-
                 if (!TryGetClosestAdjacentPose(
                     spawnedObject,
                     spawnedCollider,
