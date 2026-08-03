@@ -66,8 +66,8 @@ public class UIController : MonoBehaviour
     public ObjectSpawner m_ObjectSpawner;
     public ApiController ApiController;
 #if UNITY_EDITOR
-    [Tooltip("Enable only when testing touch input with a mouse in the regular Game view. Keep disabled when using Device Simulator or Unity Remote.")]
-    [SerializeField] private bool simulateTouchWithMouseInEditor;
+    [Tooltip("Converts mouse input to touch while testing inside Unity Editor.")]
+    [SerializeField] private bool simulateTouchWithMouseInEditor = true;
     private bool touchSimulationEnabledByThisController;
 #endif
 
