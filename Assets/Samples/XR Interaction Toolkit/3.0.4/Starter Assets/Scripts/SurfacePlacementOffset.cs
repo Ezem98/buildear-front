@@ -73,6 +73,17 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             set => m_EnableEdgeSnap = value;
         }
 
+        public static Vector3 GetLocalRotationAxis(GameObject target, bool rotateRight)
+        {
+            SurfacePlacementOffset placementSettings =
+                target != null ? target.GetComponentInParent<SurfacePlacementOffset>() : null;
+
+            if (placementSettings != null && placementSettings.enableEdgeSnap)
+                return rotateRight ? Vector3.back : Vector3.forward;
+
+            return rotateRight ? Vector3.down : Vector3.up;
+        }
+
         public float snapDistance
         {
             get => m_SnapDistance;

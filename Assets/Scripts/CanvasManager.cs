@@ -221,7 +221,15 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         {
             isRotatingRight = true;
             isRotatingLeft = false;
-            objectReference.transform.Rotate(Vector3.down, rotationSpeed * Time.deltaTime);
+            Vector3 rotationAxis = SurfacePlacementOffset.GetLocalRotationAxis(
+                objectReference,
+                true
+            );
+            objectReference.transform.Rotate(
+                rotationAxis,
+                rotationSpeed * Time.deltaTime,
+                Space.Self
+            );
         }
     }
 
@@ -231,7 +239,15 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         {
             isRotatingRight = false;
             isRotatingLeft = true;
-            objectReference.transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+            Vector3 rotationAxis = SurfacePlacementOffset.GetLocalRotationAxis(
+                objectReference,
+                false
+            );
+            objectReference.transform.Rotate(
+                rotationAxis,
+                rotationSpeed * Time.deltaTime,
+                Space.Self
+            );
         }
     }
 

@@ -89,6 +89,28 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void CeramicRotation_UsesSurfaceNormalAndKeepsModelFlat()
+        {
+            GameObject ceramic = Track(new GameObject("Ceramic"));
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.enableEdgeSnap = true;
+            Vector3 surfaceNormal = ceramic.transform.forward;
+
+            Vector3 rotationAxis = SurfacePlacementOffset.GetLocalRotationAxis(
+                ceramic,
+                true
+            );
+            ceramic.transform.Rotate(rotationAxis, 90f, Space.Self);
+
+            Assert.That(rotationAxis, Is.EqualTo(Vector3.back));
+            Assert.That(
+                Vector3.Dot(surfaceNormal, ceramic.transform.forward),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+        }
+
+        [Test]
         public void TrySpawnObject_DisablesThrowForKinematicGrabInteractable()
         {
             ObjectSpawner spawner = CreateSpawner();
