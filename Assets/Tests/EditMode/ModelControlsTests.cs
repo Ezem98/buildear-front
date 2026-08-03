@@ -18,5 +18,20 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(source, Does.Contain("foreach (Transform action in actions.transform)"));
             Assert.That(source, Does.Contain("if (actions == null)"));
         }
+
+        [Test]
+        public void XRInteractionToolkit_IncludesScreenSpaceCanvasNullGuard()
+        {
+            string manifest = File.ReadAllText(
+                Path.GetFullPath(
+                    Path.Combine(Application.dataPath, "..", "Packages", "manifest.json")
+                )
+            );
+
+            Assert.That(
+                manifest,
+                Does.Contain("\"com.unity.xr.interaction.toolkit\": \"3.0.8\"")
+            );
+        }
     }
 }
