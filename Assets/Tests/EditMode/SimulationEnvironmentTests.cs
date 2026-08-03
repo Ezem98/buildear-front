@@ -1,3 +1,4 @@
+using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -16,28 +17,16 @@ namespace BuildeAR.Tests.EditMode
         [Test]
         public void SimulationEnvironmentManager_UsesExpandedEnvironment()
         {
-            Object manager = AssetDatabase.LoadMainAssetAtPath(EnvironmentManagerPath);
-            Assert.That(manager, Is.Not.Null);
+            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            string managerPath = Path.Combine(projectRoot, EnvironmentManagerPath);
+            Assert.That(File.Exists(managerPath), Is.True);
+            string managerAsset = File.ReadAllText(managerPath);
 
-            SerializedObject serializedManager = new(manager);
-            SerializedProperty paths = serializedManager.FindProperty("m_EnvironmentPrefabPaths");
-
-            Assert.That(paths, Is.Not.Null);
-            bool containsExpandedEnvironment = false;
-            for (int index = 0; index < paths.arraySize; index++)
-            {
-                if (paths.GetArrayElementAtIndex(index).stringValue == EnvironmentPath)
-                {
-                    containsExpandedEnvironment = true;
-                    break;
-                }
-            }
-
-            Assert.That(containsExpandedEnvironment, Is.True);
-            Assert.That(
-                serializedManager.FindProperty("m_FallbackAtEndOfList").boolValue,
-                Is.False
+            StringAssert.Contains(
+                $"- {EnvironmentPath}",
+                managerAsset
             );
+            StringAssert.Contains("m_FallbackAtEndOfList: 0", managerAsset);
         }
 
         [Test]

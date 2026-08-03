@@ -292,6 +292,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
         if (objectSpawner != null)
         {
+            objectSpawner.RegisterSpawnedObject(objectCopiedReference);
             objectSpawner.IncrementCount(sourceMetadata.ModelId);
             BuildController.Instance.CalculateAmount();
             BuildController.Instance.CalculateTime();
@@ -448,6 +449,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         if (objectSpawner != null)
         {
             objectSpawner.SetActive(true);
+            objectSpawner.UnregisterSpawnedObject(objectToDestroy);
             if (metadata != null)
                 objectSpawner.ReduceCount(metadata.ModelId);
             else

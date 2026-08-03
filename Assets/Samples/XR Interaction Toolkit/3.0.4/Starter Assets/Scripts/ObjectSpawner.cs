@@ -45,6 +45,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         List<int> m_ObjectPrefabsIndex = new();
 
         private Dictionary<int, int> countDictionary = new();
+        readonly List<GameObject> m_SpawnedObjects = new();
         public Dictionary<int, int> CountDictionary { get => countDictionary; set => countDictionary = value; }
 
         /// <summary>
@@ -268,6 +269,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 
             newObject.transform.position = GetSpawnPosition(newObject, spawnPoint, spawnNormal);
             SnapToNearbyObject(newObject);
+            RegisterSpawnedObject(newObject);
             ClosePlacementMenus(newObject);
             EnsureFacingCamera();
 
@@ -322,8 +324,19 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             Quaternion snappedRotation = spawnedObject.transform.rotation;
             float closestDistance = snapSettings.snapDistance;
 
-            foreach (var otherSettings in SurfacePlacementOffset.FindActiveInLoadedScenes())
+            for (int index = m_SpawnedObjects.Count - 1; index >= 0; index--)
             {
+                GameObject otherObject = m_SpawnedObjects[index];
+                if (otherObject == null)
+                {
+                    m_SpawnedObjects.RemoveAt(index);
+                    continue;
+                }
+
+                var otherSettings = otherObject.GetComponent<SurfacePlacementOffset>();
+                if (otherSettings == null)
+                    continue;
+
                 if (otherSettings == snapSettings || !otherSettings.enableEdgeSnap ||
                     otherSettings.snapGroup != snapSettings.snapGroup ||
                     otherSettings.GetComponent<SpawnedModelMetadata>() == null)
@@ -351,6 +364,18 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             }
 
             spawnedObject.transform.SetPositionAndRotation(snappedPosition, snappedRotation);
+        }
+
+        public void RegisterSpawnedObject(GameObject spawnedObject)
+        {
+            if (spawnedObject != null && !m_SpawnedObjects.Contains(spawnedObject))
+                m_SpawnedObjects.Add(spawnedObject);
+        }
+
+        public void UnregisterSpawnedObject(GameObject spawnedObject)
+        {
+            if (spawnedObject != null)
+                m_SpawnedObjects.Remove(spawnedObject);
         }
 
         public static bool SnapNextToObject(GameObject objectToSnap, GameObject referenceObject)
