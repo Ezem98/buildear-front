@@ -7,9 +7,6 @@ using System.Collections.Generic;
 
 public class ApiController : MonoBehaviour
 {
-    private const string CurrentGuidePromptVersion =
-        "guide-responses-v6-argentine-vocabulary";
-
     // URL de tu API
     // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
@@ -359,13 +356,7 @@ public class ApiController : MonoBehaviour
             bool hasSavedGuide =
                 userModelData?.guideObject?.pasos != null
                 && userModelData.guideObject.pasos.Count > 0;
-            bool hasCostEstimate = hasSavedGuide && userModelData.guideObject.costo > 0;
-            bool hasCurrentPrompt = hasSavedGuide
-                && string.Equals(
-                    userModelData.prompt_version,
-                    CurrentGuidePromptVersion,
-                    System.StringComparison.Ordinal);
-            if (hasSavedGuide && hasCostEstimate && hasCurrentPrompt)
+            if (hasSavedGuide)
             {
                 UIController.Instance.UserModelData = userModelData;
                 int savedStep = userModelData.current_step > 0 ? userModelData.current_step : 1;
@@ -373,10 +364,7 @@ public class ApiController : MonoBehaviour
                 return;
             }
 
-            RequestGeneratedGuide(
-                modelId,
-                model,
-                hasSavedGuide ? userModelData : null);
+            RequestGeneratedGuide(modelId, model);
         }, onError: (error) =>
         {
             Debug.Log(error);
@@ -385,10 +373,7 @@ public class ApiController : MonoBehaviour
         });
     }
 
-    private void RequestGeneratedGuide(
-        int modelId,
-        ModelData model,
-        UserModelData savedUserModel)
+    private void RequestGeneratedGuide(int modelId, ModelData model)
     {
         int experienceLevel = UIController.Instance.UserData?.experience_level ?? 0;
         TutorialData tutorialData = new()
@@ -633,19 +618,6 @@ public class ApiController : MonoBehaviour
             onError?.Invoke("Respuesta invalida al consultar favoritos.");
         }, onError: (jsonResponse) =>
         {
-            if (savedUserModel?.guideObject?.pasos != null
-                && savedUserModel.guideObject.pasos.Count > 0)
-            {
-                UIController.Instance.UserModelData = savedUserModel;
-                int savedStep = savedUserModel.current_step > 0
-                    ? savedUserModel.current_step
-                    : 1;
-                ShowGuide(modelId, savedUserModel.guideObject, savedStep);
-                BuildController.Instance.ShowTemporaryMessage(
-                    "No se pudo actualizar la guía. Se muestra la versión guardada.");
-                return;
-            }
-
             Debug.Log(jsonResponse);
             onError?.Invoke(jsonResponse);
         }));

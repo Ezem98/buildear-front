@@ -4,16 +4,18 @@ using UnityEngine;
 
 namespace BuildeAR.Tests.EditMode
 {
-    public class SavedGuideFallbackTests
+    public class SavedGuideReuseTests
     {
         [Test]
-        public void GuideRefreshFailure_ShowsPreviouslySavedGuide()
+        public void ExistingGuide_IsReusedWithItsSavedStepWithoutRegeneration()
         {
             string source = File.ReadAllText(Path.Combine(Application.dataPath, "Scripts", "APIController.cs"));
 
-            Assert.That(source, Does.Contain("hasSavedGuide ? userModelData : null"));
-            Assert.That(source, Does.Contain("ShowGuide(modelId, savedUserModel.guideObject, savedStep);"));
-            Assert.That(source, Does.Contain("Se muestra la versión guardada."));
+            Assert.That(source, Does.Contain("if (hasSavedGuide)"));
+            Assert.That(source, Does.Contain("int savedStep = userModelData.current_step > 0"));
+            Assert.That(source, Does.Contain("ShowGuide(modelId, userModelData.guideObject, savedStep);"));
+            Assert.That(source, Does.Not.Contain("hasCostEstimate"));
+            Assert.That(source, Does.Not.Contain("hasCurrentPrompt"));
         }
     }
 }
