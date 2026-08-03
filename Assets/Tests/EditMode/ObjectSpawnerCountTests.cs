@@ -216,6 +216,50 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void CeramicSelection_ClosesOtherCeramicMenuBeforeOpeningSelectedOne()
+        {
+            GameObject firstCeramic = CreateSelectableCeramic("First ceramic");
+            CanvasActivationReceiver firstReceiver =
+                firstCeramic.GetComponent<CanvasActivationReceiver>();
+            GameObject secondCeramic = CreateSelectableCeramic("Second ceramic");
+            CanvasActivationReceiver secondReceiver =
+                secondCeramic.GetComponent<CanvasActivationReceiver>();
+
+            secondCeramic.GetComponent<XRGrabInteractable>().selectEntered.Invoke(null);
+
+            Assert.That(firstReceiver.HideCount, Is.EqualTo(1));
+            Assert.That(firstReceiver.ActivationCount, Is.Zero);
+            Assert.That(secondReceiver.HideCount, Is.Zero);
+            Assert.That(secondReceiver.ActivationCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void TrySpawnObject_CeramicClosesAllCeramicMenusWithoutOpeningOne()
+        {
+            GameObject existingCeramic = CreateSelectableCeramic("Existing ceramic");
+            CanvasActivationReceiver existingReceiver =
+                existingCeramic.GetComponent<CanvasActivationReceiver>();
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = CreateSelectableCeramic("Ceramic prefab");
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 8 };
+            spawner.spawnOptionId = 8;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Assert.That(spawner.TrySpawnObject(Vector3.forward, Vector3.up), Is.True);
+
+            CanvasActivationReceiver spawnedReceiver = spawner.transform
+                .GetChild(0)
+                .GetComponent<CanvasActivationReceiver>();
+            Assert.That(existingReceiver.HideCount, Is.EqualTo(1));
+            Assert.That(existingReceiver.ActivationCount, Is.Zero);
+            Assert.That(spawnedReceiver.HideCount, Is.EqualTo(1));
+            Assert.That(spawnedReceiver.ActivationCount, Is.Zero);
+        }
+
+        [Test]
         public void SelectAttempt_AfterSelection_DoesNotBlockFollowingClick()
         {
             bool everHadSelection = true;
@@ -243,6 +287,22 @@ namespace BuildeAR.Tests.EditMode
             return spawner;
         }
 
+        private GameObject CreateSelectableCeramic(string name)
+        {
+            GameObject ceramic = Track(new GameObject(name));
+            ceramic.AddComponent<BoxCollider>();
+            Rigidbody rigidbody = ceramic.AddComponent<Rigidbody>();
+            rigidbody.isKinematic = true;
+            XRGrabInteractable grabInteractable = ceramic.AddComponent<XRGrabInteractable>();
+            grabInteractable.throwOnDetach = false;
+            ceramic.AddComponent<CanvasActivationReceiver>();
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.snapGroup = "Ceramic";
+            placementSettings.activateCanvasOnSelect = true;
+            return ceramic;
+        }
+
         private GameObject Track(GameObject target)
         {
             objectsToDestroy.Add(target);
@@ -253,10 +313,16 @@ namespace BuildeAR.Tests.EditMode
     public class CanvasActivationReceiver : MonoBehaviour
     {
         public int ActivationCount { get; private set; }
+        public int HideCount { get; private set; }
 
         public void ActivateModelCanvas()
         {
             ActivationCount++;
+        }
+
+        public void HideCanvas()
+        {
+            HideCount++;
         }
     }
 }

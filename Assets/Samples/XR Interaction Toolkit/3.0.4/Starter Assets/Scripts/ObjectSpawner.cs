@@ -268,6 +268,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 
             newObject.transform.position = GetSpawnPosition(newObject, spawnPoint, spawnNormal);
             SnapToNearbyObject(newObject);
+            ClosePlacementMenus(newObject);
             EnsureFacingCamera();
 
             var facePosition = m_CameraToFace.transform.position;
@@ -300,6 +301,13 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 return spawnPoint;
 
             return spawnPoint + spawnNormal.normalized * placementOffset.offset;
+        }
+
+        static void ClosePlacementMenus(GameObject spawnedObject)
+        {
+            var placementSettings = spawnedObject.GetComponent<SurfacePlacementOffset>();
+            if (placementSettings != null && placementSettings.activateCanvasOnSelect)
+                placementSettings.HideMenusInSnapGroup(true);
         }
 
         static void SnapToNearbyObject(GameObject spawnedObject)

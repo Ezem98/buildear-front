@@ -188,45 +188,20 @@ public class CanvasManager : MonoBehaviour
 
     public void HideCanvas()
     {
-        if (activeMenu == "modelActions")
-        {
-            modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(5).transform.DOScale(Vector3.zero, 0.3f);
-        }
-        if (activeMenu == "resizeActions")
-        {
-            resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(7).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        }
-        if (activeMenu == "rotateActions")
-        {
-            rotateActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        }
-        if (activeMenu == "moveActions")
-        {
-            moveActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-        }
+        HideMenu(modelActions);
+        HideMenu(resizeActions);
+        HideMenu(rotateActions);
+        HideMenu(moveActions);
         activeMenu = menu[0]; // modelActions
+    }
+
+    private static void HideMenu(GameObject actions)
+    {
+        if (actions == null)
+            return;
+
+        foreach (Transform action in actions.transform)
+            action.DOScale(Vector3.zero, 0.3f);
     }
 
     public void RotateRightAction()
@@ -318,8 +293,12 @@ public class CanvasManager : MonoBehaviour
         }
 
         CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponentInChildren<CanvasManager>(true);
+        SurfacePlacementOffset copiedPlacementSettings =
+            objectCopiedReference.GetComponent<SurfacePlacementOffset>();
         HideCanvas();
-        if (objectCopiedCanvas != null)
+        if (copiedPlacementSettings != null && copiedPlacementSettings.activateCanvasOnSelect)
+            copiedPlacementSettings.HideMenusInSnapGroup(true);
+        else if (objectCopiedCanvas != null)
             objectCopiedCanvas.ActivateModelCanvas();
     }
 

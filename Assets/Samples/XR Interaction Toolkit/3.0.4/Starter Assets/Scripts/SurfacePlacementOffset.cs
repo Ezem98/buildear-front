@@ -106,10 +106,29 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 
         void OnSelectEntered(SelectEnterEventArgs args)
         {
+            HideMenusInSnapGroup(false);
             gameObject.SendMessage(
                 "ActivateModelCanvas",
                 SendMessageOptions.DontRequireReceiver
             );
+        }
+
+        public void HideMenusInSnapGroup(bool includeThisObject)
+        {
+            foreach (var placementSettings in FindObjectsOfType<SurfacePlacementOffset>())
+            {
+                if (!placementSettings.m_ActivateCanvasOnSelect ||
+                    placementSettings.m_SnapGroup != m_SnapGroup ||
+                    (!includeThisObject && placementSettings == this))
+                {
+                    continue;
+                }
+
+                placementSettings.gameObject.SendMessage(
+                    "HideCanvas",
+                    SendMessageOptions.DontRequireReceiver
+                );
+            }
         }
     }
 }
