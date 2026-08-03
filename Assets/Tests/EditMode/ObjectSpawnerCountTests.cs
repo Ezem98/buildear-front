@@ -178,6 +178,24 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void SnapNextToObject_PlacesCopyFlushAgainstSourceEdge()
+        {
+            GameObject source = CreateSnappingCeramic("Source ceramic", Vector3.zero);
+            GameObject copy = CreateSnappingCeramic(
+                "Copied ceramic",
+                new Vector3(0f, -0.5f, 0f)
+            );
+
+            bool snapped = ObjectSpawner.SnapNextToObject(copy, source);
+
+            Assert.That(snapped, Is.True);
+            Assert.That(copy.transform.position.x, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(copy.transform.position.y, Is.EqualTo(-0.8f).Within(0.0001f));
+            Assert.That(copy.transform.position.z, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(copy.transform.rotation, Is.EqualTo(source.transform.rotation));
+        }
+
+        [Test]
         public void CeramicPrefab_RuntimeColliderCoversCompleteMesh()
         {
             const string ceramicPath = "Assets/Prefabs/Pisos/Ceramic.prefab";
@@ -210,6 +228,7 @@ namespace BuildeAR.Tests.EditMode
                 ceramic.AddComponent<SurfacePlacementOffset>();
             placementSettings.activateCanvasOnSelect = true;
 
+            Assert.That(grabInteractable.selectFilters.count, Is.EqualTo(1));
             grabInteractable.selectEntered.Invoke(null);
 
             Assert.That(receiver.ActivationCount, Is.EqualTo(1));
@@ -300,6 +319,19 @@ namespace BuildeAR.Tests.EditMode
                 ceramic.AddComponent<SurfacePlacementOffset>();
             placementSettings.snapGroup = "Ceramic";
             placementSettings.activateCanvasOnSelect = true;
+            return ceramic;
+        }
+
+        private GameObject CreateSnappingCeramic(string name, Vector3 position)
+        {
+            GameObject ceramic = Track(new GameObject(name));
+            ceramic.transform.position = position;
+            BoxCollider boxCollider = ceramic.AddComponent<BoxCollider>();
+            boxCollider.size = new Vector3(0.8f, 0.8f, 0.01f);
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.enableEdgeSnap = true;
+            placementSettings.snapGroup = "Ceramic";
             return ceramic;
         }
 

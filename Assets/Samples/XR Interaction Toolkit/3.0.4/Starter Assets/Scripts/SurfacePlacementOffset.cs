@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Filtering;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 {
     [DisallowMultipleComponent]
-    public class SurfacePlacementOffset : MonoBehaviour
+    public class SurfacePlacementOffset : MonoBehaviour, IXRSelectFilter
     {
         const float k_MinimumColliderThickness = 0.01f;
 
@@ -63,6 +65,8 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             }
         }
 
+        public bool canProcess => isActiveAndEnabled && m_ActivateCanvasOnSelect;
+
         void Awake()
         {
             if (m_FitBoxColliderToMesh)
@@ -74,7 +78,10 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         void OnDestroy()
         {
             if (m_GrabInteractable != null)
+            {
                 m_GrabInteractable.selectEntered.RemoveListener(OnSelectEntered);
+                m_GrabInteractable.selectFilters.Remove(this);
+            }
         }
 
         public void FitBoxColliderToMesh()
@@ -97,11 +104,32 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         void RefreshSelectionListener()
         {
             if (m_GrabInteractable != null)
+            {
                 m_GrabInteractable.selectEntered.RemoveListener(OnSelectEntered);
+                m_GrabInteractable.selectFilters.Remove(this);
+            }
 
             m_GrabInteractable = GetComponent<XRGrabInteractable>();
             if (m_ActivateCanvasOnSelect && m_GrabInteractable != null)
+            {
                 m_GrabInteractable.selectEntered.AddListener(OnSelectEntered);
+                m_GrabInteractable.selectFilters.Add(this);
+            }
+        }
+
+        public bool Process(
+            IXRSelectInteractor interactor,
+            IXRSelectInteractable interactable
+        )
+        {
+            if (interactor is XRRayInteractor rayInteractor &&
+                rayInteractor.TryGetCurrentUIRaycastResult(out var uiRaycastResult) &&
+                uiRaycastResult.gameObject != null)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         void OnSelectEntered(SelectEnterEventArgs args)
@@ -130,5 +158,6 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 );
             }
         }
+
     }
 }

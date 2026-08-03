@@ -284,6 +284,11 @@ public class CanvasManager : MonoBehaviour
             copiedMetadata = objectCopiedReference.AddComponent<SpawnedModelMetadata>();
         copiedMetadata.Initialize(sourceMetadata.ModelId);
 
+        SurfacePlacementOffset copiedPlacementSettings =
+            objectCopiedReference.GetComponent<SurfacePlacementOffset>();
+        if (copiedPlacementSettings != null && copiedPlacementSettings.enableEdgeSnap)
+            ObjectSpawner.SnapNextToObject(objectCopiedReference, sourceObject);
+
         ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
         if (objectSpawner != null)
         {
@@ -293,8 +298,6 @@ public class CanvasManager : MonoBehaviour
         }
 
         CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponentInChildren<CanvasManager>(true);
-        SurfacePlacementOffset copiedPlacementSettings =
-            objectCopiedReference.GetComponent<SurfacePlacementOffset>();
         HideCanvas();
         if (copiedPlacementSettings != null && copiedPlacementSettings.activateCanvasOnSelect)
             copiedPlacementSettings.HideMenusInSnapGroup(true);

@@ -331,46 +331,115 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                     continue;
                 }
 
-                var otherCollider = otherSettings.GetComponent<BoxCollider>();
-                if (otherCollider == null)
+                if (!TryGetClosestAdjacentPose(
+                    spawnedObject,
+                    spawnedCollider,
+                    otherSettings,
+                    desiredPosition,
+                    out Vector3 candidatePosition,
+                    out Quaternion candidateRotation,
+                    out float candidateDistance
+                ))
                     continue;
 
-                Transform otherTransform = otherSettings.transform;
-                Vector3 axisX = otherTransform.right.normalized;
-                Vector3 axisY = otherTransform.up.normalized;
-                float combinedHalfX = GetScaledHalfSize(otherCollider, 0) +
-                    GetScaledHalfSize(spawnedCollider, 0);
-                float combinedHalfY = GetScaledHalfSize(otherCollider, 1) +
-                    GetScaledHalfSize(spawnedCollider, 1);
-                Vector3 otherCenter = otherTransform.TransformPoint(otherCollider.center);
-                Quaternion candidateRotation = otherTransform.rotation;
-                Vector3 spawnedCenterOffset = candidateRotation * Vector3.Scale(
-                    spawnedCollider.center,
-                    spawnedObject.transform.lossyScale
-                );
-
-                Vector3[] candidateCenters =
+                if (candidateDistance <= closestDistance)
                 {
-                    otherCenter + axisX * combinedHalfX,
-                    otherCenter - axisX * combinedHalfX,
-                    otherCenter + axisY * combinedHalfY,
-                    otherCenter - axisY * combinedHalfY,
-                };
-
-                foreach (Vector3 candidateCenter in candidateCenters)
-                {
-                    Vector3 candidatePosition = candidateCenter - spawnedCenterOffset;
-                    float distance = Vector3.Distance(desiredPosition, candidatePosition);
-                    if (distance <= closestDistance)
-                    {
-                        closestDistance = distance;
-                        snappedPosition = candidatePosition;
-                        snappedRotation = candidateRotation;
-                    }
+                    closestDistance = candidateDistance;
+                    snappedPosition = candidatePosition;
+                    snappedRotation = candidateRotation;
                 }
             }
 
             spawnedObject.transform.SetPositionAndRotation(snappedPosition, snappedRotation);
+        }
+
+        public static bool SnapNextToObject(GameObject objectToSnap, GameObject referenceObject)
+        {
+            if (objectToSnap == null || referenceObject == null)
+                return false;
+
+            var snapSettings = objectToSnap.GetComponent<SurfacePlacementOffset>();
+            var referenceSettings = referenceObject.GetComponent<SurfacePlacementOffset>();
+            var objectCollider = objectToSnap.GetComponent<BoxCollider>();
+            if (snapSettings == null || referenceSettings == null || objectCollider == null ||
+                !snapSettings.enableEdgeSnap || !referenceSettings.enableEdgeSnap ||
+                snapSettings.snapGroup != referenceSettings.snapGroup)
+            {
+                return false;
+            }
+
+            if (!TryGetClosestAdjacentPose(
+                objectToSnap,
+                objectCollider,
+                referenceSettings,
+                objectToSnap.transform.position,
+                out Vector3 snappedPosition,
+                out Quaternion snappedRotation,
+                out _
+            ))
+            {
+                return false;
+            }
+
+            objectToSnap.transform.SetPositionAndRotation(snappedPosition, snappedRotation);
+            return true;
+        }
+
+        static bool TryGetClosestAdjacentPose(
+            GameObject objectToSnap,
+            BoxCollider objectCollider,
+            SurfacePlacementOffset referenceSettings,
+            Vector3 desiredPosition,
+            out Vector3 snappedPosition,
+            out Quaternion snappedRotation,
+            out float snappedDistance
+        )
+        {
+            var referenceCollider = referenceSettings.GetComponent<BoxCollider>();
+            if (referenceCollider == null)
+            {
+                snappedPosition = default;
+                snappedRotation = default;
+                snappedDistance = default;
+                return false;
+            }
+
+            Transform referenceTransform = referenceSettings.transform;
+            Vector3 axisX = referenceTransform.right.normalized;
+            Vector3 axisY = referenceTransform.up.normalized;
+            float combinedHalfX = GetScaledHalfSize(referenceCollider, 0) +
+                GetScaledHalfSize(objectCollider, 0);
+            float combinedHalfY = GetScaledHalfSize(referenceCollider, 1) +
+                GetScaledHalfSize(objectCollider, 1);
+            Vector3 referenceCenter = referenceTransform.TransformPoint(referenceCollider.center);
+            snappedRotation = referenceTransform.rotation;
+            Vector3 objectCenterOffset = snappedRotation * Vector3.Scale(
+                objectCollider.center,
+                objectToSnap.transform.lossyScale
+            );
+
+            Vector3[] candidateCenters =
+            {
+                referenceCenter + axisX * combinedHalfX,
+                referenceCenter - axisX * combinedHalfX,
+                referenceCenter + axisY * combinedHalfY,
+                referenceCenter - axisY * combinedHalfY,
+            };
+
+            snappedPosition = default;
+            snappedDistance = float.MaxValue;
+            foreach (Vector3 candidateCenter in candidateCenters)
+            {
+                Vector3 candidatePosition = candidateCenter - objectCenterOffset;
+                float candidateDistance = Vector3.Distance(desiredPosition, candidatePosition);
+                if (candidateDistance < snappedDistance)
+                {
+                    snappedDistance = candidateDistance;
+                    snappedPosition = candidatePosition;
+                }
+            }
+
+            return true;
         }
 
         static float GetScaledHalfSize(BoxCollider boxCollider, int axis)
