@@ -159,23 +159,43 @@ public class ApiController : MonoBehaviour
 
     IEnumerator DownloadImage(string url, System.Action<UnityWebRequest> onSuccess, System.Action<string> onError)
     {
-        // Crear la solicitud POST
-        UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url);
-
-        // Enviar la solicitud y esperar respuesta
-        yield return webRequest.SendWebRequest();
-
-        // Manejo de errores
-        if (webRequest.result == UnityWebRequest.Result.Success)
+        if (!TryNormalizeHttpUrl(url, out string normalizedUrl))
         {
-            // Invocar el callback de éxito con la respuesta
-            onSuccess?.Invoke(webRequest);
+            onError?.Invoke("No se pudo cargar la imagen: la URL está vacía o no usa HTTP/HTTPS.");
+            yield break;
         }
-        else
+
+        using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(normalizedUrl))
         {
-            // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(webRequest.error);
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                onSuccess?.Invoke(webRequest);
+            }
+            else
+            {
+                onError?.Invoke(webRequest.error);
+            }
         }
+    }
+
+    public static bool TryNormalizeHttpUrl(string url, out string normalizedUrl)
+    {
+        normalizedUrl = null;
+        if (string.IsNullOrWhiteSpace(url)) return false;
+
+        string candidate = url.Trim();
+        if (candidate.StartsWith("//")) candidate = "https:" + candidate;
+
+        if (!System.Uri.TryCreate(candidate, System.UriKind.Absolute, out System.Uri parsedUrl))
+            return false;
+
+        if (parsedUrl.Scheme != System.Uri.UriSchemeHttp && parsedUrl.Scheme != System.Uri.UriSchemeHttps)
+            return false;
+
+        normalizedUrl = parsedUrl.AbsoluteUri;
+        return true;
     }
 
     // Método que llamas para iniciar la solicitud
@@ -419,7 +439,6 @@ public class ApiController : MonoBehaviour
             onSuccess?.Invoke(sprite);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
             onError?.Invoke(jsonResponse);
         }));
     }

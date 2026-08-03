@@ -281,27 +281,29 @@ public class CanvasManager : MonoBehaviour
 
     public void CopyObject()
     {
-        SpawnedModelMetadata sourceMetadata = objectReference.GetComponent<SpawnedModelMetadata>();
+        SpawnedModelMetadata sourceMetadata = objectReference.GetComponentInParent<SpawnedModelMetadata>();
         if (sourceMetadata == null)
         {
             Debug.LogError("The selected object has no model metadata and cannot be copied safely.", objectReference);
             return;
         }
 
+        GameObject sourceObject = sourceMetadata.gameObject;
+
         Vector3 newPosition;
         Vector3 direction;
         if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
         {
-            direction = objectReference.transform.up / 2;
-            newPosition = objectReference.transform.position - direction;
+            direction = sourceObject.transform.up / 2;
+            newPosition = sourceObject.transform.position - direction;
         }
         else
         {
 
-            direction = objectReference.transform.forward;
-            newPosition = objectReference.transform.position - direction;
+            direction = sourceObject.transform.forward;
+            newPosition = sourceObject.transform.position - direction;
         }
-        objectCopiedReference = Instantiate(objectReference, newPosition, objectReference.transform.rotation);
+        objectCopiedReference = Instantiate(sourceObject, newPosition, sourceObject.transform.rotation);
         SpawnedModelMetadata copiedMetadata = objectCopiedReference.GetComponent<SpawnedModelMetadata>();
         if (copiedMetadata == null)
             copiedMetadata = objectCopiedReference.AddComponent<SpawnedModelMetadata>();
@@ -315,9 +317,10 @@ public class CanvasManager : MonoBehaviour
             BuildController.Instance.CalculateTime();
         }
 
-        CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponent<CanvasManager>();
+        CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponentInChildren<CanvasManager>(true);
         HideCanvas();
-        objectCopiedCanvas.ActivateModelCanvas();
+        if (objectCopiedCanvas != null)
+            objectCopiedCanvas.ActivateModelCanvas();
     }
 
     public void MoveRightAction()
@@ -452,11 +455,12 @@ public class CanvasManager : MonoBehaviour
     // Update is called once per frame
     public void DestroyObject()
     {
-        SpawnedModelMetadata metadata = objectReference.GetComponent<SpawnedModelMetadata>();
+        SpawnedModelMetadata metadata = objectReference.GetComponentInParent<SpawnedModelMetadata>();
         ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        GameObject objectToDestroy = metadata != null ? metadata.gameObject : objectReference;
 
         HideCanvas();
-        Destroy(objectReference);
+        Destroy(objectToDestroy);
         if (objectSpawner != null)
         {
             objectSpawner.SetActive(true);
