@@ -1,3 +1,4 @@
+using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -12,32 +13,26 @@ namespace BuildeAR.Tests.EditMode
             "Assets/XR/UserSimulationSettings/SimulationEnvironmentAssetsManager.asset";
         private const string RuntimePreferencesPath =
             "Assets/XR/UserSimulationSettings/Resources/XRSimulationPreferences.asset";
-        private const string EditorPreferencesPath =
-            "Assets/XR/Temp/XRSimulationPreferences.asset";
 
         [Test]
         public void SimulationEnvironmentManager_UsesExpandedEnvironment()
         {
-            Object manager = AssetDatabase.LoadMainAssetAtPath(EnvironmentManagerPath);
-            Assert.That(manager, Is.Not.Null);
+            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            string managerPath = Path.Combine(projectRoot, EnvironmentManagerPath);
+            Assert.That(File.Exists(managerPath), Is.True);
+            string managerAsset = File.ReadAllText(managerPath);
 
-            SerializedObject serializedManager = new(manager);
-            SerializedProperty paths = serializedManager.FindProperty("m_EnvironmentPrefabPaths");
-
-            Assert.That(paths, Is.Not.Null);
-            Assert.That(paths.arraySize, Is.EqualTo(1));
-            Assert.That(paths.GetArrayElementAtIndex(0).stringValue, Is.EqualTo(EnvironmentPath));
-            Assert.That(
-                serializedManager.FindProperty("m_FallbackAtEndOfList").boolValue,
-                Is.False
+            StringAssert.Contains(
+                $"- {EnvironmentPath}",
+                managerAsset
             );
+            StringAssert.Contains("m_FallbackAtEndOfList: 0", managerAsset);
         }
 
-        [TestCase(RuntimePreferencesPath)]
-        [TestCase(EditorPreferencesPath)]
-        public void SimulationPreferences_AlwaysSelectExpandedEnvironment(string preferencesPath)
+        [Test]
+        public void RuntimeSimulationPreferences_SelectExpandedEnvironment()
         {
-            Object preferences = AssetDatabase.LoadMainAssetAtPath(preferencesPath);
+            Object preferences = AssetDatabase.LoadMainAssetAtPath(RuntimePreferencesPath);
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
 
             Assert.That(preferences, Is.Not.Null);

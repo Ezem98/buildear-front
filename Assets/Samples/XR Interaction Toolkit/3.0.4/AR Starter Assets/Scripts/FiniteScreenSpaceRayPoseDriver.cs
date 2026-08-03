@@ -7,6 +7,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
     /// Drives the screen-space ray while ignoring invalid positions reported by
     /// Unity Device Simulator when the pointer is outside the simulated screen.
     /// </summary>
+    [DefaultExecutionOrder(-30000)]
     [AddComponentMenu("XR/Input/Finite Screen Space Ray Pose Driver")]
     public class FiniteScreenSpaceRayPoseDriver : MonoBehaviour
     {
@@ -72,16 +73,14 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
                 return;
             }
 
-            if (
-                m_DragCurrentPositionInput.TryReadValue(out Vector2 dragPosition) &&
-                TryApplyPose(dragPosition)
-            )
-            {
+            // A completed drag can keep returning its last position for another frame.
+            // Apply a new tap first so XRI does not select the object created at the
+            // previous pointer position when the user taps somewhere else.
+            if (tappedThisFrame && TryApplyPose(tapStartPosition))
                 return;
-            }
 
-            if (tappedThisFrame)
-                TryApplyPose(tapStartPosition);
+            if (m_DragCurrentPositionInput.TryReadValue(out Vector2 dragPosition))
+                TryApplyPose(dragPosition);
         }
 
         private bool TryApplyPose(Vector2 screenPosition)

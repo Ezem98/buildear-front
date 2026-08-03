@@ -4,12 +4,14 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace BuildeAR.Tests.EditMode
 {
     public class ObjectSpawnerCountTests
     {
+        private const string TestSnapGroup = "BuildeAR.Tests.Ceramic";
         private readonly List<GameObject> objectsToDestroy = new();
 
         [TearDown]
@@ -87,6 +89,28 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void CeramicRotation_UsesSurfaceNormalAndKeepsModelFlat()
+        {
+            GameObject ceramic = Track(new GameObject("Ceramic"));
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.enableEdgeSnap = true;
+            Vector3 surfaceNormal = ceramic.transform.forward;
+
+            Vector3 rotationAxis = SurfacePlacementOffset.GetLocalRotationAxis(
+                ceramic,
+                true
+            );
+            ceramic.transform.Rotate(rotationAxis, 90f, Space.Self);
+
+            Assert.That(rotationAxis, Is.EqualTo(Vector3.back));
+            Assert.That(
+                Vector3.Dot(surfaceNormal, ceramic.transform.forward),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+        }
+
+        [Test]
         public void TrySpawnObject_DisablesThrowForKinematicGrabInteractable()
         {
             ObjectSpawner spawner = CreateSpawner();
@@ -145,6 +169,150 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(placementOffset.offset, Is.EqualTo(0.005f));
         }
 
+        [Test]
+        public void SnapNextToObject_PlacesCopyFlushAgainstSourceEdge()
+        {
+            GameObject source = CreateSnappingCeramic("Source ceramic", Vector3.zero);
+            GameObject copy = CreateSnappingCeramic(
+                "Copied ceramic",
+                new Vector3(0f, -0.5f, 0f)
+            );
+
+            bool snapped = ObjectSpawner.SnapNextToObject(copy, source);
+
+            Assert.That(snapped, Is.True);
+            Assert.That(copy.transform.position.x, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(copy.transform.position.y, Is.EqualTo(-0.8f).Within(0.0001f));
+            Assert.That(copy.transform.position.z, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(copy.transform.rotation, Is.EqualTo(source.transform.rotation));
+        }
+
+        [Test]
+        public void SnapCopyToFreeEdge_PrefersSideAndAvoidsOccupiedEdge()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject source = CreateSnappingCeramic("Source ceramic", Vector3.zero);
+            GameObject firstCopy = CreateSnappingCeramic("First copy", Vector3.zero);
+            GameObject secondCopy = CreateSnappingCeramic("Second copy", Vector3.zero);
+            spawner.RegisterSpawnedObject(source);
+
+            Assert.That(spawner.SnapCopyToFreeEdge(firstCopy, source), Is.True);
+            Assert.That(firstCopy.transform.position.x, Is.EqualTo(0.8f).Within(0.0001f));
+            Assert.That(firstCopy.transform.position.y, Is.EqualTo(0f).Within(0.0001f));
+            spawner.RegisterSpawnedObject(firstCopy);
+
+            Assert.That(spawner.SnapCopyToFreeEdge(secondCopy, source), Is.True);
+            Assert.That(secondCopy.transform.position.x, Is.EqualTo(-0.8f).Within(0.0001f));
+            Assert.That(secondCopy.transform.position.y, Is.EqualTo(0f).Within(0.0001f));
+        }
+
+        [Test]
+        public void CeramicPrefab_RuntimeColliderCoversCompleteMesh()
+        {
+            const string ceramicPath = "Assets/Prefabs/Pisos/Ceramic.prefab";
+            GameObject ceramicPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ceramicPath);
+            GameObject ceramic = Track(Object.Instantiate(ceramicPrefab));
+            MeshFilter meshFilter = ceramic.GetComponent<MeshFilter>();
+            BoxCollider boxCollider = ceramic.GetComponent<BoxCollider>();
+            SurfacePlacementOffset placementSettings =
+                ceramic.GetComponent<SurfacePlacementOffset>();
+
+            Assert.That(meshFilter, Is.Not.Null);
+            Assert.That(boxCollider, Is.Not.Null);
+            Assert.That(placementSettings, Is.Not.Null);
+
+            placementSettings.FitBoxColliderToMesh();
+
+            Vector3 meshSize = meshFilter.sharedMesh.bounds.size;
+            Assert.That(boxCollider.size.x, Is.EqualTo(Mathf.Max(meshSize.x, 0.01f)));
+            Assert.That(boxCollider.size.y, Is.EqualTo(Mathf.Max(meshSize.y, 0.01f)));
+            Assert.That(boxCollider.size.z, Is.EqualTo(Mathf.Max(meshSize.z, 0.01f)));
+            Assert.That(boxCollider.center, Is.EqualTo(meshFilter.sharedMesh.bounds.center));
+        }
+
+        [Test]
+        public void CeramicSelection_ActivatesCanvasOnFirstSelect()
+        {
+            GameObject ceramic = Track(new GameObject("Selectable ceramic"));
+            ceramic.AddComponent<BoxCollider>();
+            Rigidbody rigidbody = ceramic.AddComponent<Rigidbody>();
+            rigidbody.isKinematic = true;
+            XRGrabInteractable grabInteractable = ceramic.AddComponent<XRGrabInteractable>();
+            grabInteractable.throwOnDetach = false;
+            CanvasActivationReceiver receiver = ceramic.AddComponent<CanvasActivationReceiver>();
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.snapGroup = TestSnapGroup;
+            placementSettings.activateCanvasOnSelect = true;
+
+            Assert.That(grabInteractable.selectFilters.count, Is.EqualTo(1));
+            placementSettings.ActivateSelectionMenu();
+
+            Assert.That(receiver.ActivationCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void CeramicSelection_ClosesOtherCeramicMenuBeforeOpeningSelectedOne()
+        {
+            GameObject firstCeramic = CreateSelectableCeramic("First ceramic");
+            CanvasActivationReceiver firstReceiver =
+                firstCeramic.GetComponent<CanvasActivationReceiver>();
+            GameObject secondCeramic = CreateSelectableCeramic("Second ceramic");
+            CanvasActivationReceiver secondReceiver =
+                secondCeramic.GetComponent<CanvasActivationReceiver>();
+
+            secondCeramic.GetComponent<SurfacePlacementOffset>().ActivateSelectionMenu();
+
+            Assert.That(firstReceiver.HideCount, Is.EqualTo(1));
+            Assert.That(firstReceiver.ActivationCount, Is.Zero);
+            Assert.That(secondReceiver.HideCount, Is.Zero);
+            Assert.That(secondReceiver.ActivationCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void TrySpawnObject_CeramicClosesAllCeramicMenusWithoutOpeningOne()
+        {
+            GameObject existingCeramic = CreateSelectableCeramic("Existing ceramic");
+            CanvasActivationReceiver existingReceiver =
+                existingCeramic.GetComponent<CanvasActivationReceiver>();
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = CreateSelectableCeramic("Ceramic prefab");
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 8 };
+            spawner.spawnOptionId = 8;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Assert.That(spawner.TrySpawnObject(Vector3.forward, Vector3.up), Is.True);
+
+            CanvasActivationReceiver spawnedReceiver = spawner.transform
+                .GetChild(0)
+                .GetComponent<CanvasActivationReceiver>();
+            Assert.That(existingReceiver.HideCount, Is.EqualTo(1));
+            Assert.That(existingReceiver.ActivationCount, Is.Zero);
+            Assert.That(spawnedReceiver.HideCount, Is.EqualTo(1));
+            Assert.That(spawnedReceiver.ActivationCount, Is.Zero);
+        }
+
+        [Test]
+        public void SelectAttempt_AfterSelection_DoesNotBlockFollowingClick()
+        {
+            bool everHadSelection = true;
+
+            bool spawnFromSelectionClick = ARInteractorSpawnTrigger.ShouldSpawnAfterSelectAttempt(
+                false,
+                ref everHadSelection
+            );
+            bool spawnFromFollowingEmptyClick = ARInteractorSpawnTrigger.ShouldSpawnAfterSelectAttempt(
+                false,
+                ref everHadSelection
+            );
+
+            Assert.That(spawnFromSelectionClick, Is.False);
+            Assert.That(spawnFromFollowingEmptyClick, Is.True);
+        }
+
         private ObjectSpawner CreateSpawner()
         {
             GameObject cameraObject = Track(new GameObject("Main Camera"));
@@ -155,10 +323,55 @@ namespace BuildeAR.Tests.EditMode
             return spawner;
         }
 
+        private GameObject CreateSelectableCeramic(string name)
+        {
+            GameObject ceramic = Track(new GameObject(name));
+            ceramic.AddComponent<BoxCollider>();
+            Rigidbody rigidbody = ceramic.AddComponent<Rigidbody>();
+            rigidbody.isKinematic = true;
+            XRGrabInteractable grabInteractable = ceramic.AddComponent<XRGrabInteractable>();
+            grabInteractable.throwOnDetach = false;
+            ceramic.AddComponent<CanvasActivationReceiver>();
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.snapGroup = TestSnapGroup;
+            placementSettings.activateCanvasOnSelect = true;
+            return ceramic;
+        }
+
+        private GameObject CreateSnappingCeramic(string name, Vector3 position)
+        {
+            GameObject ceramic = Track(new GameObject(name));
+            ceramic.transform.position = position;
+            BoxCollider boxCollider = ceramic.AddComponent<BoxCollider>();
+            boxCollider.size = new Vector3(0.8f, 0.8f, 0.01f);
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.enableEdgeSnap = true;
+            placementSettings.snapGroup = TestSnapGroup;
+            return ceramic;
+        }
+
         private GameObject Track(GameObject target)
         {
             objectsToDestroy.Add(target);
             return target;
+        }
+    }
+
+    public class CanvasActivationReceiver : MonoBehaviour, IModelCanvasController
+    {
+        public int ActivationCount { get; private set; }
+        public int HideCount { get; private set; }
+
+        public void ActivateModelCanvas()
+        {
+            ActivationCount++;
+        }
+
+        public void HideCanvas()
+        {
+            HideCount++;
         }
     }
 }

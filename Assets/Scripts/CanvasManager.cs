@@ -5,6 +5,7 @@ using UnityEngine;
 using DG.Tweening;
 using System.ComponentModel.Design;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.UI;
 using OpenAI;
 using OpenAI.Threads;
 using System.Linq;
@@ -12,7 +13,7 @@ using Utilities.Extensions;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 
-public class CanvasManager : MonoBehaviour
+public class CanvasManager : MonoBehaviour, IModelCanvasController
 {
 
     [SerializeField] private GameObject modelActions;
@@ -51,6 +52,7 @@ public class CanvasManager : MonoBehaviour
 
     void Start()
     {
+        InstallUiSelectionBlockers();
         ActionManager.OnResizeAction += ActivateResizeCanvas;
         ActionManager.OnAceptAction += ActivateModelCanvas;
         ActionManager.OnMoveAction += ActivateMoveCanvas;
@@ -68,6 +70,15 @@ public class CanvasManager : MonoBehaviour
         ActionManager.OnDownScaleSide += DownScaleSideAction;
         ActionManager.OnDownScaleUp += DownScaleUpAction;
 
+    }
+
+    private void InstallUiSelectionBlockers()
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            if (button.GetComponent<ModelUiSelectionBlocker>() == null)
+                button.gameObject.AddComponent<ModelUiSelectionBlocker>();
+        }
     }
 
     public void SideScaleAction()
@@ -188,45 +199,20 @@ public class CanvasManager : MonoBehaviour
 
     public void HideCanvas()
     {
-        if (activeMenu == "modelActions")
-        {
-            modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            modelActions.transform.GetChild(5).transform.DOScale(Vector3.zero, 0.3f);
-        }
-        if (activeMenu == "resizeActions")
-        {
-            resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(7).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        }
-        if (activeMenu == "rotateActions")
-        {
-            rotateActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        }
-        if (activeMenu == "moveActions")
-        {
-            moveActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            moveActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-        }
+        HideMenu(modelActions);
+        HideMenu(resizeActions);
+        HideMenu(rotateActions);
+        HideMenu(moveActions);
         activeMenu = menu[0]; // modelActions
+    }
+
+    private static void HideMenu(GameObject actions)
+    {
+        if (actions == null)
+            return;
+
+        foreach (Transform action in actions.transform)
+            action.DOScale(Vector3.zero, 0.3f);
     }
 
     public void RotateRightAction()
@@ -235,7 +221,15 @@ public class CanvasManager : MonoBehaviour
         {
             isRotatingRight = true;
             isRotatingLeft = false;
-            objectReference.transform.Rotate(Vector3.down, rotationSpeed * Time.deltaTime);
+            Vector3 rotationAxis = SurfacePlacementOffset.GetLocalRotationAxis(
+                objectReference,
+                true
+            );
+            objectReference.transform.Rotate(
+                rotationAxis,
+                rotationSpeed * Time.deltaTime,
+                Space.Self
+            );
         }
     }
 
@@ -245,7 +239,15 @@ public class CanvasManager : MonoBehaviour
         {
             isRotatingRight = false;
             isRotatingLeft = true;
-            objectReference.transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+            Vector3 rotationAxis = SurfacePlacementOffset.GetLocalRotationAxis(
+                objectReference,
+                false
+            );
+            objectReference.transform.Rotate(
+                rotationAxis,
+                rotationSpeed * Time.deltaTime,
+                Space.Self
+            );
         }
     }
 
@@ -289,13 +291,18 @@ public class CanvasManager : MonoBehaviour
         }
 
         GameObject sourceObject = sourceMetadata.gameObject;
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        SurfacePlacementOffset sourcePlacementSettings =
+            sourceObject.GetComponent<SurfacePlacementOffset>();
+        bool shouldSnapCopy = sourcePlacementSettings != null &&
+            sourcePlacementSettings.enableEdgeSnap;
 
         Vector3 newPosition;
         Vector3 direction;
-        if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
+        if (shouldSnapCopy)
         {
-            direction = sourceObject.transform.up / 2;
-            newPosition = sourceObject.transform.position - direction;
+            direction = sourceObject.transform.right / 2;
+            newPosition = sourceObject.transform.position + direction;
         }
         else
         {
@@ -309,9 +316,19 @@ public class CanvasManager : MonoBehaviour
             copiedMetadata = objectCopiedReference.AddComponent<SpawnedModelMetadata>();
         copiedMetadata.Initialize(sourceMetadata.ModelId);
 
-        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        SurfacePlacementOffset copiedPlacementSettings =
+            objectCopiedReference.GetComponent<SurfacePlacementOffset>();
+        if (shouldSnapCopy && copiedPlacementSettings != null)
+        {
+            if (objectSpawner != null)
+                objectSpawner.SnapCopyToFreeEdge(objectCopiedReference, sourceObject);
+            else
+                ObjectSpawner.SnapNextToObject(objectCopiedReference, sourceObject);
+        }
+
         if (objectSpawner != null)
         {
+            objectSpawner.RegisterSpawnedObject(objectCopiedReference);
             objectSpawner.IncrementCount(sourceMetadata.ModelId);
             BuildController.Instance.CalculateAmount();
             BuildController.Instance.CalculateTime();
@@ -319,7 +336,9 @@ public class CanvasManager : MonoBehaviour
 
         CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponentInChildren<CanvasManager>(true);
         HideCanvas();
-        if (objectCopiedCanvas != null)
+        if (copiedPlacementSettings != null && copiedPlacementSettings.activateCanvasOnSelect)
+            copiedPlacementSettings.HideMenusInSnapGroup(true);
+        else if (objectCopiedCanvas != null)
             objectCopiedCanvas.ActivateModelCanvas();
     }
 
@@ -466,6 +485,7 @@ public class CanvasManager : MonoBehaviour
         if (objectSpawner != null)
         {
             objectSpawner.SetActive(true);
+            objectSpawner.UnregisterSpawnedObject(objectToDestroy);
             if (metadata != null)
                 objectSpawner.ReduceCount(metadata.ModelId);
             else

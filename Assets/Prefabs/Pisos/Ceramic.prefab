@@ -384,6 +384,11 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   m_Offset: 0.005
+  m_FitBoxColliderToMesh: 1
+  m_EnableEdgeSnap: 1
+  m_SnapDistance: 0.25
+  m_SnapGroup: Ceramic
+  m_ActivateCanvasOnSelect: 1
 --- !u!1001 &4834895649854511224
 PrefabInstance:
   m_ObjectHideFlags: 0
