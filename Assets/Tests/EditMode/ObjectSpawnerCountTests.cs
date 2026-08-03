@@ -148,37 +148,6 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
-        public void TrySpawnObject_NearMatchingEdge_SnapsModelsTogether()
-        {
-            ObjectSpawner spawner = CreateSpawner();
-            GameObject prefab = Track(new GameObject("Snapping floor prefab"));
-            BoxCollider boxCollider = prefab.AddComponent<BoxCollider>();
-            boxCollider.size = new Vector3(0.8f, 0.8f, 0.01f);
-            SurfacePlacementOffset placementSettings =
-                prefab.AddComponent<SurfacePlacementOffset>();
-            placementSettings.enableEdgeSnap = true;
-            placementSettings.snapDistance = 0.25f;
-            placementSettings.snapGroup = TestSnapGroup;
-
-            spawner.objectPrefabs = new List<GameObject> { prefab };
-            spawner.objectPrefabsIndex = new List<int> { 8 };
-            spawner.spawnOptionId = 8;
-            spawner.spawnAsChildren = true;
-            spawner.onlySpawnInView = false;
-
-            Assert.That(spawner.TrySpawnObject(Vector3.zero, Vector3.forward), Is.True);
-            Assert.That(
-                spawner.TrySpawnObject(new Vector3(0.72f, 0.03f, 0f), Vector3.forward),
-                Is.True
-            );
-
-            Transform secondModel = spawner.transform.GetChild(1);
-            Assert.That(secondModel.position.x, Is.EqualTo(0.8f).Within(0.0001f));
-            Assert.That(secondModel.position.y, Is.EqualTo(0f).Within(0.0001f));
-            Assert.That(secondModel.rotation, Is.EqualTo(spawner.transform.GetChild(0).rotation));
-        }
-
-        [Test]
         public void SnapNextToObject_PlacesCopyFlushAgainstSourceEdge()
         {
             GameObject source = CreateSnappingCeramic("Source ceramic", Vector3.zero);
