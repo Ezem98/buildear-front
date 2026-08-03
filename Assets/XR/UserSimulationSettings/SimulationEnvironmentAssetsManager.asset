@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_EnvironmentPrefabPaths:
   - Assets/XR/UserSimulationSettings/LargeSimulationEnvironment.prefab
-  m_FallbackAtEndOfList: 1
+  m_FallbackAtEndOfList: 0

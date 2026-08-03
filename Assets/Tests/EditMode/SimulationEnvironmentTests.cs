@@ -10,6 +10,10 @@ namespace BuildeAR.Tests.EditMode
             "Assets/XR/UserSimulationSettings/LargeSimulationEnvironment.prefab";
         private const string EnvironmentManagerPath =
             "Assets/XR/UserSimulationSettings/SimulationEnvironmentAssetsManager.asset";
+        private const string RuntimePreferencesPath =
+            "Assets/XR/UserSimulationSettings/Resources/XRSimulationPreferences.asset";
+        private const string EditorPreferencesPath =
+            "Assets/XR/Temp/XRSimulationPreferences.asset";
 
         [Test]
         public void SimulationEnvironmentManager_UsesExpandedEnvironment()
@@ -23,6 +27,31 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(paths, Is.Not.Null);
             Assert.That(paths.arraySize, Is.EqualTo(1));
             Assert.That(paths.GetArrayElementAtIndex(0).stringValue, Is.EqualTo(EnvironmentPath));
+            Assert.That(
+                serializedManager.FindProperty("m_FallbackAtEndOfList").boolValue,
+                Is.False
+            );
+        }
+
+        [TestCase(RuntimePreferencesPath)]
+        [TestCase(EditorPreferencesPath)]
+        public void SimulationPreferences_AlwaysSelectExpandedEnvironment(string preferencesPath)
+        {
+            Object preferences = AssetDatabase.LoadMainAssetAtPath(preferencesPath);
+            GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
+
+            Assert.That(preferences, Is.Not.Null);
+            Assert.That(environment, Is.Not.Null);
+
+            SerializedObject serializedPreferences = new(preferences);
+            Assert.That(
+                serializedPreferences.FindProperty("m_EnvironmentPrefab").objectReferenceValue,
+                Is.EqualTo(environment)
+            );
+            Assert.That(
+                serializedPreferences.FindProperty("m_FallbackEnvironmentPrefab").objectReferenceValue,
+                Is.EqualTo(environment)
+            );
         }
 
         [Test]
