@@ -338,8 +338,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                     continue;
 
                 if (otherSettings == snapSettings || !otherSettings.enableEdgeSnap ||
-                    otherSettings.snapGroup != snapSettings.snapGroup ||
-                    otherSettings.GetComponent<SpawnedModelMetadata>() == null)
+                    otherSettings.snapGroup != snapSettings.snapGroup)
                 {
                     continue;
                 }
