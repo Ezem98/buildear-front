@@ -36,6 +36,31 @@ public class ApiController : MonoBehaviour
         }
     }
 
+    public static bool TryParseBooleanResponse(string jsonResponse, out bool value)
+    {
+        value = false;
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return false;
+
+        try
+        {
+            JToken payload = JToken.Parse(jsonResponse);
+            JToken booleanToken = payload.Type == JTokenType.Boolean
+                ? payload
+                : payload.Type == JTokenType.Object
+                    ? payload["data"]
+                    : null;
+
+            if (booleanToken?.Type != JTokenType.Boolean) return false;
+
+            value = booleanToken.Value<bool>();
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     private void HandleExpiredSession(UnityWebRequest webRequest)
     {
         if (webRequest.responseCode == 401 && !webRequest.url.EndsWith("/auth/login"))
@@ -159,23 +184,43 @@ public class ApiController : MonoBehaviour
 
     IEnumerator DownloadImage(string url, System.Action<UnityWebRequest> onSuccess, System.Action<string> onError)
     {
-        // Crear la solicitud POST
-        UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url);
-
-        // Enviar la solicitud y esperar respuesta
-        yield return webRequest.SendWebRequest();
-
-        // Manejo de errores
-        if (webRequest.result == UnityWebRequest.Result.Success)
+        if (!TryNormalizeHttpUrl(url, out string normalizedUrl))
         {
-            // Invocar el callback de éxito con la respuesta
-            onSuccess?.Invoke(webRequest);
+            onError?.Invoke("No se pudo cargar la imagen: la URL está vacía o no usa HTTP/HTTPS.");
+            yield break;
         }
-        else
+
+        using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(normalizedUrl))
         {
-            // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(webRequest.error);
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                onSuccess?.Invoke(webRequest);
+            }
+            else
+            {
+                onError?.Invoke(webRequest.error);
+            }
         }
+    }
+
+    public static bool TryNormalizeHttpUrl(string url, out string normalizedUrl)
+    {
+        normalizedUrl = null;
+        if (string.IsNullOrWhiteSpace(url)) return false;
+
+        string candidate = url.Trim();
+        if (candidate.StartsWith("//")) candidate = "https:" + candidate;
+
+        if (!System.Uri.TryCreate(candidate, System.UriKind.Absolute, out System.Uri parsedUrl))
+            return false;
+
+        if (parsedUrl.Scheme != System.Uri.UriSchemeHttp && parsedUrl.Scheme != System.Uri.UriSchemeHttps)
+            return false;
+
+        normalizedUrl = parsedUrl.AbsoluteUri;
+        return true;
     }
 
     // Método que llamas para iniciar la solicitud
@@ -308,7 +353,10 @@ public class ApiController : MonoBehaviour
         BuildController.Instance.ShowLoading("Preparando tu guía...");
         GetUserModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
         {
-            if (userModelData?.guideObject?.pasos != null && userModelData.guideObject.pasos.Count > 0)
+            bool hasSavedGuide =
+                userModelData?.guideObject?.pasos != null
+                && userModelData.guideObject.pasos.Count > 0;
+            if (hasSavedGuide)
             {
                 UIController.Instance.UserModelData = userModelData;
                 int savedStep = userModelData.current_step > 0 ? userModelData.current_step : 1;
@@ -352,12 +400,16 @@ public class ApiController : MonoBehaviour
                 return;
             }
 
+            int savedStep = 1;
             if (apiResponse.user_model != null)
             {
                 apiResponse.user_model.guideObject = apiResponse.data;
                 UIController.Instance.UserModelData = apiResponse.user_model;
+                savedStep = apiResponse.user_model.current_step > 0
+                    ? apiResponse.user_model.current_step
+                    : 1;
             }
-            ShowGuide(modelId, apiResponse.data, 1);
+            ShowGuide(modelId, apiResponse.data, savedStep);
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
@@ -407,7 +459,6 @@ public class ApiController : MonoBehaviour
             onSuccess?.Invoke(sprite);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
             onError?.Invoke(jsonResponse);
         }));
     }
@@ -558,9 +609,13 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
         {
-            bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
-            onSuccess?.Invoke(apiResponse);
-            // Deserializar la cadena JSON dentro del campo 'guide'
+            if (TryParseBooleanResponse(jsonResponse, out bool isFavorite))
+            {
+                onSuccess?.Invoke(isFavorite);
+                return;
+            }
+
+            onError?.Invoke("Respuesta invalida al consultar favoritos.");
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
@@ -572,9 +627,6 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/auth/google", onSuccess: (jsonResponse) =>
         {
-            // bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
-            // onSuccess?.Invoke(apiResponse);
-            // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);

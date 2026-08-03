@@ -9,6 +9,7 @@ using OpenAI;
 using OpenAI.Threads;
 using System.Linq;
 using Utilities.Extensions;
+using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 
 public class CanvasManager : MonoBehaviour
@@ -280,23 +281,46 @@ public class CanvasManager : MonoBehaviour
 
     public void CopyObject()
     {
+        SpawnedModelMetadata sourceMetadata = objectReference.GetComponentInParent<SpawnedModelMetadata>();
+        if (sourceMetadata == null)
+        {
+            Debug.LogError("The selected object has no model metadata and cannot be copied safely.", objectReference);
+            return;
+        }
+
+        GameObject sourceObject = sourceMetadata.gameObject;
+
         Vector3 newPosition;
         Vector3 direction;
         if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
         {
-            direction = objectReference.transform.up / 2;
-            newPosition = objectReference.transform.position - direction;
+            direction = sourceObject.transform.up / 2;
+            newPosition = sourceObject.transform.position - direction;
         }
         else
         {
 
-            direction = objectReference.transform.forward;
-            newPosition = objectReference.transform.position - direction;
+            direction = sourceObject.transform.forward;
+            newPosition = sourceObject.transform.position - direction;
         }
-        objectCopiedReference = Instantiate(objectReference, newPosition, objectReference.transform.rotation);
-        CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponent<CanvasManager>();
+        objectCopiedReference = Instantiate(sourceObject, newPosition, sourceObject.transform.rotation);
+        SpawnedModelMetadata copiedMetadata = objectCopiedReference.GetComponent<SpawnedModelMetadata>();
+        if (copiedMetadata == null)
+            copiedMetadata = objectCopiedReference.AddComponent<SpawnedModelMetadata>();
+        copiedMetadata.Initialize(sourceMetadata.ModelId);
+
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        if (objectSpawner != null)
+        {
+            objectSpawner.IncrementCount(sourceMetadata.ModelId);
+            BuildController.Instance.CalculateAmount();
+            BuildController.Instance.CalculateTime();
+        }
+
+        CanvasManager objectCopiedCanvas = objectCopiedReference.GetComponentInChildren<CanvasManager>(true);
         HideCanvas();
-        objectCopiedCanvas.ActivateModelCanvas();
+        if (objectCopiedCanvas != null)
+            objectCopiedCanvas.ActivateModelCanvas();
     }
 
     public void MoveRightAction()
@@ -431,13 +455,47 @@ public class CanvasManager : MonoBehaviour
     // Update is called once per frame
     public void DestroyObject()
     {
+        SpawnedModelMetadata metadata = objectReference.GetComponentInParent<SpawnedModelMetadata>();
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        GameObject objectToDestroy = metadata != null ? metadata.gameObject : objectReference;
+
         HideCanvas();
-        Destroy(objectReference);
-        UIController.Instance.objectSpawner.SetActive(true);
-        UIController.Instance.objectSpawner.ReduceCount(UIController.Instance.CurrentModelIndex);
+        KillTweensInHierarchy(objectToDestroy);
+        PrepareForDeferredDestroy(objectToDestroy);
+        Destroy(objectToDestroy, 0.1f);
+        if (objectSpawner != null)
+        {
+            objectSpawner.SetActive(true);
+            if (metadata != null)
+                objectSpawner.ReduceCount(metadata.ModelId);
+            else
+                Debug.LogWarning("The deleted object had no model metadata; its count could not be updated.");
+        }
+
         BuildController.Instance.CalculateAmount();
         BuildController.Instance.CalculateTime();
     }
+
+    private static void KillTweensInHierarchy(GameObject root)
+    {
+        foreach (Transform target in root.GetComponentsInChildren<Transform>(true))
+            target.DOKill();
+    }
+
+    private static void PrepareForDeferredDestroy(GameObject root)
+    {
+        // Keep the hierarchy alive briefly because XRRayInteractor can still hold a
+        // reference to one of its UI children until the next interaction update.
+        foreach (Canvas canvas in root.GetComponentsInChildren<Canvas>(true))
+            canvas.enabled = false;
+
+        foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = false;
+
+        foreach (Collider collider in root.GetComponentsInChildren<Collider>(true))
+            collider.enabled = false;
+    }
+
     void Update()
     {
         if (isRotatingRight)

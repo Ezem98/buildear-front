@@ -15,12 +15,12 @@ public class MaterialListManager : MonoBehaviour
     {
         if (_instance != null)
         {
-            Destroy(gameObject); // Si ya existe una instancia, destruir este objetoassss
+            Destroy(gameObject);
+            return;
         }
         else
         {
             _instance = this;
-            DontDestroyOnLoad(gameObject); // Mantener la instancia en todas las escenas
         }
     }
 

@@ -63,6 +63,7 @@ public class UIController : MonoBehaviour
     private Dictionary<string, bool> headerDictionary;
     public ObjectSpawner m_ObjectSpawner;
     public ApiController ApiController;
+    private ObjectSpawner subscribedObjectSpawner;
 
     /// <summary>
     /// The behavior to use to spawn objects.
@@ -70,7 +71,17 @@ public class UIController : MonoBehaviour
     public ObjectSpawner objectSpawner
     {
         get => m_ObjectSpawner;
-        set => m_ObjectSpawner = value;
+        set
+        {
+            if (m_ObjectSpawner == value)
+                return;
+
+            UnsubscribeFromObjectSpawner();
+            m_ObjectSpawner = value;
+
+            if (isActiveAndEnabled)
+                SubscribeToObjectSpawner();
+        }
     }
     private static UIController _instance;
 
@@ -78,15 +89,15 @@ public class UIController : MonoBehaviour
     {
         TouchSimulation.Enable();
         navigationStack.Push("Onboarding");
+
         if (_instance != null)
         {
-            Destroy(gameObject); // Si ya existe una instancia, destruir este objetoassss
+            Destroy(gameObject);
+            return;
         }
-        else
-        {
-            _instance = this;
-            DontDestroyOnLoad(gameObject); // Mantener la instancia en todas las escenas
-        }
+
+        _instance = this;
+        DontDestroyOnLoad(gameObject);
 
         screenDictionary = new(){
                 {"Onboarding", onBoarding},
@@ -157,10 +168,27 @@ public class UIController : MonoBehaviour
         }
     }
 
-    void Update()
+    private void OnEnable()
     {
-        if (objectSpawner != null)
-            objectSpawner.objectSpawned += OnObjectSpawned;
+        SubscribeToObjectSpawner();
+    }
+
+    private void SubscribeToObjectSpawner()
+    {
+        if (m_ObjectSpawner == null || subscribedObjectSpawner == m_ObjectSpawner)
+            return;
+
+        UnsubscribeFromObjectSpawner();
+        m_ObjectSpawner.objectSpawned += OnObjectSpawned;
+        subscribedObjectSpawner = m_ObjectSpawner;
+    }
+
+    private void UnsubscribeFromObjectSpawner()
+    {
+        if (subscribedObjectSpawner != null)
+            subscribedObjectSpawner.objectSpawned -= OnObjectSpawned;
+
+        subscribedObjectSpawner = null;
     }
 
     public void ScreenHandler(string newScreenName)
@@ -369,11 +397,13 @@ public class UIController : MonoBehaviour
 
     private void OnDisable()
     {
+        UnsubscribeFromObjectSpawner();
         SaveData();
     }
 
     private void OnDestroy()
     {
+        UnsubscribeFromObjectSpawner();
         SaveData();
     }
 }

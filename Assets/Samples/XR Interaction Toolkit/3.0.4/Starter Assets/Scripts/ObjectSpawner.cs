@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Utilities;
 
 namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
@@ -72,13 +72,11 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         }
 
         [SerializeField]
-        [Tooltip("The index of the prefab to spawn. If outside the range of the list, this behavior will select " +
-            "a random object each time it spawns.")]
+        [Tooltip("The backend model ID associated with the prefab to spawn. Use a negative value to select a random model.")]
         int m_SpawnOptionId = -1;
 
         /// <summary>
-        /// The index of the prefab to spawn. If outside the range of <see cref="objectPrefabs"/>, this behavior will
-        /// select a random object each time it spawns.
+        /// The backend model ID associated with the prefab to spawn. A negative value selects a random model.
         /// </summary>
         /// <seealso cref="isSpawnOptionRandomized"/>
         public int spawnOptionId
@@ -88,11 +86,11 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         }
 
         /// <summary>
-        /// Whether this behavior will select a random object from <see cref="objectPrefabs"/> each time it spawns.
+        /// Whether this behavior will select a random configured model each time it spawns.
         /// </summary>
         /// <seealso cref="spawnOptionId"/>
         /// <seealso cref="RandomizeSpawnOption"/>
-        public bool isSpawnOptionRandomized => m_SpawnOptionId < 0 || m_SpawnOptionId >= m_ObjectPrefabs.Count;
+        public bool isSpawnOptionRandomized => m_SpawnOptionId < 0;
 
         [SerializeField]
         [Tooltip("Whether to only spawn an object if the spawn point is within view of the camera.")]
@@ -202,9 +200,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         /// <returns>Returns <see langword="true"/> if the spawner successfully spawned an object. Otherwise returns
         /// <see langword="false"/>, for instance if the spawn point is out of view of the camera.</returns>
         /// <remarks>
-        /// The object selected to spawn is based on <see cref="spawnOptionId"/>. If the index is outside
-        /// the range of <see cref="objectPrefabs"/>, this method will select a random prefab from the list to spawn.
-        /// Otherwise, it will spawn the prefab at the index.
+        /// The object selected to spawn is resolved by matching <see cref="spawnOptionId"/> against
+        /// <see cref="objectPrefabsIndex"/>. A negative ID selects a random configured model; an unknown positive
+        /// ID is rejected so that the wrong model cannot be placed or counted.
         /// </remarks>
         /// <seealso cref="objectSpawned"/>
         public bool TrySpawnObject(Vector3 spawnPoint, Vector3 spawnNormal)
@@ -221,12 +219,54 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 }
             }
 
-            var objectIndex = m_ObjectPrefabsIndex.IndexOf(m_SpawnOptionId);
+            if (m_ObjectPrefabs == null || m_ObjectPrefabsIndex == null || m_ObjectPrefabs.Count == 0)
+            {
+                Debug.LogError("ObjectSpawner has no configured prefabs.", this);
+                return false;
+            }
+
+            int objectIndex;
+            int modelId;
+            if (isSpawnOptionRandomized)
+            {
+                var availableOptions = Math.Min(m_ObjectPrefabs.Count, m_ObjectPrefabsIndex.Count);
+                if (availableOptions == 0)
+                {
+                    Debug.LogError("ObjectSpawner has no model IDs associated with its prefabs.", this);
+                    return false;
+                }
+
+                objectIndex = Random.Range(0, availableOptions);
+                modelId = m_ObjectPrefabsIndex[objectIndex];
+            }
+            else
+            {
+                modelId = m_SpawnOptionId;
+                objectIndex = m_ObjectPrefabsIndex.IndexOf(modelId);
+                if (objectIndex < 0 || objectIndex >= m_ObjectPrefabs.Count)
+                {
+                    Debug.LogError($"No prefab is configured for model ID {modelId}.", this);
+                    return false;
+                }
+            }
+
+            if (m_ObjectPrefabs[objectIndex] == null)
+            {
+                Debug.LogError($"The prefab configured for model ID {modelId} is null.", this);
+                return false;
+            }
+
             var newObject = Instantiate(m_ObjectPrefabs[objectIndex]);
+            DisableThrowForKinematicGrabInteractables(newObject);
+            var metadata = newObject.GetComponent<SpawnedModelMetadata>();
+            if (metadata == null)
+                metadata = newObject.AddComponent<SpawnedModelMetadata>();
+            metadata.Initialize(modelId);
+
             if (m_SpawnAsChildren)
                 newObject.transform.parent = transform;
 
-            newObject.transform.position = spawnPoint;
+            newObject.transform.position = GetSpawnPosition(newObject, spawnPoint, spawnNormal);
             EnsureFacingCamera();
 
             var facePosition = m_CameraToFace.transform.position;
@@ -247,18 +287,46 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 visualizationTrans.rotation = newObject.transform.rotation;
             }
 
+            IncrementCount(modelId);
             objectSpawned?.Invoke(newObject);
-            if (countDictionary.ContainsKey(objectIndex)) countDictionary[objectIndex]++;
-            else countDictionary.Add(objectIndex, 1);
             return true;
         }
 
-        public void ReduceCount(int index)
+        static Vector3 GetSpawnPosition(GameObject spawnedObject, Vector3 spawnPoint, Vector3 spawnNormal)
         {
-            if (countDictionary.ContainsKey(index))
+            var placementOffset = spawnedObject.GetComponent<SurfacePlacementOffset>();
+            if (placementOffset == null || spawnNormal.sqrMagnitude <= Mathf.Epsilon)
+                return spawnPoint;
+
+            return spawnPoint + spawnNormal.normalized * placementOffset.offset;
+        }
+
+        static void DisableThrowForKinematicGrabInteractables(GameObject root)
+        {
+            foreach (var grabInteractable in root.GetComponentsInChildren<XRGrabInteractable>(true))
             {
-                if (countDictionary[index] > 0)
-                    countDictionary[index]--;
+                var rigidbody = grabInteractable.GetComponent<Rigidbody>();
+                if (rigidbody != null && rigidbody.isKinematic)
+                    grabInteractable.throwOnDetach = false;
+            }
+        }
+
+        public void IncrementCount(int modelId)
+        {
+            if (countDictionary.TryGetValue(modelId, out var currentCount))
+                countDictionary[modelId] = currentCount + 1;
+            else
+                countDictionary.Add(modelId, 1);
+        }
+
+        public void ReduceCount(int modelId)
+        {
+            if (countDictionary.TryGetValue(modelId, out var currentCount))
+            {
+                if (currentCount <= 1)
+                    countDictionary.Remove(modelId);
+                else
+                    countDictionary[modelId] = currentCount - 1;
             }
         }
     }

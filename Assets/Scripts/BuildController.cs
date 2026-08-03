@@ -327,22 +327,25 @@ public class BuildController : MonoBehaviour
     public void CalculateAmount()
     {
         ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
-        if (objectSpawner != null)
+        if (objectSpawner == null)
         {
-            Dictionary<int, int> countDictionary = objectSpawner.CountDictionary;
-            costAmount = 0;
-            foreach (KeyValuePair<int, Guide> entry in guidesDictionary)
-            {
-                int modelId = entry.Key;
-                Guide guide = entry.Value;
-                if (countDictionary.TryGetValue(modelId, out int count))
-                {
-                    costAmount += guide.costo * count;
-                }
-            }
-            if (costAmount == 0) CostText.text = "--.--";
-            else CostText.text = $"{costAmount} USD";
+            return;
         }
+
+        Dictionary<int, int> countDictionary = objectSpawner.CountDictionary;
+        costAmount = 0;
+        foreach (KeyValuePair<int, Guide> entry in guidesDictionary)
+        {
+            int modelId = entry.Key;
+            Guide guide = entry.Value;
+            if (countDictionary.TryGetValue(modelId, out int count))
+            {
+                costAmount += guide.costo * count;
+            }
+        }
+
+        if (costAmount <= 0) CostText.text = "Sin estimación";
+        else CostText.text = $"≈ {costAmount:0.00} USD";
     }
 
     public void CalculateTime()

@@ -16,14 +16,11 @@ public class ProfileManager : MonoBehaviour
         SetProfileData();
     }
 
-    void Start()
-    {
-        SetProfileData();
-    }
-
     public void SetProfileData()
     {
         UserData userData = UIController.Instance.UserData;
+        if (userData == null) return;
+
         FullNameText.text = StringUtils.ToPascalCase($"{userData.name} {userData.surname}");
         EmailText.text = userData.email;
         if (userData.completed_profile == (int)CompletedProfile.Incomplete)
@@ -34,7 +31,13 @@ public class ProfileManager : MonoBehaviour
         {
             CompleteProfileText.gameObject.SetActive(false);
         }
-        ApiController.GetModelImage(userData.image, onSuccess: (image) => ProfileImage.sprite = image, onError: (error) => Debug.Log(error));
+        if (!string.IsNullOrWhiteSpace(userData.image))
+        {
+            ApiController.GetModelImage(
+                userData.image,
+                onSuccess: (image) => ProfileImage.sprite = image,
+                onError: (error) => Debug.LogWarning(error));
+        }
     }
 
     public void Logout()

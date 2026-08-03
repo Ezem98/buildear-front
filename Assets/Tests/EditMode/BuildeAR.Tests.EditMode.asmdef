@@ -1,0 +1,23 @@
+{
+    "name": "BuildeAR.Tests.EditMode",
+    "rootNamespace": "BuildeAR.Tests.EditMode",
+    "references": [
+        "Unity.XR.Interaction.Toolkit",
+        "Unity.XR.Interaction.Toolkit.Samples.StarterAssets",
+        "Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
