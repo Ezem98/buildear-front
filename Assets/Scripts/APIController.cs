@@ -373,7 +373,10 @@ public class ApiController : MonoBehaviour
                 return;
             }
 
-            RequestGeneratedGuide(modelId, model);
+            RequestGeneratedGuide(
+                modelId,
+                model,
+                hasSavedGuide ? userModelData : null);
         }, onError: (error) =>
         {
             Debug.Log(error);
@@ -382,7 +385,10 @@ public class ApiController : MonoBehaviour
         });
     }
 
-    private void RequestGeneratedGuide(int modelId, ModelData model)
+    private void RequestGeneratedGuide(
+        int modelId,
+        ModelData model,
+        UserModelData savedUserModel)
     {
         int experienceLevel = UIController.Instance.UserData?.experience_level ?? 0;
         TutorialData tutorialData = new()
@@ -627,6 +633,19 @@ public class ApiController : MonoBehaviour
             onError?.Invoke("Respuesta invalida al consultar favoritos.");
         }, onError: (jsonResponse) =>
         {
+            if (savedUserModel?.guideObject?.pasos != null
+                && savedUserModel.guideObject.pasos.Count > 0)
+            {
+                UIController.Instance.UserModelData = savedUserModel;
+                int savedStep = savedUserModel.current_step > 0
+                    ? savedUserModel.current_step
+                    : 1;
+                ShowGuide(modelId, savedUserModel.guideObject, savedStep);
+                BuildController.Instance.ShowTemporaryMessage(
+                    "No se pudo actualizar la guía. Se muestra la versión guardada.");
+                return;
+            }
+
             Debug.Log(jsonResponse);
             onError?.Invoke(jsonResponse);
         }));
