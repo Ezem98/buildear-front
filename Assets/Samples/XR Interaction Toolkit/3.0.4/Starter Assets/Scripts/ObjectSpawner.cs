@@ -10,6 +10,8 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
     /// </summary>
     public class ObjectSpawner : MonoBehaviour
     {
+        const float k_DefaultSurfaceOffset = 0.005f;
+
         [SerializeField]
         [Tooltip("The camera that objects will face when spawned. If not set, defaults to the main camera.")]
         Camera m_CameraToFace;
@@ -299,10 +301,13 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         static Vector3 GetSpawnPosition(GameObject spawnedObject, Vector3 spawnPoint, Vector3 spawnNormal)
         {
             var placementOffset = spawnedObject.GetComponent<SurfacePlacementOffset>();
-            if (placementOffset == null || spawnNormal.sqrMagnitude <= Mathf.Epsilon)
+            if (spawnNormal.sqrMagnitude <= Mathf.Epsilon)
                 return spawnPoint;
 
-            return spawnPoint + spawnNormal.normalized * placementOffset.offset;
+            float offset = placementOffset != null
+                ? placementOffset.offset
+                : k_DefaultSurfaceOffset;
+            return spawnPoint + spawnNormal.normalized * offset;
         }
 
         static void ClosePlacementMenus(GameObject spawnedObject)
