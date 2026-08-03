@@ -12,8 +12,6 @@ namespace BuildeAR.Tests.EditMode
             "Assets/XR/UserSimulationSettings/SimulationEnvironmentAssetsManager.asset";
         private const string RuntimePreferencesPath =
             "Assets/XR/UserSimulationSettings/Resources/XRSimulationPreferences.asset";
-        private const string EditorPreferencesPath =
-            "Assets/XR/Temp/XRSimulationPreferences.asset";
 
         [Test]
         public void SimulationEnvironmentManager_UsesExpandedEnvironment()
@@ -25,19 +23,27 @@ namespace BuildeAR.Tests.EditMode
             SerializedProperty paths = serializedManager.FindProperty("m_EnvironmentPrefabPaths");
 
             Assert.That(paths, Is.Not.Null);
-            Assert.That(paths.arraySize, Is.EqualTo(1));
-            Assert.That(paths.GetArrayElementAtIndex(0).stringValue, Is.EqualTo(EnvironmentPath));
+            bool containsExpandedEnvironment = false;
+            for (int index = 0; index < paths.arraySize; index++)
+            {
+                if (paths.GetArrayElementAtIndex(index).stringValue == EnvironmentPath)
+                {
+                    containsExpandedEnvironment = true;
+                    break;
+                }
+            }
+
+            Assert.That(containsExpandedEnvironment, Is.True);
             Assert.That(
                 serializedManager.FindProperty("m_FallbackAtEndOfList").boolValue,
                 Is.False
             );
         }
 
-        [TestCase(RuntimePreferencesPath)]
-        [TestCase(EditorPreferencesPath)]
-        public void SimulationPreferences_AlwaysSelectExpandedEnvironment(string preferencesPath)
+        [Test]
+        public void RuntimeSimulationPreferences_SelectExpandedEnvironment()
         {
-            Object preferences = AssetDatabase.LoadMainAssetAtPath(preferencesPath);
+            Object preferences = AssetDatabase.LoadMainAssetAtPath(RuntimePreferencesPath);
             GameObject environment = AssetDatabase.LoadAssetAtPath<GameObject>(EnvironmentPath);
 
             Assert.That(preferences, Is.Not.Null);

@@ -134,6 +134,11 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 
         void OnSelectEntered(SelectEnterEventArgs args)
         {
+            ActivateSelectionMenu();
+        }
+
+        public void ActivateSelectionMenu()
+        {
             HideMenusInSnapGroup(false);
             gameObject.SendMessage(
                 "ActivateModelCanvas",

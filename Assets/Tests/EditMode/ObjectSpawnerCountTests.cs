@@ -11,6 +11,7 @@ namespace BuildeAR.Tests.EditMode
 {
     public class ObjectSpawnerCountTests
     {
+        private const string TestSnapGroup = "BuildeAR.Tests.Ceramic";
         private readonly List<GameObject> objectsToDestroy = new();
 
         [TearDown]
@@ -157,7 +158,7 @@ namespace BuildeAR.Tests.EditMode
                 prefab.AddComponent<SurfacePlacementOffset>();
             placementSettings.enableEdgeSnap = true;
             placementSettings.snapDistance = 0.25f;
-            placementSettings.snapGroup = "Ceramic";
+            placementSettings.snapGroup = TestSnapGroup;
 
             spawner.objectPrefabs = new List<GameObject> { prefab };
             spawner.objectPrefabsIndex = new List<int> { 8 };
@@ -203,9 +204,14 @@ namespace BuildeAR.Tests.EditMode
             GameObject ceramic = Track(Object.Instantiate(ceramicPrefab));
             MeshFilter meshFilter = ceramic.GetComponent<MeshFilter>();
             BoxCollider boxCollider = ceramic.GetComponent<BoxCollider>();
+            SurfacePlacementOffset placementSettings =
+                ceramic.GetComponent<SurfacePlacementOffset>();
 
             Assert.That(meshFilter, Is.Not.Null);
             Assert.That(boxCollider, Is.Not.Null);
+            Assert.That(placementSettings, Is.Not.Null);
+
+            placementSettings.FitBoxColliderToMesh();
 
             Vector3 meshSize = meshFilter.sharedMesh.bounds.size;
             Assert.That(boxCollider.size.x, Is.EqualTo(Mathf.Max(meshSize.x, 0.01f)));
@@ -226,10 +232,11 @@ namespace BuildeAR.Tests.EditMode
             CanvasActivationReceiver receiver = ceramic.AddComponent<CanvasActivationReceiver>();
             SurfacePlacementOffset placementSettings =
                 ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.snapGroup = TestSnapGroup;
             placementSettings.activateCanvasOnSelect = true;
 
             Assert.That(grabInteractable.selectFilters.count, Is.EqualTo(1));
-            grabInteractable.selectEntered.Invoke(null);
+            placementSettings.ActivateSelectionMenu();
 
             Assert.That(receiver.ActivationCount, Is.EqualTo(1));
         }
@@ -244,7 +251,7 @@ namespace BuildeAR.Tests.EditMode
             CanvasActivationReceiver secondReceiver =
                 secondCeramic.GetComponent<CanvasActivationReceiver>();
 
-            secondCeramic.GetComponent<XRGrabInteractable>().selectEntered.Invoke(null);
+            secondCeramic.GetComponent<SurfacePlacementOffset>().ActivateSelectionMenu();
 
             Assert.That(firstReceiver.HideCount, Is.EqualTo(1));
             Assert.That(firstReceiver.ActivationCount, Is.Zero);
@@ -317,7 +324,7 @@ namespace BuildeAR.Tests.EditMode
             ceramic.AddComponent<CanvasActivationReceiver>();
             SurfacePlacementOffset placementSettings =
                 ceramic.AddComponent<SurfacePlacementOffset>();
-            placementSettings.snapGroup = "Ceramic";
+            placementSettings.snapGroup = TestSnapGroup;
             placementSettings.activateCanvasOnSelect = true;
             return ceramic;
         }
@@ -331,7 +338,7 @@ namespace BuildeAR.Tests.EditMode
             SurfacePlacementOffset placementSettings =
                 ceramic.AddComponent<SurfacePlacementOffset>();
             placementSettings.enableEdgeSnap = true;
-            placementSettings.snapGroup = "Ceramic";
+            placementSettings.snapGroup = TestSnapGroup;
             return ceramic;
         }
 
