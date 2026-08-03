@@ -22,24 +22,7 @@ public class ModelManager : MonoBehaviour
             FavoriteButton.interactable = false;
 
         int modelId = UIController.Instance.CurrentModelIndex;
-        ModelData model = UIController.Instance.ModelData;
-        model = null;
-        if (UIController.Instance.SearchModelsData != null)
-        {
-            model = UIController.Instance.SearchModelsData.Find(m => m.id == modelId);
-        }
-        else if (UIController.Instance.PreviousScreen == "Home")
-        {
-            model = UIController.Instance.MyModelsData.Find(m => m.id == modelId);
-        }
-        else if (UIController.Instance.PreviousScreen == "Models")
-        {
-            model = UIController.Instance.ModelsData.Find(m => m.id == modelId);
-        }
-        else if (UIController.Instance.PreviousScreen == "Favorites")
-        {
-            model = UIController.Instance.FavoritesModelsData.Find(x => x.id == modelId);
-        }
+        ModelData model = ResolveSelectedModel(modelId);
 
         if (model != null)
         {
@@ -79,6 +62,25 @@ public class ModelManager : MonoBehaviour
         }
 
         UIController.Instance.ModelData = model;
+    }
+
+    private ModelData ResolveSelectedModel(int modelId)
+    {
+        UIController ui = UIController.Instance;
+        switch (ui.PreviousScreen)
+        {
+            case "Home":
+                return ui.MyModelsData?.Find(model => model.id == modelId);
+            case "Favorites":
+                return ui.FavoritesModelsData?.Find(model => model.id == modelId);
+            case "Models":
+                return ui.SearchModelsData?.Find(model => model.id == modelId)
+                    ?? ui.ModelsData?.Find(model => model.id == modelId);
+            default:
+                return ui.ModelData != null && ui.ModelData.id == modelId
+                    ? ui.ModelData
+                    : null;
+        }
     }
 
     public void ToggleFavorite()

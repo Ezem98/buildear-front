@@ -38,7 +38,7 @@ public class ModelsManager : MonoBehaviour
         }
         else
         {
-
+            UIController.Instance.SearchModelsData = null;
             ApiController.GetModelsByCategoryId(UIController.Instance.CurrentCategoryIndex, onSuccess: () =>
             {
                 CreateButtons(UIController.Instance.ModelsData);
