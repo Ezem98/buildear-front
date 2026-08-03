@@ -3,9 +3,7 @@ using System.Globalization;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine;
-#if UNITY_EDITOR
 using UnityEngine.InputSystem.EnhancedTouch;
-#endif
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 
@@ -65,11 +63,6 @@ public class UIController : MonoBehaviour
     private Dictionary<string, bool> headerDictionary;
     public ObjectSpawner m_ObjectSpawner;
     public ApiController ApiController;
-#if UNITY_EDITOR
-    [Tooltip("Converts mouse input to touch in the regular Game view. Keep disabled when navigating with right-click and WASD in XR Simulation.")]
-    [SerializeField] private bool simulateTouchWithMouseInEditor;
-    private bool touchSimulationEnabledByThisController;
-#endif
 
     /// <summary>
     /// The behavior to use to spawn objects.
@@ -83,6 +76,9 @@ public class UIController : MonoBehaviour
 
     void Awake()
     {
+        TouchSimulation.Enable();
+        navigationStack.Push("Onboarding");
+
         if (_instance != null)
         {
             Destroy(gameObject);
@@ -91,19 +87,6 @@ public class UIController : MonoBehaviour
 
         _instance = this;
         DontDestroyOnLoad(gameObject);
-
-#if UNITY_EDITOR
-        // TouchSimulation disables the source Mouse device. Always reset it first so
-        // XR Simulation can receive right-click and WASD navigation after a reload.
-        TouchSimulation.Disable();
-        if (simulateTouchWithMouseInEditor)
-        {
-            TouchSimulation.Enable();
-            touchSimulationEnabledByThisController = true;
-        }
-#endif
-
-        navigationStack.Push("Onboarding");
 
         screenDictionary = new(){
                 {"Onboarding", onBoarding},
@@ -391,13 +374,6 @@ public class UIController : MonoBehaviour
 
     private void OnDestroy()
     {
-#if UNITY_EDITOR
-        if (touchSimulationEnabledByThisController)
-        {
-            TouchSimulation.Disable();
-            touchSimulationEnabledByThisController = false;
-        }
-#endif
         SaveData();
     }
 }
