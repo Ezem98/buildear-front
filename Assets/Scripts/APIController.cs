@@ -308,7 +308,11 @@ public class ApiController : MonoBehaviour
         BuildController.Instance.ShowLoading("Preparando tu guía...");
         GetUserModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
         {
-            if (userModelData?.guideObject?.pasos != null && userModelData.guideObject.pasos.Count > 0)
+            bool hasSavedGuide =
+                userModelData?.guideObject?.pasos != null
+                && userModelData.guideObject.pasos.Count > 0;
+            bool hasCostEstimate = hasSavedGuide && userModelData.guideObject.costo > 0;
+            if (hasSavedGuide && hasCostEstimate)
             {
                 UIController.Instance.UserModelData = userModelData;
                 int savedStep = userModelData.current_step > 0 ? userModelData.current_step : 1;
@@ -316,6 +320,10 @@ public class ApiController : MonoBehaviour
                 return;
             }
 
+            if (hasSavedGuide)
+            {
+                Debug.Log("La guía guardada no tiene una estimación de costo; se generará una versión actualizada.");
+            }
             RequestGeneratedGuide(modelId, model);
         }, onError: (error) =>
         {
@@ -352,12 +360,16 @@ public class ApiController : MonoBehaviour
                 return;
             }
 
+            int savedStep = 1;
             if (apiResponse.user_model != null)
             {
                 apiResponse.user_model.guideObject = apiResponse.data;
                 UIController.Instance.UserModelData = apiResponse.user_model;
+                savedStep = apiResponse.user_model.current_step > 0
+                    ? apiResponse.user_model.current_step
+                    : 1;
             }
-            ShowGuide(modelId, apiResponse.data, 1);
+            ShowGuide(modelId, apiResponse.data, savedStep);
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);

@@ -340,8 +340,8 @@ public class BuildController : MonoBehaviour
                     costAmount += guide.costo * count;
                 }
             }
-            if (costAmount == 0) CostText.text = "--.--";
-            else CostText.text = $"{costAmount} USD";
+            if (costAmount <= 0) CostText.text = "Sin estimación";
+            else CostText.text = $"≈ {costAmount:0.00} USD";
         }
     }
 
