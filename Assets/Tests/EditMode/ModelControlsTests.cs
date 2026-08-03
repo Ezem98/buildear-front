@@ -14,6 +14,7 @@ namespace BuildeAR.Tests.EditMode
             );
 
             Assert.That(source, Does.Not.Contain(".GetChild("));
+            Assert.That(source, Does.Not.Contain("menu["));
             Assert.That(source, Does.Contain("ShowMenu(modelActions);"));
             Assert.That(source, Does.Contain("foreach (Transform action in actions.transform)"));
             Assert.That(source, Does.Contain("if (actions == null)"));

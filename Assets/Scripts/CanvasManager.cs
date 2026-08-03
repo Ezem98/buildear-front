@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using System.ComponentModel.Design;
@@ -15,6 +14,10 @@ using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 public class CanvasManager : MonoBehaviour, IModelCanvasController
 {
+    private const string ModelActionsMenu = "modelActions";
+    private const string RotateActionsMenu = "rotateActions";
+    private const string MoveActionsMenu = "moveActions";
+    private const string ResizeActionsMenu = "resizeActions";
 
     [SerializeField] private GameObject modelActions;
     [SerializeField] private GameObject resizeActions;
@@ -30,7 +33,6 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
     // private GameObject pivotContainer;
     // public float lengthToAdd = 0.01f;
     // private float resizeAmount = 0.01f;
-    List<string> menu = new() { "modelActions", "rotateActions", "moveActions", "resizeActions" };
     private string activeMenu;
     private string direction;
     private float resizeAmount = 0.01f;
@@ -104,7 +106,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         HideMenu(resizeActions);
         HideMenu(rotateActions);
         HideMenu(moveActions);
-        activeMenu = menu[0]; // modelActions
+        activeMenu = ModelActionsMenu;
     }
     public void ActivateResizeCanvas()
     {
@@ -114,7 +116,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         HideMenu(modelActions);
         HideMenu(rotateActions);
         HideMenu(moveActions);
-        activeMenu = menu[3]; // resizeActions
+        activeMenu = ResizeActionsMenu;
     }
     public void ActivateRotateCanvas()
     {
@@ -123,7 +125,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         HideMenu(modelActions);
         HideMenu(resizeActions);
         HideMenu(moveActions);
-        activeMenu = menu[1]; // rotateActions
+        activeMenu = RotateActionsMenu;
     }
 
     public void ActivateMoveCanvas()
@@ -133,7 +135,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         HideMenu(modelActions);
         HideMenu(resizeActions);
         HideMenu(rotateActions);
-        activeMenu = menu[2]; // moveActions
+        activeMenu = MoveActionsMenu;
     }
 
     public void HideCanvas()
@@ -142,7 +144,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         HideMenu(resizeActions);
         HideMenu(rotateActions);
         HideMenu(moveActions);
-        activeMenu = menu[0]; // modelActions
+        activeMenu = ModelActionsMenu;
     }
 
     private static void HideMenu(GameObject actions)
@@ -404,15 +406,15 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
     }
     public void CancelAction()
     {
-        if (activeMenu == "rotateActions")
+        if (activeMenu == RotateActionsMenu)
         {
             objectReference.transform.rotation = previousRotation; //Funciona
         }
-        else if (activeMenu == "moveActions")
+        else if (activeMenu == MoveActionsMenu)
         {
             objectReference.transform.position = previousPosition; //Funciona
         }
-        else if (activeMenu == "resizeActions")
+        else if (activeMenu == ResizeActionsMenu)
         {
             objectReference.transform.position = previousPosition; //Funciona
             objectReference.transform.localScale = previousLocalScale; //Funciona

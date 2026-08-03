@@ -158,6 +158,28 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void TrySpawnObject_WithoutPlacementSettings_AppliesDefaultSurfaceOffset()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = Track(new GameObject("Wall model prefab"));
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 6 };
+            spawner.spawnOptionId = 6;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Vector3 spawnPoint = new(1f, 2f, 3f);
+            bool spawned = spawner.TrySpawnObject(spawnPoint, Vector3.forward);
+
+            Assert.That(spawned, Is.True);
+            Assert.That(
+                spawner.transform.GetChild(0).position,
+                Is.EqualTo(spawnPoint + Vector3.forward * 0.005f)
+            );
+        }
+
+        [Test]
         public void CeramicPrefab_HasSurfaceOffsetToAvoidPlaneZFighting()
         {
             const string ceramicPath = "Assets/Prefabs/Pisos/Ceramic.prefab";
@@ -167,6 +189,29 @@ namespace BuildeAR.Tests.EditMode
             SurfacePlacementOffset placementOffset = ceramic.GetComponent<SurfacePlacementOffset>();
             Assert.That(placementOffset, Is.Not.Null);
             Assert.That(placementOffset.offset, Is.EqualTo(0.005f));
+        }
+
+        [Test]
+        public void WallPrefab_HasOnlyOneEnabledCanvasManager()
+        {
+            const string wallPath = "Assets/Prefabs/Paredes/fence.prefab";
+            GameObject wall = AssetDatabase.LoadAssetAtPath<GameObject>(wallPath);
+
+            Assert.That(wall, Is.Not.Null);
+            int enabledCanvasManagers = 0;
+            foreach (MonoBehaviour behaviour in wall.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (
+                    behaviour != null &&
+                    behaviour.enabled &&
+                    behaviour.GetType().Name == "CanvasManager"
+                )
+                {
+                    enabledCanvasManagers++;
+                }
+            }
+
+            Assert.That(enabledCanvasManagers, Is.EqualTo(1));
         }
 
         [Test]
