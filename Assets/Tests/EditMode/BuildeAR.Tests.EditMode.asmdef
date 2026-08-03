@@ -2,7 +2,8 @@
     "name": "BuildeAR.Tests.EditMode",
     "rootNamespace": "BuildeAR.Tests.EditMode",
     "references": [
-        "Unity.XR.Interaction.Toolkit.Samples.StarterAssets"
+        "Unity.XR.Interaction.Toolkit.Samples.StarterAssets",
+        "Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets"
     ],
     "includePlatforms": [
         "Editor"
