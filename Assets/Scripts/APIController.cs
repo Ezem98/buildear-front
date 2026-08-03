@@ -39,6 +39,31 @@ public class ApiController : MonoBehaviour
         }
     }
 
+    public static bool TryParseBooleanResponse(string jsonResponse, out bool value)
+    {
+        value = false;
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return false;
+
+        try
+        {
+            JToken payload = JToken.Parse(jsonResponse);
+            JToken booleanToken = payload.Type == JTokenType.Boolean
+                ? payload
+                : payload.Type == JTokenType.Object
+                    ? payload["data"]
+                    : null;
+
+            if (booleanToken?.Type != JTokenType.Boolean) return false;
+
+            value = booleanToken.Value<bool>();
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     private void HandleExpiredSession(UnityWebRequest webRequest)
     {
         if (webRequest.responseCode == 401 && !webRequest.url.EndsWith("/auth/login"))
@@ -593,9 +618,13 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
         {
-            bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
-            onSuccess?.Invoke(apiResponse);
-            // Deserializar la cadena JSON dentro del campo 'guide'
+            if (TryParseBooleanResponse(jsonResponse, out bool isFavorite))
+            {
+                onSuccess?.Invoke(isFavorite);
+                return;
+            }
+
+            onError?.Invoke("Respuesta invalida al consultar favoritos.");
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
@@ -607,9 +636,6 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/auth/google", onSuccess: (jsonResponse) =>
         {
-            // bool apiResponse = JsonConvert.DeserializeObject<bool>(jsonResponse);
-            // onSuccess?.Invoke(apiResponse);
-            // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
             Debug.Log(jsonResponse);
