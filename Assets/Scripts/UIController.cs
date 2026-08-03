@@ -153,14 +153,8 @@ public class UIController : MonoBehaviour
     {
         if (loggedIn)
         {
-            Debug.Log("Logged in: " + UserData.username);
-            ApiController.GetModelsByUserId(UserData.id, onSuccess: (modelData) =>
-                    {
-                        ScreenHandler("Home");
-                    }, onError: (error) =>
-                    {
-                        Debug.Log(error);
-                    });
+            guestUser = false;
+            ScreenHandler("Home");
         }
         else
         {

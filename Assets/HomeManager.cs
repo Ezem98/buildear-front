@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,16 +16,18 @@ public class HomeManager : MonoBehaviour
     // Start is called before the first frame update
     private void OnEnable()
     {
-        if (UIController.Instance.MyModelsData != null)
-            CreateButtons();
-
         if (UIController.Instance.GuestUser)
         {
-
             LoadingText.text = "Para ver tus modelos en construcción, necesitas ser usuario de BuildeAR ¡Registrate!";
             LoadingText.SetActive(true);
             ViewAllButton.interactable = false;
+            return;
         }
+
+        ViewAllButton.interactable = true;
+        LoadingText.text = "Cargando modelos...";
+        LoadingText.SetActive(true);
+        RefreshModels();
     }
 
     private void OnDisable()
@@ -34,8 +37,38 @@ public class HomeManager : MonoBehaviour
 
     public void CreateButtons()
     {
+        CreateButtons(UIController.Instance.MyModelsData);
+    }
+
+    private void RefreshModels()
+    {
+        UserData user = UIController.Instance.UserData;
+        if (ApiController == null || user == null || user.id <= 0)
+        {
+            ShowLoadError("No se pudo identificar al usuario.");
+            return;
+        }
+
+        ApiController.GetModelsByUserId(user.id, onSuccess: (models) =>
+        {
+            if (!isActiveAndEnabled) return;
+            CreateButtons(models);
+        }, onError: (error) =>
+        {
+            if (!isActiveAndEnabled) return;
+            ShowLoadError("No se pudieron cargar tus modelos.");
+            Debug.LogError(error);
+        });
+    }
+
+    private void CreateButtons(List<ModelData> models)
+    {
+        DestroyButtons();
         LoadingText.SetActive(true);
-        foreach (ModelData model in UIController.Instance.MyModelsData)
+        if (models == null)
+            models = new List<ModelData>();
+
+        foreach (ModelData model in models)
         {
             ModelButtonManager modelButton = Instantiate(ModelButtonManager, ModelsContainer.transform); ;
             modelButton.Title.text = model.name;
@@ -45,11 +78,17 @@ public class HomeManager : MonoBehaviour
         }
 
         LoadingText.SetActive(false);
-        if (UIController.Instance.MyModelsData.Count == 0)
+        if (models.Count == 0)
         {
             LoadingText.text = "Aún no has empezado ninguna construcción ¡Animate!";
             LoadingText.SetActive(true);
         }
+    }
+
+    private void ShowLoadError(string message)
+    {
+        LoadingText.text = message;
+        LoadingText.SetActive(true);
     }
 
     private void DestroyButtons()
