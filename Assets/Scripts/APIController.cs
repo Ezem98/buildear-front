@@ -334,6 +334,7 @@ public class ApiController : MonoBehaviour
             bool hasCostEstimate = hasSavedGuide && userModelData.guideObject.costo > 0;
             if (hasSavedGuide && hasCostEstimate)
             {
+                Debug.Log($"[BuildeAR Cost] Guía guardada para modelo {modelId}: costo={userModelData.guideObject.costo:0.00} USD, tiempo={userModelData.guideObject.tiempo_insumido} minutos.");
                 UIController.Instance.UserModelData = userModelData;
                 int savedStep = userModelData.current_step > 0 ? userModelData.current_step : 1;
                 ShowGuide(modelId, userModelData.guideObject, savedStep);
@@ -372,6 +373,9 @@ public class ApiController : MonoBehaviour
         string jsonData = JsonUtility.ToJson(tutorialData);
         StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
         {
+            string rawCost = JToken.Parse(jsonResponse)["data"]?["costo"]?.ToString() ?? "<ausente>";
+            Debug.Log($"[BuildeAR Cost] Respuesta backend para modelo {modelId}: data.costo={rawCost}.");
+
             APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
             if (apiResponse?.data?.pasos == null || apiResponse.data.pasos.Count == 0)
             {
@@ -379,6 +383,8 @@ public class ApiController : MonoBehaviour
                 BuildController.Instance.ShowTemporaryMessage("La guía recibida no contiene pasos válidos.");
                 return;
             }
+
+            Debug.Log($"[BuildeAR Cost] Guía deserializada para modelo {modelId}: costo={apiResponse.data.costo:0.00} USD, tiempo={apiResponse.data.tiempo_insumido} minutos.");
 
             int savedStep = 1;
             if (apiResponse.user_model != null)
