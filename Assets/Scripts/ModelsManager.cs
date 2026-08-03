@@ -30,7 +30,9 @@ public class ModelsManager : MonoBehaviour
 
     private void OnEnable()
     {
+        LoadingText.text = "Cargando modelos...";
         LoadingText.SetActive(true);
+        ModelCountText.SetActive(false);
         if (UIController.Instance.ComesFromSearch)
         {
             UIController.Instance.ComesFromSearch = false;
@@ -48,11 +50,17 @@ public class ModelsManager : MonoBehaviour
 
     private void OnDisable()
     {
+        ModelCountText.SetActive(false);
         DestroyButtons();
     }
 
     public void CreateButtons(List<ModelData> models)
     {
+        DestroyButtons();
+        ModelCountText.SetActive(false);
+        if (models == null)
+            models = new List<ModelData>();
+
         foreach (ModelData model in models)
         {
             ModelButtonManager modelButton = Instantiate(ModelButtonManager, ModelsContainer.transform); ;
@@ -63,16 +71,18 @@ public class ModelsManager : MonoBehaviour
         }
 
         LoadingText.SetActive(false);
-        if (models?.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
+        if (models.Count == 1) GridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
         else GridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
 
-        if (models?.Count > 0)
+        if (models.Count > 0)
         {
             ModelCountText.SetActive(true);
-            ModelCountText.text = "<b>" + models?.Count + "</b>" + " Modelos";
+            string modelLabel = models.Count == 1 ? "Modelo" : "Modelos";
+            ModelCountText.text = $"<b>{models.Count}</b> {modelLabel}";
         }
         else
         {
+            ModelCountText.SetActive(false);
             LoadingText.text = "Sin modelos disponibles.";
             LoadingText.SetActive(true);
         }
