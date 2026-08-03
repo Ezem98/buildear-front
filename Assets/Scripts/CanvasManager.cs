@@ -5,6 +5,7 @@ using UnityEngine;
 using DG.Tweening;
 using System.ComponentModel.Design;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.UI;
 using OpenAI;
 using OpenAI.Threads;
 using System.Linq;
@@ -51,6 +52,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
 
     void Start()
     {
+        InstallUiSelectionBlockers();
         ActionManager.OnResizeAction += ActivateResizeCanvas;
         ActionManager.OnAceptAction += ActivateModelCanvas;
         ActionManager.OnMoveAction += ActivateMoveCanvas;
@@ -68,6 +70,15 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         ActionManager.OnDownScaleSide += DownScaleSideAction;
         ActionManager.OnDownScaleUp += DownScaleUpAction;
 
+    }
+
+    private void InstallUiSelectionBlockers()
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            if (button.GetComponent<ModelUiSelectionBlocker>() == null)
+                button.gameObject.AddComponent<ModelUiSelectionBlocker>();
+        }
     }
 
     public void SideScaleAction()
@@ -264,13 +275,18 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         }
 
         GameObject sourceObject = sourceMetadata.gameObject;
+        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
+        SurfacePlacementOffset sourcePlacementSettings =
+            sourceObject.GetComponent<SurfacePlacementOffset>();
+        bool shouldSnapCopy = sourcePlacementSettings != null &&
+            sourcePlacementSettings.enableEdgeSnap;
 
         Vector3 newPosition;
         Vector3 direction;
-        if (UIController.Instance.ModelData?.category_id == (int)Categories.Floor)
+        if (shouldSnapCopy)
         {
-            direction = sourceObject.transform.up / 2;
-            newPosition = sourceObject.transform.position - direction;
+            direction = sourceObject.transform.right / 2;
+            newPosition = sourceObject.transform.position + direction;
         }
         else
         {
@@ -286,10 +302,14 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
 
         SurfacePlacementOffset copiedPlacementSettings =
             objectCopiedReference.GetComponent<SurfacePlacementOffset>();
-        if (copiedPlacementSettings != null && copiedPlacementSettings.enableEdgeSnap)
-            ObjectSpawner.SnapNextToObject(objectCopiedReference, sourceObject);
+        if (shouldSnapCopy && copiedPlacementSettings != null)
+        {
+            if (objectSpawner != null)
+                objectSpawner.SnapCopyToFreeEdge(objectCopiedReference, sourceObject);
+            else
+                ObjectSpawner.SnapNextToObject(objectCopiedReference, sourceObject);
+        }
 
-        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
         if (objectSpawner != null)
         {
             objectSpawner.RegisterSpawnedObject(objectCopiedReference);

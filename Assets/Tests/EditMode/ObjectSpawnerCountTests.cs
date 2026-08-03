@@ -166,6 +166,25 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void SnapCopyToFreeEdge_PrefersSideAndAvoidsOccupiedEdge()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject source = CreateSnappingCeramic("Source ceramic", Vector3.zero);
+            GameObject firstCopy = CreateSnappingCeramic("First copy", Vector3.zero);
+            GameObject secondCopy = CreateSnappingCeramic("Second copy", Vector3.zero);
+            spawner.RegisterSpawnedObject(source);
+
+            Assert.That(spawner.SnapCopyToFreeEdge(firstCopy, source), Is.True);
+            Assert.That(firstCopy.transform.position.x, Is.EqualTo(0.8f).Within(0.0001f));
+            Assert.That(firstCopy.transform.position.y, Is.EqualTo(0f).Within(0.0001f));
+            spawner.RegisterSpawnedObject(firstCopy);
+
+            Assert.That(spawner.SnapCopyToFreeEdge(secondCopy, source), Is.True);
+            Assert.That(secondCopy.transform.position.x, Is.EqualTo(-0.8f).Within(0.0001f));
+            Assert.That(secondCopy.transform.position.y, Is.EqualTo(0f).Within(0.0001f));
+        }
+
+        [Test]
         public void CeramicPrefab_RuntimeColliderCoversCompleteMesh()
         {
             const string ceramicPath = "Assets/Prefabs/Pisos/Ceramic.prefab";

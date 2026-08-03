@@ -7,6 +7,29 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 {
+    public static class ModelUiInteractionGuard
+    {
+        static int s_HoverCount;
+
+        public static bool isPointerOverModelUi => s_HoverCount > 0;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Reset()
+        {
+            s_HoverCount = 0;
+        }
+
+        public static void Enter()
+        {
+            s_HoverCount++;
+        }
+
+        public static void Exit()
+        {
+            s_HoverCount = Mathf.Max(0, s_HoverCount - 1);
+        }
+    }
+
     public interface IModelCanvasController
     {
         void ActivateModelCanvas();
@@ -129,6 +152,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             IXRSelectInteractable interactable
         )
         {
+            if (ModelUiInteractionGuard.isPointerOverModelUi)
+                return false;
+
             if (interactor is XRRayInteractor rayInteractor &&
                 rayInteractor.TryGetCurrentUIRaycastResult(out var uiRaycastResult) &&
                 uiRaycastResult.gameObject != null)
