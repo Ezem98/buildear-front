@@ -262,6 +262,8 @@ public class UIController : MonoBehaviour
     public void ChangeCategory(int categoryIndex)
     {
         currentCategoryIndex = categoryIndex;
+        ComesFromSearch = false;
+        SearchModelsData = null;
         ScreenHandler("Models");
     }
 
@@ -379,7 +381,10 @@ public class UIController : MonoBehaviour
         currentConversationId = -1;
         UserData = null;
         MyModelsData = null;
+        ModelsData = null;
         FavoritesModelsData = null;
+        SearchModelsData = null;
+        ComesFromSearch = false;
         ConversationsData = new();
         PlayerPrefs.DeleteKey("accessToken");
         PlayerPrefs.DeleteKey("accessTokenExpiresAt");
