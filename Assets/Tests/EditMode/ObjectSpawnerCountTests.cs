@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -106,6 +107,42 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(spawned, Is.True);
             XRGrabInteractable spawnedGrab = spawner.transform.GetChild(0).GetComponent<XRGrabInteractable>();
             Assert.That(spawnedGrab.throwOnDetach, Is.False);
+        }
+
+        [Test]
+        public void TrySpawnObject_WithSurfaceOffset_MovesModelAlongSurfaceNormal()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = Track(new GameObject("Floor model prefab"));
+            SurfacePlacementOffset placementOffset = prefab.AddComponent<SurfacePlacementOffset>();
+            placementOffset.offset = 0.005f;
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 8 };
+            spawner.spawnOptionId = 8;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Vector3 spawnPoint = new(1f, 2f, 3f);
+            bool spawned = spawner.TrySpawnObject(spawnPoint, Vector3.up);
+
+            Assert.That(spawned, Is.True);
+            Assert.That(
+                spawner.transform.GetChild(0).position,
+                Is.EqualTo(spawnPoint + Vector3.up * 0.005f)
+            );
+        }
+
+        [Test]
+        public void CeramicPrefab_HasSurfaceOffsetToAvoidPlaneZFighting()
+        {
+            const string ceramicPath = "Assets/Prefabs/Pisos/Ceramic.prefab";
+            GameObject ceramic = AssetDatabase.LoadAssetAtPath<GameObject>(ceramicPath);
+
+            Assert.That(ceramic, Is.Not.Null);
+            SurfacePlacementOffset placementOffset = ceramic.GetComponent<SurfacePlacementOffset>();
+            Assert.That(placementOffset, Is.Not.Null);
+            Assert.That(placementOffset.offset, Is.EqualTo(0.005f));
         }
 
         private ObjectSpawner CreateSpawner()

@@ -266,7 +266,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             if (m_SpawnAsChildren)
                 newObject.transform.parent = transform;
 
-            newObject.transform.position = spawnPoint;
+            newObject.transform.position = GetSpawnPosition(newObject, spawnPoint, spawnNormal);
             EnsureFacingCamera();
 
             var facePosition = m_CameraToFace.transform.position;
@@ -290,6 +290,15 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             IncrementCount(modelId);
             objectSpawned?.Invoke(newObject);
             return true;
+        }
+
+        static Vector3 GetSpawnPosition(GameObject spawnedObject, Vector3 spawnPoint, Vector3 spawnNormal)
+        {
+            var placementOffset = spawnedObject.GetComponent<SurfacePlacementOffset>();
+            if (placementOffset == null || spawnNormal.sqrMagnitude <= Mathf.Epsilon)
+                return spawnPoint;
+
+            return spawnPoint + spawnNormal.normalized * placementOffset.offset;
         }
 
         static void DisableThrowForKinematicGrabInteractables(GameObject root)
