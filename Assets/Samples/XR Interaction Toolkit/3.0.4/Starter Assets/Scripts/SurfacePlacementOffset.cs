@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Filtering;
@@ -6,6 +7,12 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 {
+    public interface IModelCanvasController
+    {
+        void ActivateModelCanvas();
+        void HideCanvas();
+    }
+
     [DisallowMultipleComponent]
     public class SurfacePlacementOffset : MonoBehaviour, IXRSelectFilter
     {
@@ -140,15 +147,12 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         public void ActivateSelectionMenu()
         {
             HideMenusInSnapGroup(false);
-            gameObject.SendMessage(
-                "ActivateModelCanvas",
-                SendMessageOptions.DontRequireReceiver
-            );
+            GetCanvasController()?.ActivateModelCanvas();
         }
 
         public void HideMenusInSnapGroup(bool includeThisObject)
         {
-            foreach (var placementSettings in FindObjectsOfType<SurfacePlacementOffset>())
+            foreach (var placementSettings in FindActiveInLoadedScenes())
             {
                 if (!placementSettings.m_ActivateCanvasOnSelect ||
                     placementSettings.m_SnapGroup != m_SnapGroup ||
@@ -157,10 +161,34 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                     continue;
                 }
 
-                placementSettings.gameObject.SendMessage(
-                    "HideCanvas",
-                    SendMessageOptions.DontRequireReceiver
-                );
+                placementSettings.GetCanvasController()?.HideCanvas();
+            }
+        }
+
+        IModelCanvasController GetCanvasController()
+        {
+            foreach (var behaviour in GetComponents<MonoBehaviour>())
+            {
+                if (behaviour is IModelCanvasController canvasController)
+                    return canvasController;
+            }
+
+            return null;
+        }
+
+        public static IEnumerable<SurfacePlacementOffset> FindActiveInLoadedScenes()
+        {
+            foreach (
+                var placementSettings in
+                Resources.FindObjectsOfTypeAll<SurfacePlacementOffset>()
+            )
+            {
+                if (placementSettings != null &&
+                    placementSettings.gameObject.scene.IsValid() &&
+                    placementSettings.gameObject.activeInHierarchy)
+                {
+                    yield return placementSettings;
+                }
             }
         }
 

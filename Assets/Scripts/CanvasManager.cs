@@ -12,7 +12,7 @@ using Utilities.Extensions;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 
-public class CanvasManager : MonoBehaviour
+public class CanvasManager : MonoBehaviour, IModelCanvasController
 {
 
     [SerializeField] private GameObject modelActions;

@@ -322,7 +322,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             Quaternion snappedRotation = spawnedObject.transform.rotation;
             float closestDistance = snapSettings.snapDistance;
 
-            foreach (var otherSettings in FindObjectsOfType<SurfacePlacementOffset>())
+            foreach (var otherSettings in SurfacePlacementOffset.FindActiveInLoadedScenes())
             {
                 if (otherSettings == snapSettings || !otherSettings.enableEdgeSnap ||
                     otherSettings.snapGroup != snapSettings.snapGroup ||

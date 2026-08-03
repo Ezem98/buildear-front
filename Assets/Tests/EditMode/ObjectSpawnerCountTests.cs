@@ -349,7 +349,7 @@ namespace BuildeAR.Tests.EditMode
         }
     }
 
-    public class CanvasActivationReceiver : MonoBehaviour
+    public class CanvasActivationReceiver : MonoBehaviour, IModelCanvasController
     {
         public int ActivationCount { get; private set; }
         public int HideCount { get; private set; }
