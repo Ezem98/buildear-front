@@ -190,7 +190,10 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
             {
                 case SpawnTriggerType.SelectAttempt:
                     if (selectState.wasCompletedThisFrame)
-                        m_AttemptSpawn = !m_ARInteractor.hasSelection && !m_EverHadSelection;
+                        m_AttemptSpawn = ShouldSpawnAfterSelectAttempt(
+                            m_ARInteractor.hasSelection,
+                            ref m_EverHadSelection
+                        );
                     break;
 
                 case SpawnTriggerType.InputAction:
@@ -198,6 +201,16 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
                         m_AttemptSpawn = !m_ARInteractor.hasSelection && !m_EverHadSelection;
                     break;
             }
+        }
+
+        public static bool ShouldSpawnAfterSelectAttempt(
+            bool hasSelection,
+            ref bool everHadSelection
+        )
+        {
+            bool shouldSpawn = !hasSelection && !everHadSelection;
+            everHadSelection = false;
+            return shouldSpawn;
         }
     }
 }

@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace BuildeAR.Tests.EditMode
@@ -195,6 +196,43 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(boxCollider.center, Is.EqualTo(meshFilter.sharedMesh.bounds.center));
         }
 
+        [Test]
+        public void CeramicSelection_ActivatesCanvasOnFirstSelect()
+        {
+            GameObject ceramic = Track(new GameObject("Selectable ceramic"));
+            ceramic.AddComponent<BoxCollider>();
+            Rigidbody rigidbody = ceramic.AddComponent<Rigidbody>();
+            rigidbody.isKinematic = true;
+            XRGrabInteractable grabInteractable = ceramic.AddComponent<XRGrabInteractable>();
+            grabInteractable.throwOnDetach = false;
+            CanvasActivationReceiver receiver = ceramic.AddComponent<CanvasActivationReceiver>();
+            SurfacePlacementOffset placementSettings =
+                ceramic.AddComponent<SurfacePlacementOffset>();
+            placementSettings.activateCanvasOnSelect = true;
+
+            grabInteractable.selectEntered.Invoke(null);
+
+            Assert.That(receiver.ActivationCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SelectAttempt_AfterSelection_DoesNotBlockFollowingClick()
+        {
+            bool everHadSelection = true;
+
+            bool spawnFromSelectionClick = ARInteractorSpawnTrigger.ShouldSpawnAfterSelectAttempt(
+                false,
+                ref everHadSelection
+            );
+            bool spawnFromFollowingEmptyClick = ARInteractorSpawnTrigger.ShouldSpawnAfterSelectAttempt(
+                false,
+                ref everHadSelection
+            );
+
+            Assert.That(spawnFromSelectionClick, Is.False);
+            Assert.That(spawnFromFollowingEmptyClick, Is.True);
+        }
+
         private ObjectSpawner CreateSpawner()
         {
             GameObject cameraObject = Track(new GameObject("Main Camera"));
@@ -209,6 +247,16 @@ namespace BuildeAR.Tests.EditMode
         {
             objectsToDestroy.Add(target);
             return target;
+        }
+    }
+
+    public class CanvasActivationReceiver : MonoBehaviour
+    {
+        public int ActivationCount { get; private set; }
+
+        public void ActivateModelCanvas()
+        {
+            ActivationCount++;
         }
     }
 }

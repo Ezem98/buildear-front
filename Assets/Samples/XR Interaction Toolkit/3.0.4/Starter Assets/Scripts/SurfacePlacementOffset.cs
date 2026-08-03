@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 {
@@ -21,6 +23,11 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 
         [SerializeField]
         string m_SnapGroup;
+
+        [SerializeField]
+        bool m_ActivateCanvasOnSelect;
+
+        XRGrabInteractable m_GrabInteractable;
 
         public float offset
         {
@@ -46,10 +53,28 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             set => m_SnapGroup = value;
         }
 
+        public bool activateCanvasOnSelect
+        {
+            get => m_ActivateCanvasOnSelect;
+            set
+            {
+                m_ActivateCanvasOnSelect = value;
+                RefreshSelectionListener();
+            }
+        }
+
         void Awake()
         {
             if (m_FitBoxColliderToMesh)
                 FitBoxColliderToMesh();
+
+            RefreshSelectionListener();
+        }
+
+        void OnDestroy()
+        {
+            if (m_GrabInteractable != null)
+                m_GrabInteractable.selectEntered.RemoveListener(OnSelectEntered);
         }
 
         public void FitBoxColliderToMesh()
@@ -67,6 +92,24 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
 
             boxCollider.center = meshBounds.center;
             boxCollider.size = colliderSize;
+        }
+
+        void RefreshSelectionListener()
+        {
+            if (m_GrabInteractable != null)
+                m_GrabInteractable.selectEntered.RemoveListener(OnSelectEntered);
+
+            m_GrabInteractable = GetComponent<XRGrabInteractable>();
+            if (m_ActivateCanvasOnSelect && m_GrabInteractable != null)
+                m_GrabInteractable.selectEntered.AddListener(OnSelectEntered);
+        }
+
+        void OnSelectEntered(SelectEnterEventArgs args)
+        {
+            gameObject.SendMessage(
+                "ActivateModelCanvas",
+                SendMessageOptions.DontRequireReceiver
+            );
         }
     }
 }
