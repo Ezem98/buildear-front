@@ -460,6 +460,7 @@ public class CanvasManager : MonoBehaviour
         GameObject objectToDestroy = metadata != null ? metadata.gameObject : objectReference;
 
         HideCanvas();
+        KillTweensInHierarchy(objectToDestroy);
         Destroy(objectToDestroy);
         if (objectSpawner != null)
         {
@@ -473,6 +474,13 @@ public class CanvasManager : MonoBehaviour
         BuildController.Instance.CalculateAmount();
         BuildController.Instance.CalculateTime();
     }
+
+    private static void KillTweensInHierarchy(GameObject root)
+    {
+        foreach (Transform target in root.GetComponentsInChildren<Transform>(true))
+            target.DOKill();
+    }
+
     void Update()
     {
         if (isRotatingRight)
