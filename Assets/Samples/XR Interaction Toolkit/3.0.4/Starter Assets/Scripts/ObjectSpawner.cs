@@ -267,6 +267,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 newObject.transform.parent = transform;
 
             newObject.transform.position = GetSpawnPosition(newObject, spawnPoint, spawnNormal);
+            SnapToNearbyObject(newObject);
             EnsureFacingCamera();
 
             var facePosition = m_CameraToFace.transform.position;
@@ -299,6 +300,74 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 return spawnPoint;
 
             return spawnPoint + spawnNormal.normalized * placementOffset.offset;
+        }
+
+        static void SnapToNearbyObject(GameObject spawnedObject)
+        {
+            var snapSettings = spawnedObject.GetComponent<SurfacePlacementOffset>();
+            var spawnedCollider = spawnedObject.GetComponent<BoxCollider>();
+            if (snapSettings == null || !snapSettings.enableEdgeSnap || spawnedCollider == null)
+                return;
+
+            Vector3 desiredPosition = spawnedObject.transform.position;
+            Vector3 snappedPosition = desiredPosition;
+            Quaternion snappedRotation = spawnedObject.transform.rotation;
+            float closestDistance = snapSettings.snapDistance;
+
+            foreach (var otherSettings in FindObjectsOfType<SurfacePlacementOffset>())
+            {
+                if (otherSettings == snapSettings || !otherSettings.enableEdgeSnap ||
+                    otherSettings.snapGroup != snapSettings.snapGroup ||
+                    otherSettings.GetComponent<SpawnedModelMetadata>() == null)
+                {
+                    continue;
+                }
+
+                var otherCollider = otherSettings.GetComponent<BoxCollider>();
+                if (otherCollider == null)
+                    continue;
+
+                Transform otherTransform = otherSettings.transform;
+                Vector3 axisX = otherTransform.right.normalized;
+                Vector3 axisY = otherTransform.up.normalized;
+                float combinedHalfX = GetScaledHalfSize(otherCollider, 0) +
+                    GetScaledHalfSize(spawnedCollider, 0);
+                float combinedHalfY = GetScaledHalfSize(otherCollider, 1) +
+                    GetScaledHalfSize(spawnedCollider, 1);
+                Vector3 otherCenter = otherTransform.TransformPoint(otherCollider.center);
+                Quaternion candidateRotation = otherTransform.rotation;
+                Vector3 spawnedCenterOffset = candidateRotation * Vector3.Scale(
+                    spawnedCollider.center,
+                    spawnedObject.transform.lossyScale
+                );
+
+                Vector3[] candidateCenters =
+                {
+                    otherCenter + axisX * combinedHalfX,
+                    otherCenter - axisX * combinedHalfX,
+                    otherCenter + axisY * combinedHalfY,
+                    otherCenter - axisY * combinedHalfY,
+                };
+
+                foreach (Vector3 candidateCenter in candidateCenters)
+                {
+                    Vector3 candidatePosition = candidateCenter - spawnedCenterOffset;
+                    float distance = Vector3.Distance(desiredPosition, candidatePosition);
+                    if (distance <= closestDistance)
+                    {
+                        closestDistance = distance;
+                        snappedPosition = candidatePosition;
+                        snappedRotation = candidateRotation;
+                    }
+                }
+            }
+
+            spawnedObject.transform.SetPositionAndRotation(snappedPosition, snappedRotation);
+        }
+
+        static float GetScaledHalfSize(BoxCollider boxCollider, int axis)
+        {
+            return boxCollider.size[axis] * Mathf.Abs(boxCollider.transform.lossyScale[axis]) * 0.5f;
         }
 
         static void DisableThrowForKinematicGrabInteractables(GameObject root)

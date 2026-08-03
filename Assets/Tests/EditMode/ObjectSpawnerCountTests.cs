@@ -145,6 +145,56 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(placementOffset.offset, Is.EqualTo(0.005f));
         }
 
+        [Test]
+        public void TrySpawnObject_NearMatchingEdge_SnapsModelsTogether()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = Track(new GameObject("Snapping floor prefab"));
+            BoxCollider boxCollider = prefab.AddComponent<BoxCollider>();
+            boxCollider.size = new Vector3(0.8f, 0.8f, 0.01f);
+            SurfacePlacementOffset placementSettings =
+                prefab.AddComponent<SurfacePlacementOffset>();
+            placementSettings.enableEdgeSnap = true;
+            placementSettings.snapDistance = 0.25f;
+            placementSettings.snapGroup = "Ceramic";
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 8 };
+            spawner.spawnOptionId = 8;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Assert.That(spawner.TrySpawnObject(Vector3.zero, Vector3.forward), Is.True);
+            Assert.That(
+                spawner.TrySpawnObject(new Vector3(0.72f, 0.03f, 0f), Vector3.forward),
+                Is.True
+            );
+
+            Transform secondModel = spawner.transform.GetChild(1);
+            Assert.That(secondModel.position.x, Is.EqualTo(0.8f).Within(0.0001f));
+            Assert.That(secondModel.position.y, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(secondModel.rotation, Is.EqualTo(spawner.transform.GetChild(0).rotation));
+        }
+
+        [Test]
+        public void CeramicPrefab_RuntimeColliderCoversCompleteMesh()
+        {
+            const string ceramicPath = "Assets/Prefabs/Pisos/Ceramic.prefab";
+            GameObject ceramicPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ceramicPath);
+            GameObject ceramic = Track(Object.Instantiate(ceramicPrefab));
+            MeshFilter meshFilter = ceramic.GetComponent<MeshFilter>();
+            BoxCollider boxCollider = ceramic.GetComponent<BoxCollider>();
+
+            Assert.That(meshFilter, Is.Not.Null);
+            Assert.That(boxCollider, Is.Not.Null);
+
+            Vector3 meshSize = meshFilter.sharedMesh.bounds.size;
+            Assert.That(boxCollider.size.x, Is.EqualTo(Mathf.Max(meshSize.x, 0.01f)));
+            Assert.That(boxCollider.size.y, Is.EqualTo(Mathf.Max(meshSize.y, 0.01f)));
+            Assert.That(boxCollider.size.z, Is.EqualTo(Mathf.Max(meshSize.z, 0.01f)));
+            Assert.That(boxCollider.center, Is.EqualTo(meshFilter.sharedMesh.bounds.center));
+        }
+
         private ObjectSpawner CreateSpawner()
         {
             GameObject cameraObject = Track(new GameObject("Main Camera"));
