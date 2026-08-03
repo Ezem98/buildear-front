@@ -7,6 +7,9 @@ using System.Collections.Generic;
 
 public class ApiController : MonoBehaviour
 {
+    private const string CurrentGuidePromptVersion =
+        "guide-responses-v6-argentine-vocabulary";
+
     // URL de tu API
     // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
@@ -332,7 +335,12 @@ public class ApiController : MonoBehaviour
                 userModelData?.guideObject?.pasos != null
                 && userModelData.guideObject.pasos.Count > 0;
             bool hasCostEstimate = hasSavedGuide && userModelData.guideObject.costo > 0;
-            if (hasSavedGuide && hasCostEstimate)
+            bool hasCurrentPrompt = hasSavedGuide
+                && string.Equals(
+                    userModelData.prompt_version,
+                    CurrentGuidePromptVersion,
+                    System.StringComparison.Ordinal);
+            if (hasSavedGuide && hasCostEstimate && hasCurrentPrompt)
             {
                 Debug.Log($"[BuildeAR Cost] Guía guardada para modelo {modelId}: costo={userModelData.guideObject.costo:0.00} USD, tiempo={userModelData.guideObject.tiempo_insumido} minutos.");
                 UIController.Instance.UserModelData = userModelData;
@@ -343,7 +351,11 @@ public class ApiController : MonoBehaviour
 
             if (hasSavedGuide)
             {
-                Debug.Log("La guía guardada no tiene una estimación de costo; se generará una versión actualizada.");
+                string regenerationReason = !hasCostEstimate
+                    ? "no tiene una estimación de costo"
+                    : $"usa el prompt '{userModelData.prompt_version ?? "<sin versión>"}'";
+                Debug.Log(
+                    $"La guía guardada {regenerationReason}; se generará con '{CurrentGuidePromptVersion}'.");
             }
             RequestGeneratedGuide(modelId, model);
         }, onError: (error) =>
