@@ -674,7 +674,7 @@ public class ApiController : MonoBehaviour
 
     public void SaveConversation(ConversationPostData conversationPostData, System.Action<ConversationData> onSuccess, System.Action<string> onError)
     {
-        string conversationData = JsonUtility.ToJson(conversationPostData);
+        string conversationData = JsonConvert.SerializeObject(conversationPostData);
         StartCoroutine(PostRequest(baseUrl + "/conversation", conversationData, onSuccess: (jsonResponse) =>
         {
             APIResponse<ConversationData> apiResponse = JsonConvert.DeserializeObject<APIResponse<ConversationData>>(jsonResponse);
@@ -689,7 +689,7 @@ public class ApiController : MonoBehaviour
 
     public void SaveMessages(ConversationMessagePostData conversationMessagesPostData, System.Action<List<ConversationMessageData>> onSuccess, System.Action<string> onError)
     {
-        string conversationMessagesData = JsonUtility.ToJson(conversationMessagesPostData);
+        string conversationMessagesData = JsonConvert.SerializeObject(conversationMessagesPostData);
         StartCoroutine(PostRequest(baseUrl + "/conversationMessage/all", conversationMessagesData, onSuccess: (jsonResponse) =>
         {
             Debug.Log("Crear mensajes de la conver");

@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
+using Newtonsoft.Json;
 
 
 public class UIController : MonoBehaviour
@@ -325,7 +326,7 @@ public class UIController : MonoBehaviour
         }
         if (ConversationsData != null)
         {
-            string conversationsJsonData = JsonUtility.ToJson(ConversationsData);
+            string conversationsJsonData = SerializeConversations(ConversationsData);
             PlayerPrefs.SetString("conversationsData", conversationsJsonData);
         }
         if (currentConversationId != -1)
@@ -355,9 +356,30 @@ public class UIController : MonoBehaviour
         }
         string modelJsonData = PlayerPrefs.GetString("modelData", "{}");
         ModelData = JsonUtility.FromJson<ModelData>(modelJsonData);
-        string conversationsJsonData = PlayerPrefs.GetString("conversationsData", "{}");
-        ConversationsData = JsonUtility.FromJson<List<ConversationData>>(conversationsJsonData);
+        string conversationsJsonData = PlayerPrefs.GetString("conversationsData", "[]");
+        ConversationsData = DeserializeConversations(conversationsJsonData);
         currentConversationId = PlayerPrefs.GetInt("currentConversationId", -1);
+    }
+
+    public static string SerializeConversations(List<ConversationData> conversations)
+    {
+        return JsonConvert.SerializeObject(conversations ?? new List<ConversationData>());
+    }
+
+    public static List<ConversationData> DeserializeConversations(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return new List<ConversationData>();
+
+        try
+        {
+            return JsonConvert.DeserializeObject<List<ConversationData>>(json)
+                ?? new List<ConversationData>();
+        }
+        catch (JsonException)
+        {
+            return new List<ConversationData>();
+        }
     }
 
     public bool HasValidSession()
@@ -389,6 +411,7 @@ public class UIController : MonoBehaviour
         PlayerPrefs.DeleteKey("accessToken");
         PlayerPrefs.DeleteKey("accessTokenExpiresAt");
         PlayerPrefs.DeleteKey("userData");
+        PlayerPrefs.DeleteKey("conversationsData");
         PlayerPrefs.DeleteKey("currentConversationId");
         PlayerPrefs.SetInt("loggedIn", 0);
         PlayerPrefs.Save();
