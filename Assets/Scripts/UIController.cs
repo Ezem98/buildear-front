@@ -3,7 +3,9 @@ using System.Globalization;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEngine.InputSystem.EnhancedTouch;
+#endif
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 
@@ -63,6 +65,11 @@ public class UIController : MonoBehaviour
     private Dictionary<string, bool> headerDictionary;
     public ObjectSpawner m_ObjectSpawner;
     public ApiController ApiController;
+#if UNITY_EDITOR
+    [Tooltip("Enable only when testing touch input with a mouse in the regular Game view. Keep disabled when using Device Simulator or Unity Remote.")]
+    [SerializeField] private bool simulateTouchWithMouseInEditor;
+    private bool touchSimulationEnabledByThisController;
+#endif
 
     /// <summary>
     /// The behavior to use to spawn objects.
@@ -76,17 +83,24 @@ public class UIController : MonoBehaviour
 
     void Awake()
     {
-        TouchSimulation.Enable();
-        navigationStack.Push("Onboarding");
         if (_instance != null)
         {
-            Destroy(gameObject); // Si ya existe una instancia, destruir este objetoassss
+            Destroy(gameObject);
+            return;
         }
-        else
+
+        _instance = this;
+        DontDestroyOnLoad(gameObject);
+
+#if UNITY_EDITOR
+        if (simulateTouchWithMouseInEditor)
         {
-            _instance = this;
-            DontDestroyOnLoad(gameObject); // Mantener la instancia en todas las escenas
+            TouchSimulation.Enable();
+            touchSimulationEnabledByThisController = true;
         }
+#endif
+
+        navigationStack.Push("Onboarding");
 
         screenDictionary = new(){
                 {"Onboarding", onBoarding},
@@ -374,6 +388,13 @@ public class UIController : MonoBehaviour
 
     private void OnDestroy()
     {
+#if UNITY_EDITOR
+        if (touchSimulationEnabledByThisController)
+        {
+            TouchSimulation.Disable();
+            touchSimulationEnabledByThisController = false;
+        }
+#endif
         SaveData();
     }
 }
