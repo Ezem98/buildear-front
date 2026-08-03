@@ -73,17 +73,7 @@ public class ModelManager : MonoBehaviour
             }else{
                 IsFavorite(() =>
                 {
-                    FavoriteButton.interactable = true;
-                    if (IsFav)
-                    {
-                        FavoriteButton.transform.GetChild(0).SetActive(false);
-                        FavoriteButton.transform.GetChild(1).SetActive(true);
-                    }
-                    else
-                    {
-                        FavoriteButton.transform.GetChild(0).SetActive(true);
-                        FavoriteButton.transform.GetChild(1).SetActive(false);
-                    }
+                    SetFavoriteState(IsFav);
                 });
             }
         }
@@ -95,17 +85,22 @@ public class ModelManager : MonoBehaviour
     {
         IsFavorite(() =>
         {
+            FavoriteButton.interactable = false;
             if (IsFav)
             {
-                FavoritesManager.RemoveFavorite(UIController.Instance.CurrentModelIndex);
-                FavoriteButton.transform.GetChild(0).SetActive(true);
-                FavoriteButton.transform.GetChild(1).SetActive(false);
+                FavoritesManager.RemoveFavorite(
+                    UIController.Instance.CurrentModelIndex,
+                    onSuccess: () => SetFavoriteState(false),
+                    onError: HandleFavoriteError
+                );
             }
             else
             {
-                FavoritesManager.AddFavorite(UIController.Instance.CurrentModelIndex);
-                FavoriteButton.transform.GetChild(0).SetActive(false);
-                FavoriteButton.transform.GetChild(1).SetActive(true);
+                FavoritesManager.AddFavorite(
+                    UIController.Instance.CurrentModelIndex,
+                    onSuccess: () => SetFavoriteState(true),
+                    onError: HandleFavoriteError
+                );
             }
         });
 
@@ -119,7 +114,21 @@ public class ModelManager : MonoBehaviour
             IsFav = isFavorite;
             FavoriteButton.interactable = true;
             onSuccess?.Invoke();
-        });
+        }, onError: HandleFavoriteError);
+    }
+
+    private void SetFavoriteState(bool isFavorite)
+    {
+        IsFav = isFavorite;
+        FavoriteButton.transform.GetChild(0).SetActive(!isFavorite);
+        FavoriteButton.transform.GetChild(1).SetActive(isFavorite);
+        FavoriteButton.interactable = true;
+    }
+
+    private void HandleFavoriteError(string error)
+    {
+        FavoriteButton.interactable = true;
+        Debug.LogError(error);
     }
 
 }

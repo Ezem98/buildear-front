@@ -92,7 +92,7 @@ public class ApiController : MonoBehaviour
         }
     }
 
-    IEnumerator DeleteRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
+    IEnumerator DeleteRequest(string url, System.Action onSuccess, System.Action<string> onError)
     {
         using (UnityWebRequest webRequest = UnityWebRequest.Delete(url))
         {
@@ -102,8 +102,7 @@ public class ApiController : MonoBehaviour
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
-                // Invocar el callback de éxito con la respuesta
-                onSuccess?.Invoke("Delete request successful");
+                onSuccess?.Invoke();
             }
             else
             {
@@ -576,32 +575,47 @@ public class ApiController : MonoBehaviour
         }));
     }
 
-    public void CreateFavorite(FavoriteData favoriteData)
+    public void CreateFavorite(
+        FavoriteData favoriteData,
+        System.Action onSuccess = null,
+        System.Action<string> onError = null
+    )
     {
-        // Convertir el objeto a un string JSON
-        // string jsonGuide = JsonUtility.ToJson(userModelData.guide);
-        string jsonData = JsonUtility.ToJson(favoriteData);
+        string jsonData = JsonConvert.SerializeObject(new
+        {
+            user_id = favoriteData.user_id,
+            model_id = favoriteData.model_id
+        });
 
         StartCoroutine(PostRequest(baseUrl + "/favorites", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<FavoriteData> apiResponse = JsonUtility.FromJson<APIResponse<FavoriteData>>(jsonResponse);
-            Debug.Log(apiResponse.message);
+            APIResponse<FavoriteData> apiResponse =
+                JsonConvert.DeserializeObject<APIResponse<FavoriteData>>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke("El servidor no confirmó el favorito.");
+                return;
+            }
+
+            onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo agregar el favorito."));
         }));
     }
 
-    public void DeleteFavorite(FavoriteData favoriteData)
+    public void DeleteFavorite(
+        FavoriteData favoriteData,
+        System.Action onSuccess = null,
+        System.Action<string> onError = null
+    )
     {
-        StartCoroutine(DeleteRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
+        StartCoroutine(DeleteRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: () =>
         {
-            APIResponse<FavoriteData> apiResponse = JsonConvert.DeserializeObject<APIResponse<FavoriteData>>(jsonResponse);
-            Debug.Log(apiResponse.message);
-            // Deserializar la cadena JSON dentro del campo 'guide'
+            onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo eliminar el favorito."));
         }));
     }
 
