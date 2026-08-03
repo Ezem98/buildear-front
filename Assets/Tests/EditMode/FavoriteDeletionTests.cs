@@ -24,7 +24,7 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(createFavorite.Success, Is.True);
             Assert.That(createFavorite.Value, Does.Contain("user_id = favoriteData.user_id"));
             Assert.That(createFavorite.Value, Does.Contain("model_id = favoriteData.model_id"));
-            Assert.That(createFavorite.Value, Does.Not.Contain("JsonUtility.ToJson(favoriteData)"));
+            Assert.That(createFavorite.Value, Does.Contain("JsonConvert.SerializeObject"));
             Assert.That(createFavorite.Value, Does.Contain("onSuccess?.Invoke()"));
         }
 

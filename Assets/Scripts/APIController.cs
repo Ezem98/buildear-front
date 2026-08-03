@@ -250,16 +250,16 @@ public class ApiController : MonoBehaviour
     {
 
         // Convertir el objeto a un string JSON
-        string jsonData = JsonUtility.ToJson(registerData);
+        string jsonData = JsonConvert.SerializeObject(registerData);
 
         StartCoroutine(PostRequest(baseUrl + "/users", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            APIResponse<UserData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData>>(jsonResponse);
             UIController.Instance.ScreenHandler("Login");
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            APIResponse<UserData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData>>(jsonResponse);
             onError.Invoke(apiResponse.message);
         }));
     }
@@ -267,7 +267,7 @@ public class ApiController : MonoBehaviour
     public void Login(LoginData loginData, System.Action onSuccess, System.Action<string> onError)
     {
         // Convertir el objeto a un string JSON
-        string jsonData = JsonUtility.ToJson(loginData);
+        string jsonData = JsonConvert.SerializeObject(loginData);
 
         StartCoroutine(PostRequest(baseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
         {
@@ -316,13 +316,13 @@ public class ApiController : MonoBehaviour
     {
 
         // Convertir el objeto a un string JSON
-        string jsonData = JsonUtility.ToJson(updateUserData);
+        string jsonData = JsonConvert.SerializeObject(updateUserData);
 
         Debug.Log(jsonData);
 
         StartCoroutine(PatchRequest(baseUrl + "/users/" + UIController.Instance.UserData.username, jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonUtility.FromJson<APIResponse<UserData>>(jsonResponse);
+            APIResponse<UserData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData>>(jsonResponse);
             UIController.Instance.UserData = apiResponse?.data;
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
@@ -387,7 +387,7 @@ public class ApiController : MonoBehaviour
             experienceLevel = experienceLevel != 0 ? experienceLevel : (int)ExperienceLevel.Intermediate,
         };
 
-        string jsonData = JsonUtility.ToJson(tutorialData);
+        string jsonData = JsonConvert.SerializeObject(tutorialData);
         StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
@@ -495,13 +495,11 @@ public class ApiController : MonoBehaviour
 
     public void CreateUserModel(UserModelData userModelData, System.Action<UserModelData> onSuccess, System.Action<string> onError)
     {
-        // Convertir el objeto a un string JSON
-        // string jsonGuide = JsonUtility.ToJson(userModelData.guide);
-        string jsonData = JsonUtility.ToJson(userModelData);
+        string jsonData = JsonConvert.SerializeObject(userModelData);
 
         StartCoroutine(PostRequest(baseUrl + "/userModels", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserModelData> apiResponse = JsonUtility.FromJson<APIResponse<UserModelData>>(jsonResponse);
+            APIResponse<UserModelData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserModelData>>(jsonResponse);
             UIController.Instance.UserModelData = apiResponse?.data;
             onSuccess?.Invoke(apiResponse.data);
         }, onError: (jsonResponse) =>
@@ -515,11 +513,11 @@ public class ApiController : MonoBehaviour
     {
 
         // Convertir el objeto a un string JSON
-        string jsonData = JsonUtility.ToJson(updateUserModelData);
+        string jsonData = JsonConvert.SerializeObject(updateUserModelData);
 
         StartCoroutine(PatchRequest(baseUrl + "/userModels/" + UIController.Instance.UserModelData.id, jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserModelData> apiResponse = JsonUtility.FromJson<APIResponse<UserModelData>>(jsonResponse);
+            APIResponse<UserModelData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserModelData>>(jsonResponse);
             UIController.Instance.UserModelData = apiResponse?.data;
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>

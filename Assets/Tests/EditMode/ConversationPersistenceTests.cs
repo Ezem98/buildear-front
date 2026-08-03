@@ -1,13 +1,29 @@
 using System;
 using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace BuildeAR.Tests.EditMode
 {
     public class ConversationPersistenceTests
     {
+        [Test]
+        public void RuntimeSources_UseNewtonsoftInsteadOfUnitySerializer()
+        {
+            string testsSegment = $"{Path.DirectorySeparatorChar}Tests{Path.DirectorySeparatorChar}";
+            string legacySerializer = "Json" + "Utility";
+            string[] offenders = Directory
+                .GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !path.Contains(testsSegment))
+                .Where(path => File.ReadAllText(path).Contains(legacySerializer))
+                .ToArray();
+
+            Assert.That(offenders, Is.Empty);
+        }
+
         [Test]
         public void NewtonsoftPersistence_RoundTripsRootConversationList()
         {

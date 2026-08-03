@@ -316,12 +316,12 @@ public class UIController : MonoBehaviour
             PlayerPrefs.SetInt("spawnOptionId", objectSpawner.spawnOptionId);
         if (UserData != null)
         {
-            string userJsonData = JsonUtility.ToJson(UserData);
+            string userJsonData = JsonConvert.SerializeObject(UserData);
             PlayerPrefs.SetString("userData", userJsonData);
         }
         if (ModelData != null)
         {
-            string modelJsonData = JsonUtility.ToJson(ModelData);
+            string modelJsonData = JsonConvert.SerializeObject(ModelData);
             PlayerPrefs.SetString("modelData", modelJsonData);
         }
         if (ConversationsData != null)
@@ -348,14 +348,14 @@ public class UIController : MonoBehaviour
         if (objectSpawner != null)
             objectSpawner.spawnOptionId = PlayerPrefs.GetInt("spawnOptionId", -1);
         string userJsonData = PlayerPrefs.GetString("userData", "{}");
-        UserData = JsonUtility.FromJson<UserData>(userJsonData);
+        UserData = DeserializeOrDefault<UserData>(userJsonData);
         if (!LoggedIn || UserData == null || UserData.id <= 0)
         {
             if (LoggedIn) ClearSession();
             UserData = null;
         }
         string modelJsonData = PlayerPrefs.GetString("modelData", "{}");
-        ModelData = JsonUtility.FromJson<ModelData>(modelJsonData);
+        ModelData = DeserializeOrDefault<ModelData>(modelJsonData);
         string conversationsJsonData = PlayerPrefs.GetString("conversationsData", "[]");
         ConversationsData = DeserializeConversations(conversationsJsonData);
         currentConversationId = PlayerPrefs.GetInt("currentConversationId", -1);
@@ -379,6 +379,20 @@ public class UIController : MonoBehaviour
         catch (JsonException)
         {
             return new List<ConversationData>();
+        }
+    }
+
+    public static T DeserializeOrDefault<T>(string json) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+
+        try
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 
