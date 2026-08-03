@@ -575,19 +575,32 @@ public class ApiController : MonoBehaviour
         }));
     }
 
-    public void CreateFavorite(FavoriteData favoriteData)
+    public void CreateFavorite(
+        FavoriteData favoriteData,
+        System.Action onSuccess = null,
+        System.Action<string> onError = null
+    )
     {
-        // Convertir el objeto a un string JSON
-        // string jsonGuide = JsonUtility.ToJson(userModelData.guide);
-        string jsonData = JsonUtility.ToJson(favoriteData);
+        string jsonData = JsonConvert.SerializeObject(new
+        {
+            user_id = favoriteData.user_id,
+            model_id = favoriteData.model_id
+        });
 
         StartCoroutine(PostRequest(baseUrl + "/favorites", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<FavoriteData> apiResponse = JsonUtility.FromJson<APIResponse<FavoriteData>>(jsonResponse);
-            Debug.Log(apiResponse.message);
+            APIResponse<FavoriteData> apiResponse =
+                JsonConvert.DeserializeObject<APIResponse<FavoriteData>>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke("El servidor no confirmó el favorito.");
+                return;
+            }
+
+            onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo agregar el favorito."));
         }));
     }
 

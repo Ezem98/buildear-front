@@ -96,27 +96,39 @@ public class FavoritesManager : MonoBehaviour
         }
     }
 
-    public void AddFavorite(int modelId)
+    public void AddFavorite(
+        int modelId,
+        System.Action onSuccess = null,
+        System.Action<string> onError = null
+    )
     {
         FavoriteData favoriteData = new()
         {
             user_id = UIController.Instance.UserData.id,
             model_id = modelId
         };
-        ApiController.CreateFavorite(favoriteData);
+        ApiController.CreateFavorite(favoriteData, onSuccess, onError);
     }
 
-    public void RemoveFavorite(int modelId)
+    public void RemoveFavorite(
+        int modelId,
+        System.Action onSuccess = null,
+        System.Action<string> onError = null
+    )
     {
         FavoriteData favoriteData = new()
         {
             user_id = UIController.Instance.UserData.id,
             model_id = modelId
         };
-        ApiController.DeleteFavorite(favoriteData);
+        ApiController.DeleteFavorite(favoriteData, onSuccess, onError);
     }
 
-    public void IsFavorite(int modelId, System.Action<bool> onSuccess)
+    public void IsFavorite(
+        int modelId,
+        System.Action<bool> onSuccess,
+        System.Action<string> onError = null
+    )
     {
         FavoriteData favoriteData = new()
         {
@@ -126,6 +138,6 @@ public class FavoritesManager : MonoBehaviour
         ApiController.IsFavorite(favoriteData, onSuccess: (isFavorite) =>
         {
             onSuccess?.Invoke(isFavorite);
-        }, onError: (error) => Debug.Log(error));
+        }, onError: (error) => onError?.Invoke(error));
     }
 }
