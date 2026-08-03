@@ -282,19 +282,18 @@ public class ApiController : MonoBehaviour
             UIController.Instance.AccessToken = apiResponse.data.access_token;
             UIController.Instance.AccessTokenExpiresAt = apiResponse.data.expires_at;
             UIController.Instance.LoggedIn = true;
+            UIController.Instance.GuestUser = false;
+            UIController.Instance.MyModelsData = null;
             if (UIController.Instance.UserData.completed_profile == (int)CompletedProfile.Incomplete)
             {
                 UIController.Instance.ScreenHandler("Profile");
                 onSuccess?.Invoke();
             }
-            else GetModelsByUserId(apiResponse.data.user.id, onSuccess: (modelData) =>
-                    {
-                        UIController.Instance.ScreenHandler("Home");
-                        onSuccess?.Invoke();
-                    }, onError: (error) =>
-                    {
-                        Debug.Log(error);
-                    });
+            else
+            {
+                UIController.Instance.ScreenHandler("Home");
+                onSuccess?.Invoke();
+            }
         }, onError: (jsonResponse) =>
         {
             onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo iniciar sesión."));
