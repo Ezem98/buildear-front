@@ -66,8 +66,8 @@ public class UIController : MonoBehaviour
     public ObjectSpawner m_ObjectSpawner;
     public ApiController ApiController;
 #if UNITY_EDITOR
-    [Tooltip("Converts mouse input to touch while testing inside Unity Editor.")]
-    [SerializeField] private bool simulateTouchWithMouseInEditor = true;
+    [Tooltip("Converts mouse input to touch in the regular Game view. Keep disabled when navigating with right-click and WASD in XR Simulation.")]
+    [SerializeField] private bool simulateTouchWithMouseInEditor;
     private bool touchSimulationEnabledByThisController;
 #endif
 
@@ -93,6 +93,9 @@ public class UIController : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
 #if UNITY_EDITOR
+        // TouchSimulation disables the source Mouse device. Always reset it first so
+        // XR Simulation can receive right-click and WASD navigation after a reload.
+        TouchSimulation.Disable();
         if (simulateTouchWithMouseInEditor)
         {
             TouchSimulation.Enable();
