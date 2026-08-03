@@ -74,8 +74,9 @@ public class ModelManager : MonoBehaviour
             case "Favorites":
                 return ui.FavoritesModelsData?.Find(model => model.id == modelId);
             case "Models":
-                return ui.SearchModelsData?.Find(model => model.id == modelId)
-                    ?? ui.ModelsData?.Find(model => model.id == modelId);
+                return ui.ComesFromSearch
+                    ? ui.SearchModelsData?.Find(model => model.id == modelId)
+                    : ui.ModelsData?.Find(model => model.id == modelId);
             default:
                 return ui.ModelData != null && ui.ModelData.id == modelId
                     ? ui.ModelData

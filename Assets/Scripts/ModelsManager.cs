@@ -33,7 +33,6 @@ public class ModelsManager : MonoBehaviour
         LoadingText.SetActive(true);
         if (UIController.Instance.ComesFromSearch)
         {
-            UIController.Instance.ComesFromSearch = false;
             CreateButtons(UIController.Instance.SearchModelsData);
         }
         else

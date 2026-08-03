@@ -24,8 +24,34 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(resolver.Value, Does.Contain("case \"Favorites\":"));
             Assert.That(resolver.Value, Does.Contain("ui.FavoritesModelsData?.Find"));
             Assert.That(resolver.Value, Does.Contain("case \"Models\":"));
+            Assert.That(resolver.Value, Does.Contain("ui.ComesFromSearch"));
             Assert.That(resolver.Value, Does.Contain("ui.SearchModelsData?.Find"));
             Assert.That(resolver.Value, Does.Contain("ui.ModelsData?.Find"));
+        }
+
+        [Test]
+        public void ReturningToModels_KeepsSearchContextActive()
+        {
+            string managerPath = Path.Combine(
+                Application.dataPath,
+                "Scripts",
+                "ModelsManager.cs"
+            );
+            string source = File.ReadAllText(managerPath);
+            Match searchBranch = Regex.Match(
+                source,
+                @"if\s*\(UIController\.Instance\.ComesFromSearch\)[\s\S]*?else"
+            );
+
+            Assert.That(searchBranch.Success, Is.True);
+            Assert.That(
+                searchBranch.Value,
+                Does.Contain("CreateButtons(UIController.Instance.SearchModelsData)")
+            );
+            Assert.That(
+                searchBranch.Value,
+                Does.Not.Contain("ComesFromSearch = false")
+            );
         }
 
         [Test]
