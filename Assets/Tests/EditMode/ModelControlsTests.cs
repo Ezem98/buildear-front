@@ -34,5 +34,44 @@ namespace BuildeAR.Tests.EditMode
                 Does.Contain("\"com.unity.xr.interaction.toolkit\": \"3.0.8\"")
             );
         }
+
+        [Test]
+        public void ARSpawnInput_IsSeparatedFromObjectSelection()
+        {
+            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            string buildScene = File.ReadAllText(
+                Path.Combine(projectRoot, "Assets", "Scenes", "Build.unity")
+            );
+            string buildUiScene = File.ReadAllText(
+                Path.Combine(projectRoot, "Assets", "Scenes", "BuildUI.unity")
+            );
+            string inputActions = File.ReadAllText(
+                Path.Combine(
+                    projectRoot,
+                    "Assets",
+                    "Samples",
+                    "XR Interaction Toolkit",
+                    "3.0.4",
+                    "Starter Assets",
+                    "XRI Default Input Actions.inputactions"
+                )
+            );
+
+            Assert.That(buildScene, Does.Contain("m_SpawnTriggerType: 1"));
+            Assert.That(buildUiScene, Does.Contain("m_SpawnTriggerType: 1"));
+            Assert.That(
+                buildScene,
+                Does.Contain("guid: c348712bda248c246b8c49b3db54643f")
+            );
+            Assert.That(
+                buildUiScene,
+                Does.Contain("guid: c348712bda248c246b8c49b3db54643f")
+            );
+            Assert.That(
+                inputActions,
+                Does.Contain("<TouchscreenGestureInputController>/tapStartPosition")
+            );
+            Assert.That(inputActions, Does.Contain("Tap(duration=0.5)"));
+        }
     }
 }
