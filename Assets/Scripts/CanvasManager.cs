@@ -461,7 +461,8 @@ public class CanvasManager : MonoBehaviour
 
         HideCanvas();
         KillTweensInHierarchy(objectToDestroy);
-        Destroy(objectToDestroy);
+        PrepareForDeferredDestroy(objectToDestroy);
+        Destroy(objectToDestroy, 0.1f);
         if (objectSpawner != null)
         {
             objectSpawner.SetActive(true);
@@ -479,6 +480,20 @@ public class CanvasManager : MonoBehaviour
     {
         foreach (Transform target in root.GetComponentsInChildren<Transform>(true))
             target.DOKill();
+    }
+
+    private static void PrepareForDeferredDestroy(GameObject root)
+    {
+        // Keep the hierarchy alive briefly because XRRayInteractor can still hold a
+        // reference to one of its UI children until the next interaction update.
+        foreach (Canvas canvas in root.GetComponentsInChildren<Canvas>(true))
+            canvas.enabled = false;
+
+        foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+            renderer.enabled = false;
+
+        foreach (Collider collider in root.GetComponentsInChildren<Collider>(true))
+            collider.enabled = false;
     }
 
     void Update()
