@@ -363,12 +363,26 @@ public class ApiController : MonoBehaviour
             }
 
             RequestGeneratedGuide(modelId, model);
-        }, onError: (error) =>
+        }, onError: (_) =>
         {
-            Debug.Log(error);
-            BuildController.Instance.LoadingModal.SetActive(false);
-            BuildController.Instance.ShowTemporaryMessage(ErrorMessage(error, "No se pudo consultar la guía guardada."));
+            HandleSavedGuideLookupFailure(modelId, model);
         });
+    }
+
+    private void HandleSavedGuideLookupFailure(int modelId, ModelData model)
+    {
+        if (!UIController.Instance.HasValidSession())
+        {
+            BuildController.Instance.LoadingModal.SetActive(false);
+            BuildController.Instance.ShowTemporaryMessage(
+                "Tu sesión venció. Iniciá sesión nuevamente para generar la guía."
+            );
+            return;
+        }
+
+        // No tener todavía un registro en user_models no debe bloquear la guía.
+        // El endpoint de generación crea o actualiza ese registro de forma segura.
+        RequestGeneratedGuide(modelId, model);
     }
 
     private void RequestGeneratedGuide(int modelId, ModelData model)
@@ -478,17 +492,24 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/userModels/" + userId + "/" + modelId, onSuccess: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
             APIResponse<UserModelData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserModelData>>(jsonResponse);
-            // Deserializar la cadena JSON dentro del campo 'guide'
             if (apiResponse?.data != null)
             {
-                apiResponse.data.guideObject = JsonConvert.DeserializeObject<Guide>(apiResponse.data.guide);
+                try
+                {
+                    apiResponse.data.guideObject = string.IsNullOrWhiteSpace(apiResponse.data.guide)
+                        ? null
+                        : JsonConvert.DeserializeObject<Guide>(apiResponse.data.guide);
+                }
+                catch (JsonException)
+                {
+                    // Una guía incompleta o de una versión anterior se regenera.
+                    apiResponse.data.guideObject = null;
+                }
             }
             onSuccess?.Invoke(apiResponse?.data);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
             onError?.Invoke(jsonResponse);
         }));
     }
