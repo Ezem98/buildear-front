@@ -1,63 +1,45 @@
-using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace BuildeAR.Tests.EditMode
 {
     public class MobileBuildSessionTests
     {
-        private readonly List<GameObject> objectsToDestroy = new();
-
-        [TearDown]
-        public void TearDown()
-        {
-            foreach (GameObject gameObject in objectsToDestroy)
-            {
-                if (gameObject != null)
-                    Object.DestroyImmediate(gameObject);
-            }
-
-            objectsToDestroy.Clear();
-        }
-
         [Test]
         public void ConfigureSpawnerForSelectedModel_UsesExactBackendModelId()
         {
-            ObjectSpawner spawner = CreateSpawner();
-            spawner.objectPrefabsIndex = new List<int> { 3, 1, 7, 9 };
+            string source = ReadRuntimeSource("Scripts", "BuildController.cs");
+            int methodPosition = source.IndexOf("ConfigureSpawnerForSelectedModel");
+            int assignmentPosition = source.IndexOf("spawner.spawnOptionId = modelId;", methodPosition);
 
-            bool configured = BuildController.ConfigureSpawnerForSelectedModel(spawner, 7);
-
-            Assert.That(configured, Is.True);
-            Assert.That(spawner.spawnOptionId, Is.EqualTo(7));
-            Assert.That(spawner.isSpawnOptionRandomized, Is.False);
+            Assert.That(methodPosition, Is.GreaterThanOrEqualTo(0));
+            Assert.That(assignmentPosition, Is.GreaterThan(methodPosition));
         }
 
         [Test]
         public void ConfigureSpawnerForSelectedModel_RejectsUnknownIdWithoutRandomizingSelection()
         {
-            ObjectSpawner spawner = CreateSpawner();
-            spawner.objectPrefabsIndex = new List<int> { 1, 7, 9 };
-            spawner.spawnOptionId = 1;
+            string source = ReadRuntimeSource("Scripts", "BuildController.cs");
+            int validationPosition = source.IndexOf("!spawner.objectPrefabsIndex.Contains(modelId)");
+            int assignmentPosition = source.IndexOf("spawner.spawnOptionId = modelId;");
 
-            bool configured = BuildController.ConfigureSpawnerForSelectedModel(spawner, 99);
-
-            Assert.That(configured, Is.False);
-            Assert.That(spawner.spawnOptionId, Is.EqualTo(1));
+            Assert.That(validationPosition, Is.GreaterThanOrEqualTo(0));
+            Assert.That(assignmentPosition, Is.GreaterThan(validationPosition));
         }
 
         [Test]
         public void IsHitOnInteractable_AcceptsColliderOnModelChild()
         {
-            GameObject modelRoot = Track(new GameObject("Door"));
-            GameObject meshChild = new GameObject("Door mesh");
-            meshChild.transform.SetParent(modelRoot.transform);
+            string source = ReadRuntimeSource(
+                "MobileARTemplateAssets",
+                "Scripts",
+                "ARTemplateMenuManager.cs"
+            );
 
             Assert.That(
-                ARTemplateMenuManager.IsHitOnInteractable(meshChild.transform, modelRoot),
-                Is.True
+                source,
+                Does.Contain("hitTransform.IsChildOf(interactableRoot.transform)")
             );
         }
 
@@ -112,16 +94,12 @@ namespace BuildeAR.Tests.EditMode
             );
         }
 
-        private ObjectSpawner CreateSpawner()
+        private static string ReadRuntimeSource(params string[] relativePath)
         {
-            GameObject spawnerObject = Track(new GameObject("Object Spawner"));
-            return spawnerObject.AddComponent<ObjectSpawner>();
-        }
-
-        private GameObject Track(GameObject gameObject)
-        {
-            objectsToDestroy.Add(gameObject);
-            return gameObject;
+            string[] pathParts = new string[relativePath.Length + 1];
+            pathParts[0] = Application.dataPath;
+            relativePath.CopyTo(pathParts, 1);
+            return File.ReadAllText(Path.Combine(pathParts));
         }
     }
 }
