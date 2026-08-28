@@ -39,7 +39,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701448701099452507}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9585d8ca2c061b245bb7cab171b3b75a, type: 3}
   m_Name: 
@@ -504,7 +504,7 @@ MonoBehaviour:
   ResizeActions: {fileID: 3508726404937098491}
   RotateActions: {fileID: 3625940384969753416}
   ActionManager: {fileID: 8867161354304716004}
-  CanvasManager: {fileID: 5132284406578706638}
+  CanvasManager: {fileID: 8464144207830135850}
   objectToRotate: {fileID: 5958407088867369703}
   rotationSpeed: 45
 --- !u!65 &8925927855141749033

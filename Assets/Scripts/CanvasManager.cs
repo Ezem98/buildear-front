@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using System.ComponentModel.Design;
@@ -15,6 +14,10 @@ using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 public class CanvasManager : MonoBehaviour, IModelCanvasController
 {
+    private const string ModelActionsMenu = "modelActions";
+    private const string RotateActionsMenu = "rotateActions";
+    private const string MoveActionsMenu = "moveActions";
+    private const string ResizeActionsMenu = "resizeActions";
 
     [SerializeField] private GameObject modelActions;
     [SerializeField] private GameObject resizeActions;
@@ -30,7 +33,6 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
     // private GameObject pivotContainer;
     // public float lengthToAdd = 0.01f;
     // private float resizeAmount = 0.01f;
-    List<string> menu = new() { "modelActions", "rotateActions", "moveActions", "resizeActions" };
     private string activeMenu;
     private string direction;
     private float resizeAmount = 0.01f;
@@ -100,101 +102,40 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
 
     public void ActivateModelCanvas()
     {
-        modelActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        modelActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        modelActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        modelActions.transform.GetChild(3).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        modelActions.transform.GetChild(4).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        modelActions.transform.GetChild(5).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-
-        if (activeMenu == "resizeActions")
-        {
-            resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            resizeActions.transform.GetChild(7).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        }
-        if (activeMenu == "rotateActions")
-        {
-            rotateActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-            rotateActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        }
-        if (activeMenu == "moveActions")
-        {
-            moveActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-            moveActions.transform.GetChild(6).transform.DOScale(new Vector3(0, 0, 0), 0.3f);
-        }
-        activeMenu = menu[0]; // modelActions
+        ShowMenu(modelActions);
+        HideMenu(resizeActions);
+        HideMenu(rotateActions);
+        HideMenu(moveActions);
+        activeMenu = ModelActionsMenu;
     }
     public void ActivateResizeCanvas()
     {
         previousPosition = objectReference.transform.position;
         previousLocalScale = objectReference.transform.localScale;
-        resizeActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        resizeActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        resizeActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        resizeActions.transform.GetChild(3).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        resizeActions.transform.GetChild(4).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        resizeActions.transform.GetChild(5).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        resizeActions.transform.GetChild(6).transform.DOScale(new Vector3(1, 1, 1), 0.5f);
-        resizeActions.transform.GetChild(7).transform.DOScale(new Vector3(1, 1, 1), 0.5f);
-
-        modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        activeMenu = menu[3]; // resizeActions
+        ShowMenu(resizeActions);
+        HideMenu(modelActions);
+        HideMenu(rotateActions);
+        HideMenu(moveActions);
+        activeMenu = ResizeActionsMenu;
     }
     public void ActivateRotateCanvas()
     {
         previousRotation = objectReference.transform.rotation;
-        rotateActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        rotateActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        rotateActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        rotateActions.transform.GetChild(3).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        rotateActions.transform.GetChild(4).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-
-        modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        activeMenu = menu[1]; // rotateActions
+        ShowMenu(rotateActions);
+        HideMenu(modelActions);
+        HideMenu(resizeActions);
+        HideMenu(moveActions);
+        activeMenu = RotateActionsMenu;
     }
 
     public void ActivateMoveCanvas()
     {
         previousPosition = objectReference.transform.position;
-        moveActions.transform.GetChild(0).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        moveActions.transform.GetChild(1).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        moveActions.transform.GetChild(2).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        moveActions.transform.GetChild(3).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        moveActions.transform.GetChild(4).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        moveActions.transform.GetChild(5).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-        moveActions.transform.GetChild(6).transform.DOScale(new Vector3(1, 1, 1), 0.3f);
-
-        modelActions.transform.GetChild(0).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(1).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(2).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(3).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(4).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        modelActions.transform.GetChild(5).transform.DOScale(new Vector3(0, 0, 0), 0.5f);
-        activeMenu = menu[2]; // moveActions
+        ShowMenu(moveActions);
+        HideMenu(modelActions);
+        HideMenu(resizeActions);
+        HideMenu(rotateActions);
+        activeMenu = MoveActionsMenu;
     }
 
     public void HideCanvas()
@@ -203,7 +144,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         HideMenu(resizeActions);
         HideMenu(rotateActions);
         HideMenu(moveActions);
-        activeMenu = menu[0]; // modelActions
+        activeMenu = ModelActionsMenu;
     }
 
     private static void HideMenu(GameObject actions)
@@ -213,6 +154,15 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
 
         foreach (Transform action in actions.transform)
             action.DOScale(Vector3.zero, 0.3f);
+    }
+
+    private static void ShowMenu(GameObject actions)
+    {
+        if (actions == null)
+            return;
+
+        foreach (Transform action in actions.transform)
+            action.DOScale(Vector3.one, 0.3f);
     }
 
     public void RotateRightAction()
@@ -456,15 +406,15 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
     }
     public void CancelAction()
     {
-        if (activeMenu == "rotateActions")
+        if (activeMenu == RotateActionsMenu)
         {
             objectReference.transform.rotation = previousRotation; //Funciona
         }
-        else if (activeMenu == "moveActions")
+        else if (activeMenu == MoveActionsMenu)
         {
             objectReference.transform.position = previousPosition; //Funciona
         }
-        else if (activeMenu == "resizeActions")
+        else if (activeMenu == ResizeActionsMenu)
         {
             objectReference.transform.position = previousPosition; //Funciona
             objectReference.transform.localScale = previousLocalScale; //Funciona
