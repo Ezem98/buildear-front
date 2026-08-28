@@ -262,8 +262,8 @@ public class ARTemplateMenuManager : MonoBehaviour
     void OnDisable()
     {
         m_ShowObjectMenu = false;
-        m_CurrentInteractable?.GetComponent<CanvasManager>().HideCanvas();
-        m_lastObjectInteractable?.GetComponent<CanvasManager>().HideCanvas();
+        HideModelCanvas(m_CurrentInteractable);
+        HideModelCanvas(m_lastObjectInteractable);
         actionsMenuEnabled = true;
         m_CreateButton.onClick.RemoveListener(ShowMenu);
         m_CancelButton.onClick.RemoveListener(HideMenu);
@@ -273,8 +273,9 @@ public class ARTemplateMenuManager : MonoBehaviour
 
     void OnDestroy()
     {
-        m_CurrentInteractable?.GetComponent<CanvasManager>().HideCanvas();
-        m_lastObjectInteractable?.GetComponent<CanvasManager>().HideCanvas();
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        HideModelCanvas(m_CurrentInteractable);
+        HideModelCanvas(m_lastObjectInteractable);
         actionsMenuEnabled = true;
     }
     /// <summary>
@@ -290,14 +291,81 @@ public class ARTemplateMenuManager : MonoBehaviour
         HideMenu();
         m_PlaneManager.planePrefab = m_DebugPlane;
 
-        SceneManager.sceneLoaded += (scene, mode) => OnSceneLoaded();
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    private void OnSceneLoaded()
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (objectSpawner == null) objectSpawner = FindObjectOfType<ObjectSpawner>();
         if (interactionGroup == null) interactionGroup = FindObjectOfType<XRInteractionGroup>();
         if (planeManager == null) planeManager = FindObjectOfType<ARPlaneManager>();
+    }
+
+    public static bool IsHitOnInteractable(Transform hitTransform, GameObject interactableRoot)
+    {
+        return hitTransform != null && interactableRoot != null &&
+            (hitTransform == interactableRoot.transform || hitTransform.IsChildOf(interactableRoot.transform));
+    }
+
+    private static GameObject ResolvePlacedModelRoot(GameObject interactable)
+    {
+        if (interactable == null)
+            return null;
+
+        SpawnedModelMetadata metadata = interactable.GetComponentInParent<SpawnedModelMetadata>();
+        return metadata != null ? metadata.gameObject : interactable;
+    }
+
+    private static CanvasManager GetModelCanvas(GameObject modelRoot)
+    {
+        return modelRoot != null ? modelRoot.GetComponentInChildren<CanvasManager>(true) : null;
+    }
+
+    private static void HideModelCanvas(GameObject modelRoot)
+    {
+        GetModelCanvas(modelRoot)?.HideCanvas();
+    }
+
+    private void CloseSelectedModel()
+    {
+        HideModelCanvas(m_lastObjectInteractable);
+        m_lastObjectInteractable = null;
+        m_CurrentInteractable = null;
+        actionsMenuEnabled = false;
+        UIController.Instance.objectSpawner?.SetActive(true);
+    }
+
+    private void OpenSelectedModel(GameObject selectedRoot)
+    {
+        if (m_lastObjectInteractable != null && m_lastObjectInteractable != selectedRoot)
+            HideModelCanvas(m_lastObjectInteractable);
+
+        m_CurrentInteractable = selectedRoot;
+        m_lastObjectInteractable = selectedRoot;
+        UIController.Instance.objectSpawner?.SetActive(false);
+        GetModelCanvas(selectedRoot)?.ActivateModelCanvas();
+        actionsMenuEnabled = true;
+    }
+
+    private static void SelectModelGuide(GameObject selectedRoot)
+    {
+        SpawnedModelMetadata metadata = selectedRoot?.GetComponent<SpawnedModelMetadata>();
+        if (metadata == null)
+            return;
+
+        int modelId = metadata.ModelId;
+        UIController.Instance.CurrentModelIndex = modelId;
+        BuildController buildController = BuildController.Instance;
+        if (buildController == null ||
+            !buildController.CurrentStepDictionary.TryGetValue(modelId, out Paso currentStep) ||
+            !buildController.GuidesDictionary.TryGetValue(modelId, out Guide guide))
+        {
+            return;
+        }
+
+        buildController.StepTitle.text = currentStep.titulo;
+        buildController.StepDescription.text = currentStep.descripcion;
+        buildController.StepCount.text = "Paso " + currentStep.paso + "/" + guide.pasos.Count;
     }
 
     /// <summary>
@@ -353,91 +421,33 @@ public class ARTemplateMenuManager : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && m_InteractionGroup)
         {
             XRBaseInteractable interactable = m_InteractionGroup.focusInteractable as XRBaseInteractable;
-            m_CurrentInteractable = interactable?.gameObject;
-            // Realizar un raycast desde la posición del mouse
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
+            m_CurrentInteractable = ResolvePlacedModelRoot(interactable?.gameObject);
 
-            // Verificar si el clic fue sobre un elemento de la UI
-            if (EventSystem.current.IsPointerOverGameObject())
-            {
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                 return;
+
+            Camera currentCamera = Camera.main;
+            if (currentCamera == null)
+                return;
+
+            Ray ray = currentCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                SpawnedModelMetadata hitMetadata =
+                    hit.transform.GetComponentInParent<SpawnedModelMetadata>();
+                GameObject selectedRoot = hitMetadata != null
+                    ? hitMetadata.gameObject
+                    : m_CurrentInteractable;
+
+                if (IsHitOnInteractable(hit.transform, selectedRoot))
+                {
+                    SelectModelGuide(selectedRoot);
+                    OpenSelectedModel(selectedRoot);
+                    return;
+                }
             }
 
-            //Hay Raycast
-            if (Physics.Raycast(ray, out hit))
-            {
-                //Entra si ya hay un objeto spawneado
-                if (m_CurrentInteractable) // Le pegue a un objeto
-                {
-                    Debug.Log("Current Interactable: " + m_CurrentInteractable.name);
-                    Debug.Log("Count object spawner: " + m_ObjectSpawner.objectPrefabs.Count);
-                    int currentObjectIndex = m_ObjectSpawner.objectPrefabs.FindIndex(go => go.name == m_CurrentInteractable.name.Split('(')[0].Trim());
-                    Debug.Log("Current Object Index: " + currentObjectIndex);
-                    UIController.Instance.CurrentModelIndex = m_ObjectSpawner.objectPrefabsIndex[currentObjectIndex];
-                    if (BuildController.Instance.CurrentStepDictionary.TryGetValue(currentObjectIndex, out Paso step))
-                    {
-                        Paso currentStep = BuildController.Instance.CurrentStepDictionary[currentObjectIndex];
-                        BuildController.Instance.StepTitle.text = currentStep.titulo;
-                        BuildController.Instance.StepDescription.text = currentStep.descripcion;
-                        BuildController.Instance.StepCount.text = "Paso " + currentStep.paso + "/" + BuildController.Instance.GuidesDictionary
-                        [currentObjectIndex].pasos.Count;
-                    }
-
-                    //Toque el current
-                    if (hit.transform.gameObject == m_CurrentInteractable)
-                    {
-                        if (m_lastObjectInteractable && m_lastObjectInteractable != m_CurrentInteractable)
-                        {
-                            if (actionsMenuEnabled)
-                            {
-                                UIController.Instance.objectSpawner.SetActive(true);
-                                CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
-                                cmLast.HideCanvas();
-                                actionsMenuEnabled = false;
-                            }
-                        }
-                        else
-                        {
-                            UIController.Instance.objectSpawner.SetActive(true);
-                            actionsMenuEnabled = false;
-                        }
-                        m_lastObjectInteractable = m_CurrentInteractable;
-                        if (!actionsMenuEnabled)
-                        {
-                            UIController.Instance.objectSpawner.SetActive(false);
-                            CanvasManager cmCurrent = m_CurrentInteractable.GetComponent<CanvasManager>();
-                            cmCurrent.ActivateModelCanvas();
-                            actionsMenuEnabled = true;
-                        }
-                    }
-                }
-                //No hay nada en la escena
-                else
-                {
-                    actionsMenuEnabled = false;
-                    if (m_lastObjectInteractable)
-                    {
-                        UIController.Instance.objectSpawner.SetActive(true);
-                        CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
-                        cmLast.HideCanvas();
-                    }
-                }
-            }
-            //Si no existe raycast
-            else
-            {
-                if (m_lastObjectInteractable)
-                {
-                    if (actionsMenuEnabled)
-                    {
-                        UIController.Instance.objectSpawner.SetActive(true);
-                        CanvasManager cmLast = m_lastObjectInteractable.GetComponent<CanvasManager>();
-                        cmLast.HideCanvas();
-                        actionsMenuEnabled = false;
-                    }
-                }
-            }
+            CloseSelectedModel();
         }
     }
 
@@ -445,7 +455,7 @@ public class ARTemplateMenuManager : MonoBehaviour
     /// Set the index of the object in the list on the ObjectSpawner to a specific value.
     /// This is effectively an override of the default behavior or randomly spawning an object.
     /// </summary>
-    /// <param name="objectIndex">The index in the array of the object to spawn with the ObjectSpawner</param>
+    /// <param name="objectIndex">The index in the prefab array selected by the menu.</param>
     public void SetObjectToSpawn(int objectIndex)
     {
         if (m_ObjectSpawner == null)
@@ -454,9 +464,11 @@ public class ARTemplateMenuManager : MonoBehaviour
         }
         else
         {
-            if (m_ObjectSpawner.objectPrefabs.Count > objectIndex)
+            if (objectIndex >= 0 &&
+                objectIndex < m_ObjectSpawner.objectPrefabs.Count &&
+                objectIndex < m_ObjectSpawner.objectPrefabsIndex.Count)
             {
-                m_ObjectSpawner.spawnOptionId = objectIndex;
+                m_ObjectSpawner.spawnOptionId = m_ObjectSpawner.objectPrefabsIndex[objectIndex];
             }
             else
             {
