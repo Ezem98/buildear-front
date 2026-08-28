@@ -42,6 +42,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
     private bool isMovingLeft = false;
     private bool isMovingForward = false;
     private bool isMovingBack = false;
+    private bool destroyRequested = false;
 
     public string GetActiveMenu()
     {
@@ -55,6 +56,7 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
     void Start()
     {
         InstallUiSelectionBlockers();
+        BindDeleteButton();
         ActionManager.OnResizeAction += ActivateResizeCanvas;
         ActionManager.OnAceptAction += ActivateModelCanvas;
         ActionManager.OnMoveAction += ActivateMoveCanvas;
@@ -80,6 +82,22 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
         {
             if (button.GetComponent<ModelUiSelectionBlocker>() == null)
                 button.gameObject.AddComponent<ModelUiSelectionBlocker>();
+        }
+    }
+
+    private void BindDeleteButton()
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            bool isDeleteButton = button.name == "Tachito";
+            for (int index = 0; !isDeleteButton && index < button.onClick.GetPersistentEventCount(); index++)
+                isDeleteButton = button.onClick.GetPersistentMethodName(index) == nameof(DestroyObject);
+
+            if (!isDeleteButton)
+                continue;
+
+            button.onClick.RemoveListener(DestroyObject);
+            button.onClick.AddListener(DestroyObject);
         }
     }
 
@@ -424,14 +442,28 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
     // Update is called once per frame
     public void DestroyObject()
     {
-        SpawnedModelMetadata metadata = objectReference.GetComponentInParent<SpawnedModelMetadata>();
-        ObjectSpawner objectSpawner = UIController.Instance.objectSpawner;
-        GameObject objectToDestroy = metadata != null ? metadata.gameObject : objectReference;
+        if (destroyRequested)
+            return;
+
+        destroyRequested = true;
+        SpawnedModelMetadata metadata = objectReference != null
+            ? objectReference.GetComponentInParent<SpawnedModelMetadata>()
+            : GetComponentInParent<SpawnedModelMetadata>();
+        GameObject objectToDestroy = ResolveObjectToDestroy(metadata);
+        if (objectToDestroy == null)
+        {
+            destroyRequested = false;
+            return;
+        }
+
+        ObjectSpawner objectSpawner = UIController.Instance != null
+            ? UIController.Instance.objectSpawner
+            : null;
 
         HideCanvas();
         KillTweensInHierarchy(objectToDestroy);
         PrepareForDeferredDestroy(objectToDestroy);
-        Destroy(objectToDestroy, 0.1f);
+        StartCoroutine(DestroyAfterInteractionUpdate(objectToDestroy));
         if (objectSpawner != null)
         {
             objectSpawner.SetActive(true);
@@ -442,8 +474,32 @@ public class CanvasManager : MonoBehaviour, IModelCanvasController
                 Debug.LogWarning("The deleted object had no model metadata; its count could not be updated.");
         }
 
-        BuildController.Instance.CalculateAmount();
-        BuildController.Instance.CalculateTime();
+        if (BuildController.Instance != null)
+        {
+            BuildController.Instance.CalculateAmount();
+            BuildController.Instance.CalculateTime();
+        }
+    }
+
+    private GameObject ResolveObjectToDestroy(SpawnedModelMetadata metadata)
+    {
+        if (metadata != null)
+            return metadata.gameObject;
+
+        Transform modelRoot = objectReference != null ? objectReference.transform : transform;
+        while (modelRoot.parent != null)
+            modelRoot = modelRoot.parent;
+
+        return modelRoot.gameObject;
+    }
+
+    private IEnumerator DestroyAfterInteractionUpdate(GameObject root)
+    {
+        // XR can retain the selected collider until its next update. Waiting one
+        // frame avoids that stale reference and does not depend on Time.timeScale.
+        yield return null;
+        if (root != null)
+            Destroy(root);
     }
 
     private static void KillTweensInHierarchy(GameObject root)

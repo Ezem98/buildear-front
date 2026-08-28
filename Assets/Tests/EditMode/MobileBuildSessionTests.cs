@@ -94,6 +94,19 @@ namespace BuildeAR.Tests.EditMode
             );
         }
 
+        [Test]
+        public void DeleteButton_IsBoundAtRuntimeAndDestroysAfterInteractionUpdate()
+        {
+            string source = ReadRuntimeSource("Scripts", "CanvasManager.cs");
+
+            Assert.That(source, Does.Contain("BindDeleteButton();"));
+            Assert.That(source, Does.Contain("button.onClick.AddListener(DestroyObject);"));
+            Assert.That(source, Does.Contain("if (destroyRequested)"));
+            Assert.That(source, Does.Contain("ResolveObjectToDestroy(metadata)"));
+            Assert.That(source, Does.Contain("yield return null;"));
+            Assert.That(source, Does.Not.Contain("Destroy(objectToDestroy, 0.1f);"));
+        }
+
         private static string ReadRuntimeSource(params string[] relativePath)
         {
             string[] pathParts = new string[relativePath.Length + 1];
