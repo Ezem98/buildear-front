@@ -107,6 +107,28 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(source, Does.Not.Contain("Destroy(objectToDestroy, 0.1f);"));
         }
 
+        [Test]
+        public void ModelDetailBackButton_TargetsUiNavigationAndHasSafeFallback()
+        {
+            string uiScene = ReadRuntimeSource("Scenes", "UI.unity");
+            int backButtonPosition = uiScene.IndexOf("--- !u!1 &1724267176");
+            int nextObjectPosition = uiScene.IndexOf("--- !u!1 &", backButtonPosition + 1);
+            string backButtonBlock = uiScene.Substring(
+                backButtonPosition,
+                nextObjectPosition - backButtonPosition
+            );
+            string controllerSource = ReadRuntimeSource("Scripts", "UIController.cs");
+
+            Assert.That(backButtonPosition, Is.GreaterThanOrEqualTo(0));
+            Assert.That(backButtonBlock, Does.Contain("m_Target: {fileID: 1638469108}"));
+            Assert.That(
+                backButtonBlock,
+                Does.Contain("m_TargetAssemblyTypeName: UIController, Assembly-CSharp")
+            );
+            Assert.That(backButtonBlock, Does.Contain("m_MethodName: GoBack"));
+            Assert.That(controllerSource, Does.Contain("return \"Home\";"));
+        }
+
         private static string ReadRuntimeSource(params string[] relativePath)
         {
             string[] pathParts = new string[relativePath.Length + 1];

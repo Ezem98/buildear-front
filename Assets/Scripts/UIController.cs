@@ -276,10 +276,7 @@ public class UIController : MonoBehaviour
 
     public void GoBack()
     {
-        Debug.Log("Antes del pop: " + navigationStack.Count);
-        string newScreenName = navigationStack.Pop();
-        Debug.Log("Despues del pop: " + navigationStack.Count);
-        Debug.Log("newScreenName: " + newScreenName);
+        string newScreenName = ResolveBackDestination();
         if (newScreenName == "Login")
         {
             newScreenName = "Home";
@@ -294,8 +291,18 @@ public class UIController : MonoBehaviour
         footer.SetActive(footerDictionary[newScreenName]);
         header.SetActive(headerDictionary[newScreenName]);
         currentScreen = newScreenName;
-        Debug.Log("currentScreen: " + currentScreen);
-        Debug.Log("previousScreen: " + previousScreen);
+    }
+
+    private string ResolveBackDestination()
+    {
+        while (navigationStack.Count > 0)
+        {
+            string destination = navigationStack.Pop();
+            if (destination != currentScreen && screenDictionary.ContainsKey(destination))
+                return destination;
+        }
+
+        return "Home";
     }
 
     public void SaveData()
