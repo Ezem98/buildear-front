@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
+using Newtonsoft.Json;
 
 
 public class UIController : MonoBehaviour
@@ -315,17 +316,17 @@ public class UIController : MonoBehaviour
             PlayerPrefs.SetInt("spawnOptionId", objectSpawner.spawnOptionId);
         if (UserData != null)
         {
-            string userJsonData = JsonUtility.ToJson(UserData);
+            string userJsonData = JsonConvert.SerializeObject(UserData);
             PlayerPrefs.SetString("userData", userJsonData);
         }
         if (ModelData != null)
         {
-            string modelJsonData = JsonUtility.ToJson(ModelData);
+            string modelJsonData = JsonConvert.SerializeObject(ModelData);
             PlayerPrefs.SetString("modelData", modelJsonData);
         }
         if (ConversationsData != null)
         {
-            string conversationsJsonData = JsonUtility.ToJson(ConversationsData);
+            string conversationsJsonData = SerializeConversations(ConversationsData);
             PlayerPrefs.SetString("conversationsData", conversationsJsonData);
         }
         if (currentConversationId != -1)
@@ -347,17 +348,52 @@ public class UIController : MonoBehaviour
         if (objectSpawner != null)
             objectSpawner.spawnOptionId = PlayerPrefs.GetInt("spawnOptionId", -1);
         string userJsonData = PlayerPrefs.GetString("userData", "{}");
-        UserData = JsonUtility.FromJson<UserData>(userJsonData);
+        UserData = DeserializeOrDefault<UserData>(userJsonData);
         if (!LoggedIn || UserData == null || UserData.id <= 0)
         {
             if (LoggedIn) ClearSession();
             UserData = null;
         }
         string modelJsonData = PlayerPrefs.GetString("modelData", "{}");
-        ModelData = JsonUtility.FromJson<ModelData>(modelJsonData);
-        string conversationsJsonData = PlayerPrefs.GetString("conversationsData", "{}");
-        ConversationsData = JsonUtility.FromJson<List<ConversationData>>(conversationsJsonData);
+        ModelData = DeserializeOrDefault<ModelData>(modelJsonData);
+        string conversationsJsonData = PlayerPrefs.GetString("conversationsData", "[]");
+        ConversationsData = DeserializeConversations(conversationsJsonData);
         currentConversationId = PlayerPrefs.GetInt("currentConversationId", -1);
+    }
+
+    public static string SerializeConversations(List<ConversationData> conversations)
+    {
+        return JsonConvert.SerializeObject(conversations ?? new List<ConversationData>());
+    }
+
+    public static List<ConversationData> DeserializeConversations(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return new List<ConversationData>();
+
+        try
+        {
+            return JsonConvert.DeserializeObject<List<ConversationData>>(json)
+                ?? new List<ConversationData>();
+        }
+        catch (JsonException)
+        {
+            return new List<ConversationData>();
+        }
+    }
+
+    public static T DeserializeOrDefault<T>(string json) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+
+        try
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public bool HasValidSession()
@@ -389,6 +425,7 @@ public class UIController : MonoBehaviour
         PlayerPrefs.DeleteKey("accessToken");
         PlayerPrefs.DeleteKey("accessTokenExpiresAt");
         PlayerPrefs.DeleteKey("userData");
+        PlayerPrefs.DeleteKey("conversationsData");
         PlayerPrefs.DeleteKey("currentConversationId");
         PlayerPrefs.SetInt("loggedIn", 0);
         PlayerPrefs.Save();
