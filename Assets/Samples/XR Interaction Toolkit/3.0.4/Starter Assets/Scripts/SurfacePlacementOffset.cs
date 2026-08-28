@@ -59,6 +59,12 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         [SerializeField]
         bool m_ActivateCanvasOnSelect;
 
+        [SerializeField]
+        bool m_AlignToSurfaceNormal;
+
+        [SerializeField]
+        Vector3 m_LocalSurfaceNormal = Vector3.forward;
+
         XRGrabInteractable m_GrabInteractable;
 
         public float offset
@@ -104,6 +110,36 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 m_ActivateCanvasOnSelect = value;
                 RefreshSelectionListener();
             }
+        }
+
+        public bool alignToSurfaceNormal
+        {
+            get => m_AlignToSurfaceNormal;
+            set => m_AlignToSurfaceNormal = value;
+        }
+
+        public Vector3 localSurfaceNormal
+        {
+            get => m_LocalSurfaceNormal;
+            set => m_LocalSurfaceNormal = value.sqrMagnitude > Mathf.Epsilon
+                ? value.normalized
+                : Vector3.forward;
+        }
+
+        public Quaternion GetSurfaceAlignedRotation(
+            Quaternion currentRotation,
+            Vector3 surfaceNormal
+        )
+        {
+            if (!m_AlignToSurfaceNormal || surfaceNormal.sqrMagnitude <= Mathf.Epsilon)
+                return currentRotation;
+
+            Vector3 localNormal = m_LocalSurfaceNormal.sqrMagnitude > Mathf.Epsilon
+                ? m_LocalSurfaceNormal.normalized
+                : Vector3.forward;
+            Vector3 currentWorldNormal = currentRotation * localNormal;
+            return Quaternion.FromToRotation(currentWorldNormal, surfaceNormal.normalized) *
+                currentRotation;
         }
 
         public bool canProcess => isActiveAndEnabled && m_ActivateCanvasOnSelect;

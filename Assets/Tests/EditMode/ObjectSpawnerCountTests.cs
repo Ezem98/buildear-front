@@ -158,6 +158,37 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void TrySpawnObject_WithSurfaceAlignment_MakesModelParallelToPlane()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = Track(new GameObject("Window prefab"));
+            SurfacePlacementOffset placementSettings =
+                prefab.AddComponent<SurfacePlacementOffset>();
+            placementSettings.alignToSurfaceNormal = true;
+            placementSettings.localSurfaceNormal = Vector3.right;
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 7 };
+            spawner.spawnOptionId = 7;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Vector3 wallNormal = Vector3.forward;
+            Assert.That(spawner.TrySpawnObject(Vector3.zero, wallNormal), Is.True);
+
+            Transform spawnedWindow = spawner.transform.GetChild(0);
+            Vector3 spawnedWindowNormal = spawnedWindow.rotation * Vector3.right;
+            Assert.That(
+                Vector3.Dot(spawnedWindowNormal, wallNormal),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+            Assert.That(
+                Vector3.Dot(spawnedWindow.up, Vector3.up),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+        }
+
+        [Test]
         public void TrySpawnObject_WithoutPlacementSettings_AppliesDefaultSurfaceOffset()
         {
             ObjectSpawner spawner = CreateSpawner();
@@ -189,6 +220,21 @@ namespace BuildeAR.Tests.EditMode
             SurfacePlacementOffset placementOffset = ceramic.GetComponent<SurfacePlacementOffset>();
             Assert.That(placementOffset, Is.Not.Null);
             Assert.That(placementOffset.offset, Is.EqualTo(0.005f));
+        }
+
+        [Test]
+        public void WindowPrefab_AlignsItsThinAxisToScannedWallNormal()
+        {
+            const string windowPath =
+                "Assets/Prefabs/Ventanas/VentanaDobleAluminioModel.prefab";
+            GameObject window = AssetDatabase.LoadAssetAtPath<GameObject>(windowPath);
+
+            Assert.That(window, Is.Not.Null);
+            SurfacePlacementOffset placementSettings =
+                window.GetComponent<SurfacePlacementOffset>();
+            Assert.That(placementSettings, Is.Not.Null);
+            Assert.That(placementSettings.alignToSurfaceNormal, Is.True);
+            Assert.That(placementSettings.localSurfaceNormal, Is.EqualTo(Vector3.right));
         }
 
         [Test]

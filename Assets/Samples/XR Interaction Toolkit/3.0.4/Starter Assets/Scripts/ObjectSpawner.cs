@@ -270,6 +270,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 newObject.transform.parent = transform;
 
             newObject.transform.position = GetSpawnPosition(newObject, spawnPoint, spawnNormal);
+            newObject.transform.rotation = GetSpawnRotation(newObject, spawnNormal);
             SnapToNearbyObject(newObject);
             RegisterSpawnedObject(newObject);
             ClosePlacementMenus(newObject);
@@ -308,6 +309,17 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 ? placementOffset.offset
                 : k_DefaultSurfaceOffset;
             return spawnPoint + spawnNormal.normalized * offset;
+        }
+
+        static Quaternion GetSpawnRotation(GameObject spawnedObject, Vector3 spawnNormal)
+        {
+            var placementSettings = spawnedObject.GetComponent<SurfacePlacementOffset>();
+            return placementSettings != null
+                ? placementSettings.GetSurfaceAlignedRotation(
+                    spawnedObject.transform.rotation,
+                    spawnNormal
+                )
+                : spawnedObject.transform.rotation;
         }
 
         static void ClosePlacementMenus(GameObject spawnedObject)
