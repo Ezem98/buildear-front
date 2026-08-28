@@ -189,6 +189,66 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void TrySpawnObject_WithCameraFacingPlacement_FacesDoorTowardCameraSide()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            spawner.cameraToFace.transform.position = new Vector3(0f, 0f, -5f);
+            GameObject prefab = Track(new GameObject("Door prefab"));
+            prefab.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
+            SurfacePlacementOffset placementSettings =
+                prefab.AddComponent<SurfacePlacementOffset>();
+            placementSettings.faceCameraOnSurface = true;
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 1 };
+            spawner.spawnOptionId = 1;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Assert.That(spawner.TrySpawnObject(Vector3.zero, Vector3.up), Is.True);
+
+            Transform spawnedDoor = spawner.transform.GetChild(0);
+            Assert.That(
+                Vector3.Dot(spawnedDoor.forward, Vector3.forward),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+            Assert.That(
+                Vector3.Dot(spawnedDoor.up, Vector3.up),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+        }
+
+        [Test]
+        public void TrySpawnObject_OnVerticalWall_KeepsCameraFacingDoorUpright()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            spawner.cameraToFace.transform.position = new Vector3(0f, 0f, -5f);
+            GameObject prefab = Track(new GameObject("Door prefab"));
+            prefab.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
+            SurfacePlacementOffset placementSettings =
+                prefab.AddComponent<SurfacePlacementOffset>();
+            placementSettings.faceCameraOnSurface = true;
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 1 };
+            spawner.spawnOptionId = 1;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Assert.That(spawner.TrySpawnObject(Vector3.zero, Vector3.back), Is.True);
+
+            Transform spawnedDoor = spawner.transform.GetChild(0);
+            Assert.That(
+                Vector3.Dot(spawnedDoor.forward, Vector3.forward),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+            Assert.That(
+                Vector3.Dot(spawnedDoor.up, Vector3.up),
+                Is.EqualTo(1f).Within(0.0001f)
+            );
+        }
+
+        [Test]
         public void TrySpawnObject_WithoutPlacementSettings_AppliesDefaultSurfaceOffset()
         {
             ObjectSpawner spawner = CreateSpawner();
@@ -235,6 +295,19 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(placementSettings, Is.Not.Null);
             Assert.That(placementSettings.alignToSurfaceNormal, Is.True);
             Assert.That(placementSettings.localSurfaceNormal, Is.EqualTo(Vector3.right));
+        }
+
+        [Test]
+        public void DoorPrefab_FacesItsControlsTowardCameraAtPlacement()
+        {
+            const string doorPath = "Assets/Prefabs/Puertas/PuertaMaderaRoja.prefab";
+            GameObject door = AssetDatabase.LoadAssetAtPath<GameObject>(doorPath);
+
+            Assert.That(door, Is.Not.Null);
+            SurfacePlacementOffset placementSettings =
+                door.GetComponent<SurfacePlacementOffset>();
+            Assert.That(placementSettings, Is.Not.Null);
+            Assert.That(placementSettings.faceCameraOnSurface, Is.True);
         }
 
         [Test]

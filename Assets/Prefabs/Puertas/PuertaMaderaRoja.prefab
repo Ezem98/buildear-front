@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3766650655118958877}
+  - component: {fileID: 8821932187239937442}
   m_Layer: 0
   m_Name: PuertaMaderaRoja
   m_TagString: Untagged
@@ -32,6 +33,27 @@ Transform:
   - {fileID: 2685050375200261214}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!114 &8821932187239937442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2727340133048960482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef56a6670d1407a9ade1083c2cac2e1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_Offset: 0.005
+  m_FitBoxColliderToMesh: 0
+  m_EnableEdgeSnap: 0
+  m_SnapDistance: 0.25
+  m_SnapGroup:
+  m_ActivateCanvasOnSelect: 0
+  m_AlignToSurfaceNormal: 0
+  m_LocalSurfaceNormal: {x: 0, y: 0, z: 1}
+  m_FaceCameraOnSurface: 1
 --- !u!1001 &5067472834129880486
 PrefabInstance:
   m_ObjectHideFlags: 0

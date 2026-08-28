@@ -65,6 +65,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         [SerializeField]
         Vector3 m_LocalSurfaceNormal = Vector3.forward;
 
+        [SerializeField]
+        bool m_FaceCameraOnSurface;
+
         XRGrabInteractable m_GrabInteractable;
 
         public float offset
@@ -124,6 +127,12 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             set => m_LocalSurfaceNormal = value.sqrMagnitude > Mathf.Epsilon
                 ? value.normalized
                 : Vector3.forward;
+        }
+
+        public bool faceCameraOnSurface
+        {
+            get => m_FaceCameraOnSurface;
+            set => m_FaceCameraOnSurface = value;
         }
 
         public Quaternion GetSurfaceAlignedRotation(

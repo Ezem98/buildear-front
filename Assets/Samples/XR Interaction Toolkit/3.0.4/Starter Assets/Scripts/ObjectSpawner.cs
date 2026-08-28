@@ -270,7 +270,11 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 newObject.transform.parent = transform;
 
             newObject.transform.position = GetSpawnPosition(newObject, spawnPoint, spawnNormal);
-            newObject.transform.rotation = GetSpawnRotation(newObject, spawnNormal);
+            newObject.transform.rotation = GetSpawnRotation(
+                newObject,
+                spawnPoint,
+                spawnNormal
+            );
             SnapToNearbyObject(newObject);
             RegisterSpawnedObject(newObject);
             ClosePlacementMenus(newObject);
@@ -311,15 +315,59 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             return spawnPoint + spawnNormal.normalized * offset;
         }
 
-        static Quaternion GetSpawnRotation(GameObject spawnedObject, Vector3 spawnNormal)
+        Quaternion GetSpawnRotation(
+            GameObject spawnedObject,
+            Vector3 spawnPoint,
+            Vector3 spawnNormal
+        )
         {
             var placementSettings = spawnedObject.GetComponent<SurfacePlacementOffset>();
-            return placementSettings != null
-                ? placementSettings.GetSurfaceAlignedRotation(
-                    spawnedObject.transform.rotation,
-                    spawnNormal
-                )
-                : spawnedObject.transform.rotation;
+            Quaternion currentRotation = spawnedObject.transform.rotation;
+            if (placementSettings == null)
+                return currentRotation;
+
+            if (
+                placementSettings.faceCameraOnSurface &&
+                spawnNormal.sqrMagnitude > Mathf.Epsilon
+            )
+            {
+                EnsureFacingCamera();
+                if (m_CameraToFace != null)
+                {
+                    Vector3 normalizedSurfaceNormal = spawnNormal.normalized;
+                    Vector3 cameraToSpawn = Vector3.ProjectOnPlane(
+                        spawnPoint - m_CameraToFace.transform.position,
+                        normalizedSurfaceNormal
+                    );
+
+                    // A door can be configured for a detected floor or wall.
+                    // On a wall, keep it upright and choose the normal that points
+                    // away from the camera so its controls stay on the visible side.
+                    if (Mathf.Abs(Vector3.Dot(normalizedSurfaceNormal, Vector3.up)) < 0.5f)
+                    {
+                        Vector3 facingNormal = normalizedSurfaceNormal;
+                        Vector3 cameraToObject =
+                            spawnPoint - m_CameraToFace.transform.position;
+                        if (Vector3.Dot(facingNormal, cameraToObject) < 0f)
+                            facingNormal = -facingNormal;
+
+                        return Quaternion.LookRotation(facingNormal, Vector3.up);
+                    }
+
+                    if (cameraToSpawn.sqrMagnitude > Mathf.Epsilon)
+                    {
+                        return Quaternion.LookRotation(
+                            cameraToSpawn.normalized,
+                            normalizedSurfaceNormal
+                        );
+                    }
+                }
+            }
+
+            return placementSettings.GetSurfaceAlignedRotation(
+                currentRotation,
+                spawnNormal
+            );
         }
 
         static void ClosePlacementMenus(GameObject spawnedObject)
