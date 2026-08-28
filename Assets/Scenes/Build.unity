@@ -6295,7 +6295,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &793547325
 RectTransform:
   m_ObjectHideFlags: 0
@@ -14083,7 +14083,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 2099970473}
         m_TargetAssemblyTypeName: BuildController, Assembly-CSharp
         m_MethodName: HandleChatModal
         m_Mode: 6
@@ -18261,6 +18261,7 @@ MonoBehaviour:
   LoadingModal: {fileID: 911797487}
   FinishModal: {fileID: 1980716108}
   RulerManager: {fileID: 256876333}
+  GreetingPrompt: {fileID: 595971757}
   RulerPlaceButton: {fileID: 1602264934}
   BackToSpawnModeButton: {fileID: 148510564}
   Gyroscope: {fileID: 1159280902}
@@ -18279,7 +18280,9 @@ MonoBehaviour:
   ARPlaneManager: {fileID: 151853166}
   ApiController: {fileID: 1315186298}
   ChatButton: {fileID: 0}
-  ChatModal: {fileID: 0}
+  ChatCloseButton: {fileID: 1485165205}
+  ChatInputField: {fileID: 761309916}
+  ChatModal: {fileID: 793547324}
 --- !u!1 &2116033367 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2318766424490069697, guid: dae86721c71ee42018bbec0181a4e52e,

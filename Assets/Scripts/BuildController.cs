@@ -57,9 +57,8 @@ public class BuildController : MonoBehaviour
 
     public void BackToUI()
     {
+        UIController.Instance.objectSpawner = null;
         UIController.Instance.SceneHandler("UI");
-        GameObject.Find("UI").SetActive(false);
-        GameObject.Find("XR Origin (AR Rig)").SetActive(false);
     }
 
     public void BackToSpawnMode()
@@ -77,39 +76,125 @@ public class BuildController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (ARPlaneManager != null)
+        string modelPosition = UIController.Instance.ModelData?.position;
+        if (ARPlaneManager != null &&
+            !string.IsNullOrWhiteSpace(modelPosition) &&
+            detectionModeDictionary.TryGetValue(modelPosition, out PlaneDetectionMode detectionMode))
         {
-            ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
-            previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+            ARPlaneManager.requestedDetectionMode = detectionMode;
+            previousDetectionMode = detectionMode;
         }
         if (UIController.Instance.UserData?.completed_profile == (int)CompletedProfile.Incomplete || UIController.Instance.GuestUser)
         {
-            GreetingPrompt.SetActive(true);
+            GreetingPrompt?.SetActive(true);
         }
     }
 
     private void Awake()
     {
-        // ARPlaneManager.requestedDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
-        // previousDetectionMode = detectionModeDictionary[UIController.Instance.ModelData.position];
+        _instance = this;
+        ResolveSceneReferences();
+        ResetTransientUi();
+        InitializeSelectedModel();
 
         if (GuidesDictionary.GetValueOrDefault(UIController.Instance.CurrentModelIndex) != null)
         {
-            MaterialListButton.interactable = true;
-            GuideButton.interactable = true;
-            FinishButton.interactable = true;
-            ChatButton.interactable = true;
+            if (MaterialListButton != null) MaterialListButton.interactable = true;
+            if (GuideButton != null) GuideButton.interactable = true;
+            if (FinishButton != null) FinishButton.interactable = true;
+            if (ChatButton != null) ChatButton.interactable = true;
+        }
+    }
+
+    private void ResolveSceneReferences()
+    {
+        if (ChatModal == null)
+            ChatModal = FindGameObjectInScene("Chat");
+
+        if (ChatModal != null)
+        {
+            if (ChatCloseButton == null)
+            {
+                Transform closeButton = FindChildByName(ChatModal.transform, "CloseButton");
+                if (closeButton != null)
+                    ChatCloseButton = closeButton.GetComponent<Button>();
+            }
+
+            if (ChatInputField == null)
+                ChatInputField = ChatModal.GetComponentInChildren<TMP_InputField>(true);
         }
 
-        if (_instance != null)
+        if (ChatCloseButton != null)
         {
-            Destroy(gameObject); // Si ya existe una instancia, destruir este objeto
+            ChatCloseButton.onClick.RemoveListener(CloseChatModal);
+            ChatCloseButton.onClick.AddListener(CloseChatModal);
         }
-        else
+    }
+
+    private void ResetTransientUi()
+    {
+        GuideResponse?.SetActive(false);
+        LoadingModal?.SetActive(false);
+        FinishModal?.SetActive(false);
+        ChatModal?.SetActive(false);
+        MaterialList?.SetActive(false);
+        RulerManager?.SetActive(false);
+        RulerPlaceButton?.SetActive(false);
+        BackToSpawnModeButton?.SetActive(false);
+        CameraPivot?.SetActive(false);
+        Gyroscope?.SetActive(false);
+        ObjectSpawner?.SetActive(true);
+        ToolbarButton?.SetActive(true);
+    }
+
+    private void InitializeSelectedModel()
+    {
+        ObjectSpawner spawner = ObjectSpawner != null
+            ? ObjectSpawner.GetComponent<ObjectSpawner>()
+            : FindObjectOfType<ObjectSpawner>();
+
+        UIController.Instance.objectSpawner = spawner;
+        ConfigureSpawnerForSelectedModel(spawner, UIController.Instance.CurrentModelIndex);
+    }
+
+    public static bool ConfigureSpawnerForSelectedModel(ObjectSpawner spawner, int modelId)
+    {
+        if (spawner == null || modelId <= 0 ||
+            spawner.objectPrefabsIndex == null ||
+            !spawner.objectPrefabsIndex.Contains(modelId))
         {
-            _instance = this;
-            DontDestroyOnLoad(gameObject); // Mantener la instancia en todas las escenas
+            return false;
         }
+
+        spawner.spawnOptionId = modelId;
+        return true;
+    }
+
+    private GameObject FindGameObjectInScene(string objectName)
+    {
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+        {
+            Transform match = FindChildByName(root.transform, objectName);
+            if (match != null)
+                return match.gameObject;
+        }
+
+        return null;
+    }
+
+    private static Transform FindChildByName(Transform root, string objectName)
+    {
+        if (root.name == objectName)
+            return root;
+
+        foreach (Transform child in root)
+        {
+            Transform match = FindChildByName(child, objectName);
+            if (match != null)
+                return match;
+        }
+
+        return null;
     }
 
     public static BuildController Instance
@@ -121,15 +206,6 @@ public class BuildController : MonoBehaviour
             {
                 _instance = FindObjectOfType<BuildController>();
 
-                // Si no se encuentra la instancia en la escena, crear una nueva
-                if (_instance == null)
-                {
-                    GameObject singletonObject = new();
-                    _instance = singletonObject.AddComponent<BuildController>();
-                    singletonObject.name = typeof(BuildController).ToString() + " (Singleton)";
-                    // Opcional: Evitar que sea destruido cuando se cambie de escena
-                    DontDestroyOnLoad(singletonObject);
-                }
             }
             return _instance;
         }
@@ -284,7 +360,12 @@ public class BuildController : MonoBehaviour
 
     public void HandleChatModal(bool IsOpen)
     {
-        ChatModal.SetActive(IsOpen);
+        ChatModal?.SetActive(IsOpen);
+    }
+
+    private void CloseChatModal()
+    {
+        HandleChatModal(false);
     }
 
     IEnumerator PassiveMe(int secs)
@@ -371,6 +452,12 @@ public class BuildController : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (ChatCloseButton != null)
+            ChatCloseButton.onClick.RemoveListener(CloseChatModal);
+
+        if (_instance == this)
+            _instance = null;
+
         if (!UIController.Instance.GuestUser)
             UIController.Instance.SaveData();
     }
