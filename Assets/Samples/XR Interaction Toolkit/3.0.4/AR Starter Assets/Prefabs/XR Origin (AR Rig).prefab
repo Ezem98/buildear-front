@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 2512387469002778328}
   - component: {fileID: 2512387469002778329}
   - component: {fileID: 2512387469002778310}
-  - component: {fileID: 8263514179883450840}
   - component: {fileID: 2512387469002778311}
   - component: {fileID: 8856633716983450840}
   m_Layer: 0
@@ -201,23 +200,6 @@ MonoBehaviour:
     m_Interactions: 
     m_SingletonActionBindings: []
     m_Flags: 0
---- !u!114 &8263514179883450840
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2512387469002778309}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b15f82cc229284894964d2d30806969d, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  m_HumanSegmentationStencilMode: 3
-  m_HumanSegmentationDepthMode: 2
-  m_EnvironmentDepthMode: 2
-  m_EnvironmentDepthTemporalSmoothing: 1
-  m_OcclusionPreferenceMode: 1
 --- !u!114 &8856633716983450840
 MonoBehaviour:
   m_ObjectHideFlags: 0
