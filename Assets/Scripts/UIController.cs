@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using Newtonsoft.Json;
 
@@ -56,7 +56,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject header;
     [SerializeField] private GameObject buildUI;
     [SerializeField] private GameObject XRComponent;
-    [SerializeField] private GameObject UIManager;
+    [SerializeField] private GameObject arSessionObject;
     [SerializeField] private GameObject ChatHistory;
     [SerializeField] private GameObject ChatHistoryItem;
     private Dictionary<string, GameObject> screenDictionary;
@@ -227,32 +227,64 @@ public class UIController : MonoBehaviour
 
     public void SceneHandler(string newSceneName)
     {
-        if (newSceneName == "UI")
+        if (newSceneName == "Build" || newSceneName == "BuildUI")
         {
-            // Restaura la pantalla donde estabas antes de salir
-            screenDictionary[currentScreen].SetActive(true);
-            footer.SetActive(footerDictionary[currentScreen]);
+            EnableBuildMode();
+            return;
         }
-        else
+
+        if (newSceneName == "UI" && currentScreen == "BuildUI")
         {
-            screenDictionary[currentScreen].SetActive(false);
-            footer.SetActive(false);
+            GoBack();
+            return;
         }
-        SceneManager.LoadScene(newSceneName);
+
+        if (screenDictionary.ContainsKey(newSceneName))
+            ScreenHandler(newSceneName);
     }
 
     public void EnableBuildMode()
     {
+        if (buildUI == null)
+            return;
 
-        UIManager.SetActive(false);
+        if (currentScreen != "BuildUI")
+        {
+            navigationStack.Push(currentScreen);
+            previousScreen = currentScreen;
+            if (screenDictionary.TryGetValue(currentScreen, out GameObject currentScreenObject))
+                currentScreenObject?.SetActive(false);
+            currentScreen = "BuildUI";
+        }
+
+        footer?.SetActive(false);
+        header?.SetActive(false);
+        canvas?.SetActive(false);
+
+        arSessionObject?.SetActive(true);
+        XRComponent?.SetActive(true);
+
+        if (objectSpawner != null)
+            objectSpawner.spawnOptionId = currentModelIndex;
+
         buildUI.SetActive(true);
-        objectSpawner.spawnOptionId = currentModelIndex;
     }
 
     public void DisableBuildMode()
     {
-        UIManager.SetActive(true);
+        BuildController.Instance?.EndBuildSession();
+
         buildUI.SetActive(false);
+
+        ARSession arSession = arSessionObject != null
+            ? arSessionObject.GetComponent<ARSession>()
+            : null;
+        if (arSession != null && arSessionObject.activeInHierarchy)
+            arSession.Reset();
+
+        XRComponent?.SetActive(false);
+        arSessionObject?.SetActive(false);
+        canvas?.SetActive(true);
     }
 
     public void ChangeCategory(int categoryIndex)
@@ -276,7 +308,8 @@ public class UIController : MonoBehaviour
         {
             newScreenName = "Home";
         }
-        else if (currentScreen == "BuildUI")
+
+        if (currentScreen == "BuildUI")
         {
             DisableBuildMode();
         }

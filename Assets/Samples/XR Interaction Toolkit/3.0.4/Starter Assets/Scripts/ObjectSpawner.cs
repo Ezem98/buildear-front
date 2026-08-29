@@ -436,6 +436,27 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 m_SpawnedObjects.Remove(spawnedObject);
         }
 
+        /// <summary>
+        /// Removes every object placed during the current AR build session and resets its totals.
+        /// </summary>
+        public void ClearSpawnedObjects()
+        {
+            for (int index = m_SpawnedObjects.Count - 1; index >= 0; index--)
+            {
+                GameObject spawnedObject = m_SpawnedObjects[index];
+                if (spawnedObject == null)
+                    continue;
+
+                if (Application.isPlaying)
+                    Destroy(spawnedObject);
+                else
+                    DestroyImmediate(spawnedObject);
+            }
+
+            m_SpawnedObjects.Clear();
+            countDictionary.Clear();
+        }
+
         public static bool SnapNextToObject(GameObject objectToSnap, GameObject referenceObject)
         {
             if (objectToSnap == null || referenceObject == null)

@@ -71,6 +71,28 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void ClearSpawnedObjects_RemovesPlacedModelsAndResetsCounts()
+        {
+            ObjectSpawner spawner = CreateSpawner();
+            GameObject prefab = Track(new GameObject("Model prefab"));
+
+            spawner.objectPrefabs = new List<GameObject> { prefab };
+            spawner.objectPrefabsIndex = new List<int> { 42 };
+            spawner.spawnOptionId = 42;
+            spawner.spawnAsChildren = true;
+            spawner.onlySpawnInView = false;
+
+            Assert.That(spawner.TrySpawnObject(Vector3.forward, Vector3.up), Is.True);
+            Assert.That(spawner.transform.childCount, Is.EqualTo(1));
+            Assert.That(spawner.CountDictionary[42], Is.EqualTo(1));
+
+            spawner.ClearSpawnedObjects();
+
+            Assert.That(spawner.transform.childCount, Is.Zero);
+            Assert.That(spawner.CountDictionary, Is.Empty);
+        }
+
+        [Test]
         public void TrySpawnObject_WithUnknownModelId_ReturnsFalseWithoutChangingCounts()
         {
             ObjectSpawner spawner = CreateSpawner();
