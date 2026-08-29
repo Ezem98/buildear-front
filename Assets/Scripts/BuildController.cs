@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -61,8 +60,7 @@ public class BuildController : MonoBehaviour
 
     public void BackToUI()
     {
-        UIController.Instance.objectSpawner = null;
-        UIController.Instance.SceneHandler("UI");
+        UIController.Instance.GoBack();
     }
 
     public void BackToSpawnMode()
@@ -80,6 +78,15 @@ public class BuildController : MonoBehaviour
 
     private void OnEnable()
     {
+        BeginBuildSession();
+    }
+
+    public void BeginBuildSession()
+    {
+        ResolveSceneReferences();
+        ResetTransientUi();
+        InitializeSelectedModel();
+
         string modelPosition = UIController.Instance.ModelData?.position;
         if (ARPlaneManager != null &&
             !string.IsNullOrWhiteSpace(modelPosition) &&
@@ -95,6 +102,30 @@ public class BuildController : MonoBehaviour
         {
             GreetingPrompt?.SetActive(true);
         }
+
+        bool hasGuide = GuidesDictionary.GetValueOrDefault(UIController.Instance.CurrentModelIndex) != null;
+        if (MaterialListButton != null) MaterialListButton.interactable = hasGuide;
+        if (GuideButton != null) GuideButton.interactable = hasGuide;
+        if (FinishButton != null) FinishButton.interactable = hasGuide;
+        if (ChatButton != null) ChatButton.interactable = hasGuide;
+    }
+
+    public void EndBuildSession()
+    {
+        if (temporaryMessageCoroutine != null)
+        {
+            StopCoroutine(temporaryMessageCoroutine);
+            temporaryMessageCoroutine = null;
+        }
+
+        ResetTransientUi();
+        ObjectSpawner spawner = ObjectSpawner != null
+            ? ObjectSpawner.GetComponent<ObjectSpawner>()
+            : null;
+        spawner?.ClearSpawnedObjects();
+        ChatMessages.Clear();
+        filterElevatedHorizontalPlanes = false;
+        SetAllPlaneRenderersVisible(true);
     }
 
     private void Update()
@@ -182,16 +213,6 @@ public class BuildController : MonoBehaviour
     {
         _instance = this;
         ResolveSceneReferences();
-        ResetTransientUi();
-        InitializeSelectedModel();
-
-        if (GuidesDictionary.GetValueOrDefault(UIController.Instance.CurrentModelIndex) != null)
-        {
-            if (MaterialListButton != null) MaterialListButton.interactable = true;
-            if (GuideButton != null) GuideButton.interactable = true;
-            if (FinishButton != null) FinishButton.interactable = true;
-            if (ChatButton != null) ChatButton.interactable = true;
-        }
     }
 
     private void ResolveSceneReferences()
@@ -225,6 +246,7 @@ public class BuildController : MonoBehaviour
         LoadingModal?.SetActive(false);
         FinishModal?.SetActive(false);
         ChatModal?.SetActive(false);
+        GreetingPrompt?.SetActive(false);
         MaterialList?.SetActive(false);
         RulerManager?.SetActive(false);
         RulerPlaceButton?.SetActive(false);

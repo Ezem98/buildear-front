@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEngine.SceneManagement;
 
 public class CataloguesScript : MonoBehaviour
 {
@@ -43,7 +42,6 @@ public class CataloguesScript : MonoBehaviour
 
     public void Pick3DModel()
     {
-        SceneManager.LoadScene("Build");
-
+        UIController.Instance.EnableBuildMode();
     }
 }
