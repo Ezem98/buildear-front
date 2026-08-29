@@ -80,6 +80,31 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
+        public void ArCamera_RequestsDepthOcclusionWithSafePlatformFallback()
+        {
+            string arRigPrefab = ReadRuntimeSource(
+                "Samples",
+                "XR Interaction Toolkit",
+                "3.0.4",
+                "AR Starter Assets",
+                "Prefabs",
+                "XR Origin (AR Rig).prefab"
+            );
+
+            Assert.That(
+                arRigPrefab,
+                Does.Contain("guid: b15f82cc229284894964d2d30806969d")
+            );
+            Assert.That(arRigPrefab, Does.Contain("m_EnvironmentDepthMode: 2"));
+            Assert.That(
+                arRigPrefab,
+                Does.Contain("m_EnvironmentDepthTemporalSmoothing: 1")
+            );
+            Assert.That(arRigPrefab, Does.Contain("m_HumanSegmentationStencilMode: 3"));
+            Assert.That(arRigPrefab, Does.Contain("m_HumanSegmentationDepthMode: 2"));
+        }
+
+        [Test]
         public void BuildController_ExitsBuildModeWithoutLoadingAnotherScene()
         {
             string source = File.ReadAllText(
