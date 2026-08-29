@@ -45,33 +45,83 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
-        public void AndroidBuildScene_StartsWithClosedAndConnectedChat()
+        public void SingleBuildUiScene_StartsWithArDisabledAndClosedChat()
         {
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             string buildScene = File.ReadAllText(
-                Path.Combine(projectRoot, "Assets", "Scenes", "Build.unity")
+                Path.Combine(projectRoot, "Assets", "Scenes", "BuildUI.unity")
             ).Replace("\r\n", "\n");
 
             Assert.That(buildScene, Does.Contain("m_Name: Chat\n"));
-            Assert.That(buildScene, Does.Contain("ChatCloseButton: {fileID: 1485165205}"));
-            Assert.That(buildScene, Does.Contain("ChatInputField: {fileID: 761309916}"));
-            Assert.That(buildScene, Does.Contain("ChatModal: {fileID: 793547324}"));
+            Assert.That(buildScene, Does.Contain("ChatCloseButton: {fileID: 1114486724}"));
+            Assert.That(buildScene, Does.Contain("ChatInputField: {fileID: 1753163606}"));
+            Assert.That(buildScene, Does.Contain("ChatModal: {fileID: 1094948951}"));
 
             int chatPosition = buildScene.IndexOf("m_Name: Chat\n");
             int chatStatePosition = buildScene.IndexOf("m_IsActive: 0", chatPosition);
             Assert.That(chatStatePosition, Is.InRange(chatPosition, chatPosition + 250));
+
+            int arSessionPosition = buildScene.IndexOf("m_Name: AR Session\n");
+            int arSessionStatePosition = buildScene.IndexOf("m_IsActive: 0", arSessionPosition);
+            Assert.That(arSessionStatePosition, Is.InRange(arSessionPosition, arSessionPosition + 250));
+            Assert.That(
+                buildScene,
+                Does.Contain(
+                    "propertyPath: m_Name\n" +
+                    "      value: XR Origin (AR Rig)\n" +
+                    "      objectReference: {fileID: 0}\n" +
+                    "    - target: {fileID: 2512387470528047719"
+                )
+            );
+            Assert.That(
+                buildScene,
+                Does.Contain("propertyPath: m_IsActive\n      value: 0")
+            );
         }
 
         [Test]
-        public void BuildController_IsSceneLocalAndDoesNotDisableNewSceneObjectsManually()
+        public void BuildController_ExitsBuildModeWithoutLoadingAnotherScene()
         {
             string source = File.ReadAllText(
                 Path.Combine(Application.dataPath, "Scripts", "BuildController.cs")
             );
+            string uiControllerSource = ReadRuntimeSource("Scripts", "UIController.cs");
 
             Assert.That(source, Does.Not.Contain("DontDestroyOnLoad(gameObject)"));
-            Assert.That(source, Does.Not.Contain("GameObject.Find(\"XR Origin (AR Rig)\")"));
-            Assert.That(source, Does.Contain("UIController.Instance.objectSpawner = null;"));
+            Assert.That(source, Does.Contain("UIController.Instance.GoBack();"));
+            Assert.That(source, Does.Not.Contain("SceneManager.LoadScene"));
+            Assert.That(uiControllerSource, Does.Not.Contain("SceneManager.LoadScene"));
+            Assert.That(uiControllerSource, Does.Contain("arSession.Reset();"));
+            Assert.That(uiControllerSource, Does.Contain("XRComponent?.SetActive(false);"));
+        }
+
+        [Test]
+        public void BuildSettings_ContainsOnlyBuildUiScene()
+        {
+            string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            string buildSettings = File.ReadAllText(
+                Path.Combine(projectRoot, "ProjectSettings", "EditorBuildSettings.asset")
+            );
+
+            Assert.That(buildSettings, Does.Contain("path: Assets/Scenes/BuildUI.unity"));
+            Assert.That(buildSettings, Does.Not.Contain("path: Assets/Scenes/UI.unity"));
+            Assert.That(buildSettings, Does.Not.Contain("path: Assets/Scenes/Build.unity"));
+        }
+
+        [Test]
+        public void BuildUiScene_UsesOneApiControllerAndOneBuildEntryAction()
+        {
+            string buildScene = ReadRuntimeSource("Scenes", "BuildUI.unity");
+
+            Assert.That(
+                CountOccurrences(buildScene, "guid: 43b40aadd52f18643ba398acb9a632ee"),
+                Is.EqualTo(1)
+            );
+            Assert.That(
+                CountOccurrences(buildScene, "m_MethodName: EnableBuildMode"),
+                Is.EqualTo(1)
+            );
+            Assert.That(buildScene, Does.Not.Contain("m_MethodName: SceneHandler"));
         }
 
         [Test]
@@ -139,8 +189,8 @@ namespace BuildeAR.Tests.EditMode
         [Test]
         public void ModelDetailBackButton_TargetsUiNavigationAndHasSafeFallback()
         {
-            string uiScene = ReadRuntimeSource("Scenes", "UI.unity");
-            int backButtonPosition = uiScene.IndexOf("--- !u!1 &1724267176");
+            string uiScene = ReadRuntimeSource("Scenes", "BuildUI.unity");
+            int backButtonPosition = uiScene.IndexOf("--- !u!1 &290691207");
             int nextObjectPosition = uiScene.IndexOf("--- !u!1 &", backButtonPosition + 1);
             string backButtonBlock = uiScene.Substring(
                 backButtonPosition,
@@ -149,7 +199,7 @@ namespace BuildeAR.Tests.EditMode
             string controllerSource = ReadRuntimeSource("Scripts", "UIController.cs");
 
             Assert.That(backButtonPosition, Is.GreaterThanOrEqualTo(0));
-            Assert.That(backButtonBlock, Does.Contain("m_Target: {fileID: 1638469108}"));
+            Assert.That(backButtonBlock, Does.Contain("m_Target: {fileID: 414502328}"));
             Assert.That(
                 backButtonBlock,
                 Does.Contain("m_TargetAssemblyTypeName: UIController, Assembly-CSharp")
@@ -164,6 +214,19 @@ namespace BuildeAR.Tests.EditMode
             pathParts[0] = Application.dataPath;
             relativePath.CopyTo(pathParts, 1);
             return File.ReadAllText(Path.Combine(pathParts));
+        }
+
+        private static int CountOccurrences(string source, string value)
+        {
+            int count = 0;
+            int position = 0;
+            while ((position = source.IndexOf(value, position)) >= 0)
+            {
+                count++;
+                position += value.Length;
+            }
+
+            return count;
         }
     }
 }
