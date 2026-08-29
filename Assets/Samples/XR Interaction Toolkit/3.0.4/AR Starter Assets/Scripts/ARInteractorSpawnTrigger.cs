@@ -71,6 +71,35 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
         }
 
         [SerializeField]
+        [Tooltip("Whether to restrict placement to the lowest detected horizontal surface.")]
+        bool m_RequireLowestHorizontalSurface;
+
+        public bool requireLowestHorizontalSurface
+        {
+            get => m_RequireLowestHorizontalSurface;
+            set => m_RequireLowestHorizontalSurface = value;
+        }
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Maximum height difference, in meters, allowed between floor plane fragments.")]
+        float m_LowestHorizontalSurfaceTolerance = 0.15f;
+
+        public float lowestHorizontalSurfaceTolerance
+        {
+            get => m_LowestHorizontalSurfaceTolerance;
+            set => m_LowestHorizontalSurfaceTolerance = Mathf.Max(0f, value);
+        }
+
+        ARPlaneManager m_PlaneManager;
+
+        public ARPlaneManager planeManager
+        {
+            get => m_PlaneManager;
+            set => m_PlaneManager = value;
+        }
+
+        [SerializeField]
         [Tooltip("The type of trigger to use to spawn an object, either when the Interactor's select action occurs or " +
             "when a button input is performed.")]
         SpawnTriggerType m_SpawnTriggerType;
@@ -140,6 +169,13 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
                 m_ObjectSpawner = FindObjectOfType<ObjectSpawner>();
 #endif
 
+            if (m_PlaneManager == null)
+#if UNITY_2023_1_OR_NEWER
+                m_PlaneManager = FindAnyObjectByType<ARPlaneManager>();
+#else
+                m_PlaneManager = FindObjectOfType<ARPlaneManager>();
+#endif
+
             if (m_ARInteractor == null)
             {
                 Debug.LogError("Missing AR Interactor reference, disabling component.", this);
@@ -167,6 +203,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
                         return;
 
                     if (m_RequireHorizontalUpSurface && arPlane.alignment != PlaneAlignment.HorizontalUp)
+                        return;
+
+                    if (m_RequireLowestHorizontalSurface && !IsLowestHorizontalSurface(arPlane))
                         return;
 
                     m_ObjectSpawner.TrySpawnObject(arRaycastHit.pose.position, arPlane.normal);
@@ -211,6 +250,44 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
             bool shouldSpawn = !hasSelection && !everHadSelection;
             everHadSelection = false;
             return shouldSpawn;
+        }
+
+        bool IsLowestHorizontalSurface(ARPlane candidate)
+        {
+            if (candidate == null || candidate.alignment != PlaneAlignment.HorizontalUp)
+                return false;
+
+            if (m_PlaneManager == null)
+                return true;
+
+            float lowestHeight = candidate.transform.position.y;
+            foreach (ARPlane plane in m_PlaneManager.trackables)
+            {
+                if (plane == null ||
+                    !plane.isActiveAndEnabled ||
+                    plane.subsumedBy != null ||
+                    plane.alignment != PlaneAlignment.HorizontalUp)
+                {
+                    continue;
+                }
+
+                lowestHeight = Mathf.Min(lowestHeight, plane.transform.position.y);
+            }
+
+            return IsWithinLowestHorizontalSurface(
+                candidate.transform.position.y,
+                lowestHeight,
+                m_LowestHorizontalSurfaceTolerance
+            );
+        }
+
+        public static bool IsWithinLowestHorizontalSurface(
+            float candidateHeight,
+            float lowestHeight,
+            float tolerance
+        )
+        {
+            return candidateHeight <= lowestHeight + Mathf.Max(0f, tolerance);
         }
     }
 }

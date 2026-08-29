@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 public class BuildController : MonoBehaviour
@@ -41,6 +42,9 @@ public class BuildController : MonoBehaviour
         { "vertical", PlaneDetectionMode.Vertical },
     };
     private PlaneDetectionMode previousDetectionMode;
+    private const float FloorPlaneHeightTolerance = 0.15f;
+    private bool filterElevatedHorizontalPlanes;
+    private float nextPlaneVisibilityRefresh;
     private Dictionary<int, Guide> guidesDictionary = new();
     public Dictionary<int, Guide> GuidesDictionary { get => guidesDictionary; set => guidesDictionary = value; }
     private Dictionary<int, Paso> currentStepDictionary = new();
@@ -84,10 +88,94 @@ public class BuildController : MonoBehaviour
             ARPlaneManager.requestedDetectionMode = detectionMode;
             previousDetectionMode = detectionMode;
         }
+
+        ConfigureFloorPlacement();
+
         if (UIController.Instance.UserData?.completed_profile == (int)CompletedProfile.Incomplete || UIController.Instance.GuestUser)
         {
             GreetingPrompt?.SetActive(true);
         }
+    }
+
+    private void Update()
+    {
+        if (!filterElevatedHorizontalPlanes || Time.unscaledTime < nextPlaneVisibilityRefresh)
+            return;
+
+        nextPlaneVisibilityRefresh = Time.unscaledTime + 0.25f;
+        RefreshFloorPlaneVisibility();
+    }
+
+    private void ConfigureFloorPlacement()
+    {
+        filterElevatedHorizontalPlanes =
+            UIController.Instance.ModelData?.category_id == (int)Categories.Floor;
+
+        ARInteractorSpawnTrigger[] spawnTriggers =
+            FindObjectsOfType<ARInteractorSpawnTrigger>(true);
+        foreach (ARInteractorSpawnTrigger spawnTrigger in spawnTriggers)
+        {
+            spawnTrigger.planeManager = ARPlaneManager;
+            spawnTrigger.requireHorizontalUpSurface = filterElevatedHorizontalPlanes;
+            spawnTrigger.requireLowestHorizontalSurface = filterElevatedHorizontalPlanes;
+            spawnTrigger.lowestHorizontalSurfaceTolerance = FloorPlaneHeightTolerance;
+        }
+
+        if (filterElevatedHorizontalPlanes)
+            RefreshFloorPlaneVisibility();
+        else
+            SetAllPlaneRenderersVisible(true);
+    }
+
+    private void RefreshFloorPlaneVisibility()
+    {
+        if (ARPlaneManager == null)
+            return;
+
+        float lowestHeight = float.PositiveInfinity;
+        foreach (ARPlane plane in ARPlaneManager.trackables)
+        {
+            if (IsUsableHorizontalPlane(plane))
+                lowestHeight = Mathf.Min(lowestHeight, plane.transform.position.y);
+        }
+
+        if (float.IsPositiveInfinity(lowestHeight))
+            return;
+
+        foreach (ARPlane plane in ARPlaneManager.trackables)
+        {
+            bool visible = IsUsableHorizontalPlane(plane) &&
+                ARInteractorSpawnTrigger.IsWithinLowestHorizontalSurface(
+                    plane.transform.position.y,
+                    lowestHeight,
+                    FloorPlaneHeightTolerance
+                );
+            SetPlaneRendererVisible(plane, visible);
+        }
+    }
+
+    private static bool IsUsableHorizontalPlane(ARPlane plane)
+    {
+        return plane != null &&
+            plane.isActiveAndEnabled &&
+            plane.subsumedBy == null &&
+            plane.alignment == PlaneAlignment.HorizontalUp;
+    }
+
+    private void SetAllPlaneRenderersVisible(bool visible)
+    {
+        if (ARPlaneManager == null)
+            return;
+
+        foreach (ARPlane plane in ARPlaneManager.trackables)
+            SetPlaneRendererVisible(plane, visible);
+    }
+
+    private static void SetPlaneRendererVisible(ARPlane plane, bool visible)
+    {
+        Renderer planeRenderer = plane != null ? plane.GetComponent<Renderer>() : null;
+        if (planeRenderer != null)
+            planeRenderer.enabled = visible;
     }
 
     private void Awake()
@@ -399,6 +487,8 @@ public class BuildController : MonoBehaviour
 
     private void OnDisable()
     {
+        SetAllPlaneRenderersVisible(true);
+
         if (!UIController.Instance.GuestUser)
         {
             UIController.Instance.SaveData();

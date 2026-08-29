@@ -484,6 +484,7 @@ namespace BuildeAR.Tests.EditMode
             GameObject spawnerObject = Track(new GameObject("Object Spawner"));
             ObjectSpawner spawner = spawnerObject.AddComponent<ObjectSpawner>();
             spawner.cameraToFace = camera;
+            spawner.applyRandomAngleAtSpawn = false;
             return spawner;
         }
 

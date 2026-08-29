@@ -223,11 +223,6 @@ public class UIController : MonoBehaviour
 
     public void OnObjectSpawned(GameObject spawnedObject)
     {
-        if (spawnedObject != null && ModelData?.category_id == (int)Categories.Floor)
-        {
-            spawnedObject.transform.position = new Vector3(spawnedObject.transform.position.x, 0.01f, spawnedObject.transform.position.z);
-        }
-
     }
 
     public void SceneHandler(string newSceneName)

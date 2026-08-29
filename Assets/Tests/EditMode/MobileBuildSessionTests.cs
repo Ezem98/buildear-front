@@ -1,6 +1,7 @@
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets;
 
 namespace BuildeAR.Tests.EditMode
 {
@@ -91,6 +92,34 @@ namespace BuildeAR.Tests.EditMode
                     "m_ObjectSpawner.spawnOptionId = " +
                     "m_ObjectSpawner.objectPrefabsIndex[objectIndex];"
                 )
+            );
+        }
+
+        [Test]
+        public void FloorPlacement_DoesNotForceAWorldSpaceHeight()
+        {
+            string source = ReadRuntimeSource("Scripts", "UIController.cs");
+            int handlerPosition = source.IndexOf("public void OnObjectSpawned");
+            int nextMethodPosition = source.IndexOf("public void SceneHandler", handlerPosition);
+            string handler = source.Substring(
+                handlerPosition,
+                nextMethodPosition - handlerPosition
+            );
+
+            Assert.That(handler, Does.Not.Contain("transform.position ="));
+            Assert.That(handler, Does.Not.Contain("0.01f"));
+        }
+
+        [Test]
+        public void FloorPlacement_RejectsElevatedHorizontalPlane()
+        {
+            Assert.That(
+                ARInteractorSpawnTrigger.IsWithinLowestHorizontalSurface(0.04f, 0f, 0.15f),
+                Is.True
+            );
+            Assert.That(
+                ARInteractorSpawnTrigger.IsWithinLowestHorizontalSurface(0.75f, 0f, 0.15f),
+                Is.False
             );
         }
 
