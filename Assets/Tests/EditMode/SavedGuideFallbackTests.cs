@@ -55,5 +55,40 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(source, Does.Contain("catch (JsonException)"));
             Assert.That(source, Does.Contain("apiResponse.data.guideObject = null;"));
         }
+
+        [Test]
+        public void FailedGeneration_RecoversGuidePersistedBeforeResponseWasLost()
+        {
+            string source = File.ReadAllText(
+                Path.Combine(Application.dataPath, "Scripts", "APIController.cs")
+            );
+            int handler = source.IndexOf("private void HandleGuideGenerationFailure");
+            int lookup = source.IndexOf("GetUserModel(", handler);
+            int savedGuideCheck = source.IndexOf("bool guideWasSaved", lookup);
+            int showGuide = source.IndexOf(
+                "ShowGuide(modelId, userModelData.guideObject, savedStep);",
+                savedGuideCheck
+            );
+
+            Assert.That(handler, Is.GreaterThanOrEqualTo(0));
+            Assert.That(lookup, Is.GreaterThan(handler));
+            Assert.That(savedGuideCheck, Is.GreaterThan(lookup));
+            Assert.That(showGuide, Is.GreaterThan(savedGuideCheck));
+        }
+
+        [Test]
+        public void NetworkFailure_ProducesSpecificMessageInsteadOfEmptyFallback()
+        {
+            string source = File.ReadAllText(
+                Path.Combine(Application.dataPath, "Scripts", "APIController.cs")
+            );
+
+            Assert.That(source, Does.Contain("RequestErrorPayload(webRequest)"));
+            Assert.That(
+                source,
+                Does.Contain("No se pudo conectar con el servidor. Revisá tu conexión")
+            );
+            Assert.That(source, Does.Contain("webRequest.timeout = 120;"));
+        }
     }
 }

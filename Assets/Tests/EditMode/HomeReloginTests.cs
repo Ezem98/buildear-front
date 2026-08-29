@@ -47,5 +47,28 @@ namespace BuildeAR.Tests.EditMode
             Assert.That(login.Value, Does.Contain("MyModelsData = null"));
             Assert.That(login.Value, Does.Contain("ScreenHandler(\"Home\")"));
         }
+
+        [Test]
+        public void LegacyTokenWithoutExpiration_IsNotConsideredAValidSession()
+        {
+            string uiPath = Path.Combine(
+                Application.dataPath,
+                "Scripts",
+                "UIController.cs"
+            );
+            string source = File.ReadAllText(uiPath);
+            Match validation = Regex.Match(
+                source,
+                @"public\s+bool\s+HasValidSession[\s\S]*?public\s+void\s+ClearSession"
+            );
+
+            Assert.That(validation.Success, Is.True);
+            Assert.That(
+                validation.Value,
+                Does.Contain(
+                    "if (string.IsNullOrWhiteSpace(accessTokenExpiresAt)) return false;"
+                )
+            );
+        }
     }
 }

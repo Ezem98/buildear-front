@@ -69,6 +69,42 @@ public class ApiController : MonoBehaviour
         }
     }
 
+    private static string RequestErrorPayload(UnityWebRequest webRequest)
+    {
+        string responseBody = webRequest.downloadHandler?.text;
+        if (!string.IsNullOrWhiteSpace(responseBody))
+        {
+            Debug.LogError(
+                $"{webRequest.method} {webRequest.url} falló "
+                + $"({webRequest.responseCode}, {webRequest.result}): {responseBody}"
+            );
+            return responseBody;
+        }
+
+        string message = webRequest.responseCode == 401
+            ? "Tu sesión venció. Iniciá sesión nuevamente."
+            : webRequest.result == UnityWebRequest.Result.ConnectionError
+                ? "No se pudo conectar con el servidor. Revisá tu conexión e intentá nuevamente."
+                : "El servidor no pudo completar la solicitud. Intentá nuevamente.";
+
+        Debug.LogError(
+            $"{webRequest.method} {webRequest.url} falló "
+            + $"({webRequest.responseCode}, {webRequest.result}): {webRequest.error}"
+        );
+        return JsonConvert.SerializeObject(new
+        {
+            error = new
+            {
+                message,
+                details = new
+                {
+                    response_code = webRequest.responseCode,
+                    transport_error = webRequest.error,
+                },
+            },
+        });
+    }
+
     // Método para realizar el GET
     IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
     {
@@ -87,7 +123,7 @@ public class ApiController : MonoBehaviour
             {
                 HandleExpiredSession(webRequest);
                 // Invocar el callback de error con el mensaje de error
-                onError?.Invoke(webRequest.downloadHandler.text);
+                onError?.Invoke(RequestErrorPayload(webRequest));
             }
         }
     }
@@ -108,7 +144,7 @@ public class ApiController : MonoBehaviour
             {
                 HandleExpiredSession(webRequest);
                 // Invocar el callback de error con el mensaje de error
-                onError?.Invoke(webRequest.downloadHandler.text);
+                onError?.Invoke(RequestErrorPayload(webRequest));
             }
         }
     }
@@ -128,6 +164,7 @@ public class ApiController : MonoBehaviour
         // Definir el tipo de contenido (importante para APIs que reciben JSON)
         webRequest.SetRequestHeader("Content-Type", "application/json");
         ApplyAuthorization(webRequest);
+        webRequest.timeout = 120;
 
         // Enviar la solicitud y esperar respuesta
         yield return webRequest.SendWebRequest();
@@ -142,7 +179,7 @@ public class ApiController : MonoBehaviour
         {
             HandleExpiredSession(webRequest);
             // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(webRequest.downloadHandler.text);
+            onError?.Invoke(RequestErrorPayload(webRequest));
         }
     }
 
@@ -176,7 +213,7 @@ public class ApiController : MonoBehaviour
         {
             HandleExpiredSession(webRequest);
             // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(webRequest.downloadHandler.text);
+            onError?.Invoke(RequestErrorPayload(webRequest));
         }
     }
 
@@ -424,10 +461,46 @@ public class ApiController : MonoBehaviour
             ShowGuide(modelId, apiResponse.data, savedStep);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
-            BuildController.Instance.LoadingModal.SetActive(false);
-            BuildController.Instance.ShowTemporaryMessage(ErrorMessage(jsonResponse, "No se pudo generar la guía. Intentá nuevamente."));
+            HandleGuideGenerationFailure(modelId, jsonResponse);
         }));
+    }
+
+    private void HandleGuideGenerationFailure(int modelId, string errorResponse)
+    {
+        Debug.LogError("Falló la generación de la guía: " + errorResponse);
+        if (!UIController.Instance.HasValidSession())
+        {
+            BuildController.Instance.LoadingModal.SetActive(false);
+            BuildController.Instance.ShowTemporaryMessage(
+                "Tu sesión venció. Iniciá sesión nuevamente para generar la guía."
+            );
+            return;
+        }
+
+        int userId = UIController.Instance.UserData.id;
+        GetUserModel(userId.ToString(), modelId.ToString(), onSuccess: (userModelData) =>
+        {
+            bool guideWasSaved =
+                userModelData?.guideObject?.pasos != null
+                && userModelData.guideObject.pasos.Count > 0;
+            if (guideWasSaved)
+            {
+                UIController.Instance.UserModelData = userModelData;
+                int savedStep = userModelData.current_step > 0 ? userModelData.current_step : 1;
+                ShowGuide(modelId, userModelData.guideObject, savedStep);
+                return;
+            }
+
+            ShowGuideGenerationError(errorResponse);
+        }, onError: (_) => ShowGuideGenerationError(errorResponse));
+    }
+
+    private void ShowGuideGenerationError(string errorResponse)
+    {
+        BuildController.Instance.LoadingModal.SetActive(false);
+        BuildController.Instance.ShowTemporaryMessage(
+            ErrorMessage(errorResponse, "No se pudo generar la guía. Intentá nuevamente.")
+        );
     }
 
     private void ShowGuide(int modelId, Guide guide, int requestedStep)
