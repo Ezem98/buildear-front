@@ -434,7 +434,9 @@ public class UIController : MonoBehaviour
     public bool HasValidSession()
     {
         if (string.IsNullOrWhiteSpace(accessToken)) return false;
-        if (string.IsNullOrWhiteSpace(accessTokenExpiresAt)) return true;
+        // Los tokens anteriores al sistema de sesiones no tenían vencimiento.
+        // El backend actual no los acepta, por lo que deben forzar un nuevo login.
+        if (string.IsNullOrWhiteSpace(accessTokenExpiresAt)) return false;
 
         return DateTime.TryParse(
             accessTokenExpiresAt,
