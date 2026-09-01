@@ -119,10 +119,6 @@ public class BuildController : MonoBehaviour
         }
 
         ResetTransientUi();
-        ObjectSpawner spawner = ObjectSpawner != null
-            ? ObjectSpawner.GetComponent<ObjectSpawner>()
-            : null;
-        spawner?.ClearSpawnedObjects();
         ChatMessages.Clear();
         filterElevatedHorizontalPlanes = false;
         SetAllPlaneRenderersVisible(true);
