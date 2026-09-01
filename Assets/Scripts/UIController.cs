@@ -276,15 +276,20 @@ public class UIController : MonoBehaviour
 
         buildUI.SetActive(false);
 
+        XRComponent?.SetActive(false);
+        arSessionObject?.SetActive(false);
+        canvas?.SetActive(true);
+    }
+
+    public void ClearBuildWorkspace()
+    {
+        objectSpawner?.ClearSpawnedObjects();
+
         ARSession arSession = arSessionObject != null
             ? arSessionObject.GetComponent<ARSession>()
             : null;
         if (arSession != null && arSessionObject.activeInHierarchy)
             arSession.Reset();
-
-        XRComponent?.SetActive(false);
-        arSessionObject?.SetActive(false);
-        canvas?.SetActive(true);
     }
 
     public void ChangeCategory(int categoryIndex)
@@ -448,6 +453,7 @@ public class UIController : MonoBehaviour
 
     public void ClearSession()
     {
+        ClearBuildWorkspace();
         loggedIn = false;
         accessToken = null;
         accessTokenExpiresAt = null;

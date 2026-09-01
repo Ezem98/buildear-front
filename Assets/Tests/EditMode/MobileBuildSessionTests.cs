@@ -80,19 +80,59 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
-        public void BuildController_ExitsBuildModeWithoutLoadingAnotherScene()
+        public void BuildController_PausesBuildModeWithoutDiscardingArWorkspace()
         {
             string source = File.ReadAllText(
                 Path.Combine(Application.dataPath, "Scripts", "BuildController.cs")
             );
             string uiControllerSource = ReadRuntimeSource("Scripts", "UIController.cs");
 
+            int endSessionPosition = source.IndexOf("public void EndBuildSession()");
+            int updatePosition = source.IndexOf("private void Update()", endSessionPosition);
+            string endSessionBlock = source.Substring(
+                endSessionPosition,
+                updatePosition - endSessionPosition
+            );
+
+            int disablePosition = uiControllerSource.IndexOf("public void DisableBuildMode()");
+            int clearWorkspacePosition = uiControllerSource.IndexOf(
+                "public void ClearBuildWorkspace()",
+                disablePosition
+            );
+            string disableBlock = uiControllerSource.Substring(
+                disablePosition,
+                clearWorkspacePosition - disablePosition
+            );
+
+            int clearSessionPosition = uiControllerSource.IndexOf("public void ClearSession()");
+            int onDisablePosition = uiControllerSource.IndexOf(
+                "private void OnDisable()",
+                clearSessionPosition
+            );
+            string clearSessionBlock = uiControllerSource.Substring(
+                clearSessionPosition,
+                onDisablePosition - clearSessionPosition
+            );
+
             Assert.That(source, Does.Not.Contain("DontDestroyOnLoad(gameObject)"));
             Assert.That(source, Does.Contain("UIController.Instance.GoBack();"));
             Assert.That(source, Does.Not.Contain("SceneManager.LoadScene"));
             Assert.That(uiControllerSource, Does.Not.Contain("SceneManager.LoadScene"));
-            Assert.That(uiControllerSource, Does.Contain("arSession.Reset();"));
-            Assert.That(uiControllerSource, Does.Contain("XRComponent?.SetActive(false);"));
+            Assert.That(endSessionBlock, Does.Not.Contain("ClearSpawnedObjects"));
+            Assert.That(disableBlock, Does.Not.Contain("arSession.Reset();"));
+            Assert.That(disableBlock, Does.Contain("XRComponent?.SetActive(false);"));
+            Assert.That(
+                uiControllerSource,
+                Does.Contain("public void ClearBuildWorkspace()")
+            );
+            Assert.That(
+                uiControllerSource,
+                Does.Contain("objectSpawner?.ClearSpawnedObjects();")
+            );
+            Assert.That(
+                clearSessionBlock.IndexOf("ClearBuildWorkspace();"),
+                Is.LessThan(clearSessionBlock.IndexOf("loggedIn = false;"))
+            );
         }
 
         [Test]
