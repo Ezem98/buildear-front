@@ -10,6 +10,12 @@ public class ProfileManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI CompleteProfileText;
     [SerializeField] private Image ProfileImage;
     [SerializeField] private ApiController ApiController;
+    private Sprite defaultProfileImage;
+
+    private void Awake()
+    {
+        if (ProfileImage != null) defaultProfileImage = ProfileImage.sprite;
+    }
     // Start is called before the first frame update
     void OnEnable()
     {
@@ -38,6 +44,10 @@ public class ProfileManager : MonoBehaviour
                 onSuccess: (image) => ProfileImage.sprite = image,
                 onError: (error) => Debug.LogWarning(error));
         }
+        else if (ProfileImage != null)
+        {
+            ProfileImage.sprite = defaultProfileImage;
+        }
     }
 
     public void Logout()
@@ -49,7 +59,7 @@ public class ProfileManager : MonoBehaviour
             UIController.Instance.ScreenHandler("Onboarding");
         }
 
-        if (ApiController != null && UIController.Instance.HasValidSession())
+        if (ApiController != null && UIController.Instance.HasAuthenticatedSession())
         {
             ApiController.Logout(ClearLocalSession);
         }

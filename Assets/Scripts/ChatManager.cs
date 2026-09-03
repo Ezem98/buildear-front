@@ -36,15 +36,9 @@ public class ChatManager : MonoBehaviour
             {
                 _instance = FindObjectOfType<ChatManager>();
 
-                // Si no se encuentra la instancia en la escena, crear una nueva
                 if (_instance == null)
                 {
-                    GameObject singletonObject = new();
-                    _instance = singletonObject.AddComponent<ChatManager>();
-                    singletonObject.name = typeof(ChatManager).ToString() + " (Singleton)";
-
-                    // Opcional: Evitar que sea destruido cuando se cambie de escena
-                    DontDestroyOnLoad(singletonObject);
+                    Debug.LogError("No hay un ChatManager configurado en la escena.");
                 }
             }
             return _instance;
@@ -62,7 +56,7 @@ public class ChatManager : MonoBehaviour
 
         string message = MessageInputField.text.Trim();
         if (string.IsNullOrWhiteSpace(message)) return;
-        if (!UIController.Instance.HasValidSession())
+        if (!UIController.Instance.HasAuthenticatedSession())
         {
             CreateAIChatMessage("Tu sesión venció. Iniciá sesión nuevamente para continuar.");
             return;

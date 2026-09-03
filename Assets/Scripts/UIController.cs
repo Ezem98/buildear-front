@@ -1,8 +1,11 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 using Newtonsoft.Json;
@@ -31,9 +34,26 @@ public class UIController : MonoBehaviour
     private int currentConversationId = -1;
     private string accessToken;
     private string accessTokenExpiresAt;
+    private string refreshToken;
+    private string refreshTokenExpiresAt;
+    private bool isDuplicate;
+    private Coroutine feedbackCoroutine;
+    private GameObject feedbackPanel;
+    private TextMeshProUGUI feedbackText;
     public int CurrentConversationId { get => currentConversationId; set => currentConversationId = value; }
     public string AccessToken { get => accessToken; set => accessToken = value; }
     public string AccessTokenExpiresAt { get => accessTokenExpiresAt; set => accessTokenExpiresAt = value; }
+    public string RefreshToken
+    {
+        get => refreshToken;
+        set
+        {
+            refreshToken = value;
+            if (string.IsNullOrWhiteSpace(value)) SecureTokenStorage.Delete();
+            else SecureTokenStorage.Save(value);
+        }
+    }
+    public string RefreshTokenExpiresAt { get => refreshTokenExpiresAt; set => refreshTokenExpiresAt = value; }
     public bool ComesFromSearch { get; set; }
     public bool LoggedIn { get => loggedIn; set => loggedIn = value; }
     public bool GuestUser { get => guestUser; set => guestUser = value; }
@@ -93,6 +113,7 @@ public class UIController : MonoBehaviour
 
         if (_instance != null)
         {
+            isDuplicate = true;
             Destroy(gameObject);
             return;
         }
@@ -188,12 +209,27 @@ public class UIController : MonoBehaviour
 
     public void ScreenHandler(string newScreenName)
     {
-        navigationStack.Push(currentScreen);
+        if (
+            screenDictionary == null
+            || !screenDictionary.TryGetValue(newScreenName, out GameObject newScreen)
+            || newScreen == null
+        )
+        {
+            Debug.LogError($"No existe la pantalla '{newScreenName}'.", this);
+            ShowUserMessage("No se pudo abrir esa pantalla.", true);
+            return;
+        }
+
+        if (currentScreen == newScreenName) return;
+
+        if (navigationStack.Count == 0 || navigationStack.Peek() != currentScreen)
+            navigationStack.Push(currentScreen);
         previousScreen = currentScreen;
-        screenDictionary[currentScreen].SetActive(false);
-        screenDictionary[newScreenName].SetActive(true);
-        footer.SetActive(footerDictionary[newScreenName]);
-        header.SetActive(headerDictionary[newScreenName]);
+        if (screenDictionary.TryGetValue(currentScreen, out GameObject activeScreen))
+            activeScreen?.SetActive(false);
+        newScreen.SetActive(true);
+        footer?.SetActive(footerDictionary.TryGetValue(newScreenName, out bool showFooter) && showFooter);
+        header?.SetActive(headerDictionary.TryGetValue(newScreenName, out bool showHeader) && showHeader);
         currentScreen = newScreenName;
     }
 
@@ -206,15 +242,9 @@ public class UIController : MonoBehaviour
             {
                 _instance = FindObjectOfType<UIController>();
 
-                // Si no se encuentra la instancia en la escena, crear una nueva
                 if (_instance == null)
                 {
-                    GameObject singletonObject = new();
-                    _instance = singletonObject.AddComponent<UIController>();
-                    singletonObject.name = typeof(UIController).ToString() + " (Singleton)";
-
-                    // Opcional: Evitar que sea destruido cuando se cambie de escena
-                    DontDestroyOnLoad(singletonObject);
+                    Debug.LogError("No hay un UIController configurado en la escena.");
                 }
             }
             return _instance;
@@ -319,10 +349,16 @@ public class UIController : MonoBehaviour
             DisableBuildMode();
         }
         previousScreen = currentScreen;
-        screenDictionary[currentScreen].SetActive(false);
-        screenDictionary[newScreenName].SetActive(true);
-        footer.SetActive(footerDictionary[newScreenName]);
-        header.SetActive(headerDictionary[newScreenName]);
+        if (!screenDictionary.TryGetValue(newScreenName, out GameObject newScreen))
+        {
+            ShowUserMessage("No se pudo volver a la pantalla anterior.", true);
+            return;
+        }
+        if (screenDictionary.TryGetValue(currentScreen, out GameObject activeScreen))
+            activeScreen?.SetActive(false);
+        newScreen?.SetActive(true);
+        footer?.SetActive(footerDictionary.TryGetValue(newScreenName, out bool showFooter) && showFooter);
+        header?.SetActive(headerDictionary.TryGetValue(newScreenName, out bool showHeader) && showHeader);
         currentScreen = newScreenName;
     }
 
@@ -340,17 +376,22 @@ public class UIController : MonoBehaviour
 
     public void SaveData()
     {
+        if (isDuplicate) return;
+
         PlayerPrefs.SetInt("loggedIn", loggedIn ? 1 : 0);
         if (!loggedIn)
         {
             PlayerPrefs.DeleteKey("accessToken");
             PlayerPrefs.DeleteKey("accessTokenExpiresAt");
+            PlayerPrefs.DeleteKey("refreshTokenExpiresAt");
+            SecureTokenStorage.Delete();
             PlayerPrefs.DeleteKey("userData");
         }
         else
         {
             PlayerPrefs.SetString("accessToken", accessToken ?? "");
             PlayerPrefs.SetString("accessTokenExpiresAt", accessTokenExpiresAt ?? "");
+            PlayerPrefs.SetString("refreshTokenExpiresAt", refreshTokenExpiresAt ?? "");
         }
         if (objectSpawner != null)
             PlayerPrefs.SetInt("spawnOptionId", objectSpawner.spawnOptionId);
@@ -381,7 +422,9 @@ public class UIController : MonoBehaviour
         LoggedIn = PlayerPrefs.GetInt("loggedIn", 0) == 1;
         accessToken = PlayerPrefs.GetString("accessToken", "");
         accessTokenExpiresAt = PlayerPrefs.GetString("accessTokenExpiresAt", "");
-        if (LoggedIn && !HasValidSession())
+        refreshToken = SecureTokenStorage.Load();
+        refreshTokenExpiresAt = PlayerPrefs.GetString("refreshTokenExpiresAt", "");
+        if (LoggedIn && !HasValidSession() && !HasRefreshSession())
         {
             ClearSession();
         }
@@ -443,8 +486,24 @@ public class UIController : MonoBehaviour
         // El backend actual no los acepta, por lo que deben forzar un nuevo login.
         if (string.IsNullOrWhiteSpace(accessTokenExpiresAt)) return false;
 
+        return IsFutureTimestamp(accessTokenExpiresAt);
+    }
+
+    public bool HasRefreshSession()
+    {
+        return !string.IsNullOrWhiteSpace(refreshToken)
+            && IsFutureTimestamp(refreshTokenExpiresAt);
+    }
+
+    public bool HasAuthenticatedSession()
+    {
+        return LoggedIn && (HasValidSession() || HasRefreshSession());
+    }
+
+    private static bool IsFutureTimestamp(string value)
+    {
         return DateTime.TryParse(
-            accessTokenExpiresAt,
+            value,
             CultureInfo.InvariantCulture,
             DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
             out DateTime expiresAt
@@ -457,6 +516,8 @@ public class UIController : MonoBehaviour
         loggedIn = false;
         accessToken = null;
         accessTokenExpiresAt = null;
+        RefreshToken = null;
+        refreshTokenExpiresAt = null;
         currentConversationId = -1;
         UserData = null;
         MyModelsData = null;
@@ -467,6 +528,7 @@ public class UIController : MonoBehaviour
         ConversationsData = new();
         PlayerPrefs.DeleteKey("accessToken");
         PlayerPrefs.DeleteKey("accessTokenExpiresAt");
+        PlayerPrefs.DeleteKey("refreshTokenExpiresAt");
         PlayerPrefs.DeleteKey("userData");
         PlayerPrefs.DeleteKey("conversationsData");
         PlayerPrefs.DeleteKey("currentConversationId");
@@ -474,16 +536,94 @@ public class UIController : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    public void ExpireSession(string message = null)
+    {
+        if (currentScreen == "BuildUI") DisableBuildMode();
+        canvas?.SetActive(true);
+        ClearSession();
+        if (screenDictionary != null && screenDictionary.ContainsKey("Login"))
+            ScreenHandler("Login");
+        navigationStack.Clear();
+        navigationStack.Push("Onboarding");
+        ShowUserMessage(
+            string.IsNullOrWhiteSpace(message)
+                ? "Tu sesión venció. Iniciá sesión nuevamente."
+                : message,
+            true
+        );
+    }
+
+    public void ShowUserMessage(string message, bool isError = false)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        EnsureFeedbackPanel();
+        if (feedbackPanel == null || feedbackText == null) return;
+
+        feedbackText.text = message;
+        feedbackPanel.GetComponent<Image>().color = isError
+            ? new Color(0.55f, 0.12f, 0.12f, 0.96f)
+            : new Color(0.12f, 0.42f, 0.25f, 0.96f);
+        feedbackPanel.SetActive(true);
+        if (feedbackCoroutine != null) StopCoroutine(feedbackCoroutine);
+        feedbackCoroutine = StartCoroutine(HideFeedbackAfterDelay());
+    }
+
+    private void EnsureFeedbackPanel()
+    {
+        if (feedbackPanel != null) return;
+
+        GameObject feedbackCanvas = new("UserFeedbackCanvas", typeof(Canvas), typeof(CanvasScaler));
+        feedbackCanvas.transform.SetParent(transform, false);
+        Canvas overlay = feedbackCanvas.GetComponent<Canvas>();
+        overlay.renderMode = RenderMode.ScreenSpaceOverlay;
+        overlay.sortingOrder = 1000;
+        CanvasScaler scaler = feedbackCanvas.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1080f, 1920f);
+
+        feedbackPanel = new GameObject("UserFeedback", typeof(RectTransform), typeof(Image));
+        feedbackPanel.transform.SetParent(feedbackCanvas.transform, false);
+        RectTransform panelRect = feedbackPanel.GetComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0.08f, 0.88f);
+        panelRect.anchorMax = new Vector2(0.92f, 0.98f);
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+
+        GameObject textObject = new("Message", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(feedbackPanel.transform, false);
+        feedbackText = textObject.GetComponent<TextMeshProUGUI>();
+        feedbackText.alignment = TextAlignmentOptions.Center;
+        feedbackText.fontSize = 34f;
+        feedbackText.color = Color.white;
+        feedbackText.enableWordWrapping = true;
+        RectTransform textRect = textObject.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(24f, 12f);
+        textRect.offsetMax = new Vector2(-24f, -12f);
+        feedbackPanel.SetActive(false);
+    }
+
+    private IEnumerator HideFeedbackAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(4f);
+        feedbackPanel?.SetActive(false);
+        feedbackCoroutine = null;
+    }
+
     private void OnDisable()
     {
         UnsubscribeFromObjectSpawner();
+        if (isDuplicate) return;
         SaveData();
     }
 
     private void OnDestroy()
     {
         UnsubscribeFromObjectSpawner();
+        if (isDuplicate) return;
         SaveData();
+        if (_instance == this) _instance = null;
     }
 }
 

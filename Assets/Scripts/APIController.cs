@@ -4,6 +4,7 @@ using System.Collections;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Text;
 
 public class ApiController : MonoBehaviour
 {
@@ -11,6 +12,10 @@ public class ApiController : MonoBehaviour
     // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
 
     [SerializeField] private string baseUrl = "https://buildear-backend-production.up.railway.app/api/v1";
+    private const int DefaultTimeoutSeconds = 30;
+    private const int OpenAITimeoutSeconds = 120;
+    private bool refreshInProgress;
+    private bool lastRefreshSucceeded;
 
     private void ApplyAuthorization(UnityWebRequest webRequest)
     {
@@ -23,16 +28,25 @@ public class ApiController : MonoBehaviour
 
     public static string ErrorMessage(string jsonResponse, string fallback)
     {
+        APIErrorResponse payload = ParseErrorResponse(jsonResponse);
+        return payload?.error?.message ?? payload?.message ?? fallback;
+    }
+
+    public static string ErrorCode(string jsonResponse)
+    {
+        return ParseErrorResponse(jsonResponse)?.error?.code;
+    }
+
+    private static APIErrorResponse ParseErrorResponse(string jsonResponse)
+    {
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
         try
         {
-            JObject payload = JObject.Parse(jsonResponse);
-            return payload["error"]?["message"]?.ToString()
-                ?? payload["message"]?.ToString()
-                ?? fallback;
+            return JsonConvert.DeserializeObject<APIErrorResponse>(jsonResponse);
         }
-        catch
+        catch (JsonException)
         {
-            return fallback;
+            return null;
         }
     }
 
@@ -61,12 +75,10 @@ public class ApiController : MonoBehaviour
         }
     }
 
-    private void HandleExpiredSession(UnityWebRequest webRequest)
+    private static bool IsSessionError(string payload)
     {
-        if (webRequest.responseCode == 401 && !webRequest.url.EndsWith("/auth/login"))
-        {
-            UIController.Instance.ClearSession();
-        }
+        string code = ErrorCode(payload);
+        return code == "AUTH_REQUIRED" || code == "INVALID_SESSION";
     }
 
     private static string RequestErrorPayload(UnityWebRequest webRequest)
@@ -76,7 +88,7 @@ public class ApiController : MonoBehaviour
         {
             Debug.LogError(
                 $"{webRequest.method} {webRequest.url} falló "
-                + $"({webRequest.responseCode}, {webRequest.result}): {responseBody}"
+                + $"({webRequest.responseCode}, {webRequest.result})."
             );
             return responseBody;
         }
@@ -105,116 +117,223 @@ public class ApiController : MonoBehaviour
         });
     }
 
-    // Método para realizar el GET
-    IEnumerator GetRequest(string url, System.Action<string> onSuccess, System.Action<string> onError)
+    private static UnityWebRequest CreateRequest(string method, string url, string jsonData)
     {
-        using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
+        UnityWebRequest webRequest = new(url, method);
+        webRequest.downloadHandler = new DownloadHandlerBuffer();
+        if (jsonData != null)
+        {
+            webRequest.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonData));
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+        }
+        webRequest.timeout = url.Contains("/openai")
+            ? OpenAITimeoutSeconds
+            : DefaultTimeoutSeconds;
+        return webRequest;
+    }
+
+    private bool ShouldRefresh(string method, string url)
+    {
+        if (url.EndsWith("/auth/login") || url.EndsWith("/auth/refresh"))
+            return false;
+        if (method == UnityWebRequest.kHttpVerbPOST && url.EndsWith("/users"))
+            return false;
+        return UIController.Instance != null && UIController.Instance.LoggedIn;
+    }
+
+    private IEnumerator RefreshAccessToken(System.Action<bool> onComplete, bool force)
+    {
+        UIController ui = UIController.Instance;
+        if (ui == null || !ui.LoggedIn)
+        {
+            onComplete?.Invoke(false);
+            yield break;
+        }
+        if (!force && ui.HasValidSession())
+        {
+            onComplete?.Invoke(true);
+            yield break;
+        }
+        if (!ui.HasRefreshSession())
+        {
+            ui.ExpireSession();
+            onComplete?.Invoke(false);
+            yield break;
+        }
+
+        if (refreshInProgress)
+        {
+            while (refreshInProgress) yield return null;
+            onComplete?.Invoke(lastRefreshSucceeded && ui.HasValidSession());
+            yield break;
+        }
+
+        refreshInProgress = true;
+        lastRefreshSucceeded = false;
+        string jsonData = JsonConvert.SerializeObject(new RefreshData
+        {
+            refresh_token = ui.RefreshToken
+        });
+
+        using (UnityWebRequest webRequest = CreateRequest(
+            UnityWebRequest.kHttpVerbPOST,
+            baseUrl + "/auth/refresh",
+            jsonData
+        ))
+        {
+            yield return webRequest.SendWebRequest();
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                APIResponse<AuthData> response = DeserializeResponse<AuthData>(
+                    webRequest.downloadHandler.text
+                );
+                if (response?.data?.user != null
+                    && !string.IsNullOrWhiteSpace(response.data.access_token)
+                    && !string.IsNullOrWhiteSpace(response.data.refresh_token))
+                {
+                    ApplyAuthenticatedSession(response.data);
+                    lastRefreshSucceeded = true;
+                }
+            }
+
+            if (!lastRefreshSucceeded)
+            {
+                string payload = RequestErrorPayload(webRequest);
+                ui.ExpireSession(ErrorMessage(
+                    payload,
+                    "Tu sesión venció. Iniciá sesión nuevamente."
+                ));
+            }
+        }
+
+        refreshInProgress = false;
+        onComplete?.Invoke(lastRefreshSucceeded);
+    }
+
+    private IEnumerator SendRequest(
+        string method,
+        string url,
+        string jsonData,
+        System.Action<string> onSuccess,
+        System.Action<string> onError,
+        bool retryAfterRefresh = true,
+        bool showFeedback = true
+    )
+    {
+        bool refreshAllowed = ShouldRefresh(method, url);
+        if (refreshAllowed && !UIController.Instance.HasValidSession())
+        {
+            bool refreshed = false;
+            yield return RefreshAccessToken(result => refreshed = result, false);
+            if (!refreshed)
+            {
+                onError?.Invoke(JsonConvert.SerializeObject(new
+                {
+                    error = new
+                    {
+                        code = "INVALID_REFRESH_TOKEN",
+                        message = "Tu sesión venció. Iniciá sesión nuevamente."
+                    }
+                }));
+                yield break;
+            }
+        }
+
+        using (UnityWebRequest webRequest = CreateRequest(method, url, jsonData))
         {
             ApplyAuthorization(webRequest);
-            // Enviar la solicitud y esperar respuesta
             yield return webRequest.SendWebRequest();
 
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
-                // Invocar el callback de éxito con la respuesta
                 onSuccess?.Invoke(webRequest.downloadHandler.text);
+                yield break;
             }
-            else
+
+            string payload = RequestErrorPayload(webRequest);
+            if (
+                webRequest.responseCode == 401
+                && refreshAllowed
+                && retryAfterRefresh
+                && IsSessionError(payload)
+                && UIController.Instance.HasRefreshSession()
+            )
             {
-                HandleExpiredSession(webRequest);
-                // Invocar el callback de error con el mensaje de error
-                onError?.Invoke(RequestErrorPayload(webRequest));
+                bool refreshed = false;
+                yield return RefreshAccessToken(result => refreshed = result, true);
+                if (refreshed)
+                {
+                    yield return SendRequest(
+                        method,
+                        url,
+                        jsonData,
+                        onSuccess,
+                        onError,
+                        false,
+                        showFeedback
+                    );
+                    yield break;
+                }
             }
+            else if (
+                webRequest.responseCode == 401
+                && refreshAllowed
+                && IsSessionError(payload)
+            )
+            {
+                UIController.Instance.ExpireSession();
+            }
+
+            if (showFeedback)
+            {
+                UIController.Instance?.ShowUserMessage(
+                    ErrorMessage(payload, "No se pudo completar la solicitud."),
+                    true
+                );
+            }
+            onError?.Invoke(payload);
         }
+    }
+
+    // Método para realizar el GET
+    IEnumerator GetRequest(
+        string url,
+        System.Action<string> onSuccess,
+        System.Action<string> onError,
+        bool showFeedback = true
+    )
+    {
+        yield return SendRequest(
+            UnityWebRequest.kHttpVerbGET,
+            url,
+            null,
+            onSuccess,
+            onError,
+            showFeedback: showFeedback
+        );
     }
 
     IEnumerator DeleteRequest(string url, System.Action onSuccess, System.Action<string> onError)
     {
-        using (UnityWebRequest webRequest = UnityWebRequest.Delete(url))
-        {
-            ApplyAuthorization(webRequest);
-            // Enviar la solicitud y esperar respuesta
-            yield return webRequest.SendWebRequest();
-
-            if (webRequest.result == UnityWebRequest.Result.Success)
-            {
-                onSuccess?.Invoke();
-            }
-            else
-            {
-                HandleExpiredSession(webRequest);
-                // Invocar el callback de error con el mensaje de error
-                onError?.Invoke(RequestErrorPayload(webRequest));
-            }
-        }
+        yield return SendRequest(
+            UnityWebRequest.kHttpVerbDELETE,
+            url,
+            null,
+            _ => onSuccess?.Invoke(),
+            onError
+        );
     }
 
     // Método para realizar el POST
     IEnumerator PostRequest(string url, string jsonData, System.Action<string> onSuccess, System.Action<string> onError)
     {
-        // Crear la solicitud POST
-        UnityWebRequest webRequest = new UnityWebRequest(url, "POST");
-        // Convertir los datos a un formato de JSON o similar
-        byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(jsonData);
-
-        // Asignar los datos a la solicitud
-        webRequest.uploadHandler = new UploadHandlerRaw(jsonToSend);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-
-        // Definir el tipo de contenido (importante para APIs que reciben JSON)
-        webRequest.SetRequestHeader("Content-Type", "application/json");
-        ApplyAuthorization(webRequest);
-        webRequest.timeout = 120;
-
-        // Enviar la solicitud y esperar respuesta
-        yield return webRequest.SendWebRequest();
-
-        // Manejo de errores
-        if (webRequest.result == UnityWebRequest.Result.Success)
-        {
-            // Invocar el callback de éxito con la respuesta
-            onSuccess?.Invoke(webRequest.downloadHandler.text);
-        }
-        else
-        {
-            HandleExpiredSession(webRequest);
-            // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(RequestErrorPayload(webRequest));
-        }
+        yield return SendRequest(UnityWebRequest.kHttpVerbPOST, url, jsonData, onSuccess, onError);
     }
 
     // Método para realizar el PUT
     IEnumerator PatchRequest(string url, string jsonData, System.Action<string> onSuccess, System.Action<string> onError)
     {
-        // Crear la solicitud PUT
-        UnityWebRequest webRequest = new UnityWebRequest(url, "PATCH");
-
-        // Convertir los datos a un formato de JSON o similar
-        byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(jsonData);
-
-        // Asignar los datos a la solicitud
-        webRequest.uploadHandler = new UploadHandlerRaw(jsonToSend);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-
-        // Definir el tipo de contenido (importante para APIs que reciben JSON)
-        webRequest.SetRequestHeader("Content-Type", "application/json");
-        ApplyAuthorization(webRequest);
-
-        // Enviar la solicitud y esperar respuesta
-        yield return webRequest.SendWebRequest();
-
-        // Manejo de errores
-        if (webRequest.result == UnityWebRequest.Result.Success)
-        {
-            // Invocar el callback de éxito con la respuesta
-            onSuccess?.Invoke(webRequest.downloadHandler.text);
-        }
-        else
-        {
-            HandleExpiredSession(webRequest);
-            // Invocar el callback de error con el mensaje de error
-            onError?.Invoke(RequestErrorPayload(webRequest));
-        }
+        yield return SendRequest("PATCH", url, jsonData, onSuccess, onError);
     }
 
 
@@ -228,6 +347,7 @@ public class ApiController : MonoBehaviour
 
         using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(normalizedUrl))
         {
+            webRequest.timeout = DefaultTimeoutSeconds;
             yield return webRequest.SendWebRequest();
 
             if (webRequest.result == UnityWebRequest.Result.Success)
@@ -259,26 +379,66 @@ public class ApiController : MonoBehaviour
         return true;
     }
 
+    private static APIResponse<T> DeserializeResponse<T>(string jsonResponse)
+    {
+        if (string.IsNullOrWhiteSpace(jsonResponse)) return null;
+        try
+        {
+            return JsonConvert.DeserializeObject<APIResponse<T>>(jsonResponse);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static void ApplyAuthenticatedSession(AuthData authData)
+    {
+        UIController ui = UIController.Instance;
+        ui.UserData = authData.user;
+        ui.AccessToken = authData.access_token;
+        ui.AccessTokenExpiresAt = authData.expires_at;
+        ui.RefreshToken = authData.refresh_token;
+        ui.RefreshTokenExpiresAt = authData.refresh_expires_at;
+        ui.LoggedIn = true;
+        ui.GuestUser = false;
+        ui.MyModelsData = null;
+        ui.SaveData();
+    }
+
+    private static string InvalidResponse(string operation)
+    {
+        string message = $"El servidor devolvió una respuesta inválida al {operation}.";
+        UIController.Instance?.ShowUserMessage(message, true);
+        return message;
+    }
+
     // Método que llamas para iniciar la solicitud
     public void GetAllUsers()
     {
         StartCoroutine(GetRequest(baseUrl + "/users", onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserData[]> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData[]>>(jsonResponse);
+            APIResponse<UserData[]> apiResponse = DeserializeResponse<UserData[]>(jsonResponse);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            UIController.Instance?.ShowUserMessage(
+                ErrorMessage(jsonResponse, "No se pudieron obtener los usuarios."),
+                true
+            );
         }));
     }
 
     public void GetUserByUsername(string username)
     {
-        StartCoroutine(GetRequest(baseUrl + "/users/" + username, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(baseUrl + "/users/" + UnityWebRequest.EscapeURL(username), onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData>>(jsonResponse);
+            APIResponse<UserData> apiResponse = DeserializeResponse<UserData>(jsonResponse);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            UIController.Instance?.ShowUserMessage(
+                ErrorMessage(jsonResponse, "No se pudo obtener el usuario."),
+                true
+            );
         }));
     }
 
@@ -291,13 +451,17 @@ public class ApiController : MonoBehaviour
 
         StartCoroutine(PostRequest(baseUrl + "/users", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData>>(jsonResponse);
+            APIResponse<UserData> apiResponse = DeserializeResponse<UserData>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke(InvalidResponse("registrar el usuario"));
+                return;
+            }
             UIController.Instance.ScreenHandler("Login");
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData>>(jsonResponse);
-            onError.Invoke(apiResponse.message);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo completar el registro."));
         }));
     }
 
@@ -308,17 +472,17 @@ public class ApiController : MonoBehaviour
 
         StartCoroutine(PostRequest(baseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<AuthData> apiResponse = JsonConvert.DeserializeObject<APIResponse<AuthData>>(jsonResponse);
-            if (apiResponse?.data?.user == null || string.IsNullOrWhiteSpace(apiResponse.data.access_token))
+            APIResponse<AuthData> apiResponse = DeserializeResponse<AuthData>(jsonResponse);
+            if (
+                apiResponse?.data?.user == null
+                || string.IsNullOrWhiteSpace(apiResponse.data.access_token)
+                || string.IsNullOrWhiteSpace(apiResponse.data.refresh_token)
+            )
             {
-                Debug.Log("Usuario o contraseña incorrectos");
-                onError?.Invoke("No se pudo iniciar sesión.");
+                onError?.Invoke(InvalidResponse("iniciar sesión"));
                 return;
             }
-            UIController.Instance.UserData = apiResponse.data.user;
-            UIController.Instance.AccessToken = apiResponse.data.access_token;
-            UIController.Instance.AccessTokenExpiresAt = apiResponse.data.expires_at;
-            UIController.Instance.LoggedIn = true;
+            ApplyAuthenticatedSession(apiResponse.data);
             UIController.Instance.GuestUser = false;
             UIController.Instance.MyModelsData = null;
             if (UIController.Instance.UserData.completed_profile == (int)CompletedProfile.Incomplete)
@@ -349,28 +513,63 @@ public class ApiController : MonoBehaviour
         }));
     }
 
-    public void UpdateUserData(UpdateUserData updateUserData, System.Action onSuccess)
+    public void UpdateUserData(
+        UpdateUserData updateUserData,
+        System.Action onSuccess,
+        System.Action<string> onError
+    )
     {
+        string jsonData = JsonConvert.SerializeObject(
+            updateUserData,
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }
+        );
+        string username = UnityWebRequest.EscapeURL(UIController.Instance.UserData.username);
 
-        // Convertir el objeto a un string JSON
-        string jsonData = JsonConvert.SerializeObject(updateUserData);
-
-        Debug.Log(jsonData);
-
-        StartCoroutine(PatchRequest(baseUrl + "/users/" + UIController.Instance.UserData.username, jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PatchRequest(baseUrl + "/users/" + username, jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserData>>(jsonResponse);
-            UIController.Instance.UserData = apiResponse?.data;
+            APIResponse<UserData> apiResponse = DeserializeResponse<UserData>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke(InvalidResponse("guardar el perfil"));
+                return;
+            }
+            UIController.Instance.UserData = apiResponse.data;
+            UIController.Instance.SaveData();
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo guardar el perfil."));
+        }));
+    }
+
+    public void ChangePassword(
+        UpdatePasswordData passwordData,
+        System.Action onSuccess,
+        System.Action<string> onError
+    )
+    {
+        string jsonData = JsonConvert.SerializeObject(passwordData);
+        StartCoroutine(PostRequest(baseUrl + "/users/me/password", jsonData, _ =>
+        {
+            UIController.Instance.ClearSession();
+            UIController.Instance.ScreenHandler("Login");
+            UIController.Instance.ShowUserMessage(
+                "Contraseña actualizada. Iniciá sesión nuevamente.",
+                false
+            );
+            onSuccess?.Invoke();
+        }, jsonResponse =>
+        {
+            onError?.Invoke(ErrorMessage(
+                jsonResponse,
+                "No se pudo cambiar la contraseña."
+            ));
         }));
     }
 
     public void GenerateBuildTutorial()
     {
-        if (UIController.Instance.GuestUser || !UIController.Instance.HasValidSession())
+        if (UIController.Instance.GuestUser || !UIController.Instance.HasAuthenticatedSession())
         {
             BuildController.Instance.ShowTemporaryMessage("Iniciá sesión para generar y guardar una guía.");
             return;
@@ -408,7 +607,7 @@ public class ApiController : MonoBehaviour
 
     private void HandleSavedGuideLookupFailure(int modelId, ModelData model)
     {
-        if (!UIController.Instance.HasValidSession())
+        if (!UIController.Instance.HasAuthenticatedSession())
         {
             BuildController.Instance.LoadingModal.SetActive(false);
             BuildController.Instance.ShowTemporaryMessage(
@@ -441,7 +640,7 @@ public class ApiController : MonoBehaviour
         string jsonData = JsonConvert.SerializeObject(tutorialData);
         StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<Guide> apiResponse = JsonConvert.DeserializeObject<APIResponse<Guide>>(jsonResponse);
+            APIResponse<Guide> apiResponse = DeserializeResponse<Guide>(jsonResponse);
             if (apiResponse?.data?.pasos == null || apiResponse.data.pasos.Count == 0)
             {
                 BuildController.Instance.LoadingModal.SetActive(false);
@@ -467,8 +666,8 @@ public class ApiController : MonoBehaviour
 
     private void HandleGuideGenerationFailure(int modelId, string errorResponse)
     {
-        Debug.LogError("Falló la generación de la guía: " + errorResponse);
-        if (!UIController.Instance.HasValidSession())
+        Debug.LogError("Falló la generación de la guía.");
+        if (!UIController.Instance.HasAuthenticatedSession())
         {
             BuildController.Instance.LoadingModal.SetActive(false);
             BuildController.Instance.ShowTemporaryMessage(
@@ -525,12 +724,15 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/models/category/" + categoryId, onSuccess: (jsonResponse) =>
         {
-            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
             UIController.Instance.ModelsData = apiResponse?.data;
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            UIController.Instance?.ShowUserMessage(
+                ErrorMessage(jsonResponse, "No se pudieron cargar los modelos."),
+                true
+            );
         }));
     }
 
@@ -539,7 +741,7 @@ public class ApiController : MonoBehaviour
         StartCoroutine(DownloadImage(url, onSuccess: (webRequest) =>
         {
             Texture2D texture = DownloadHandlerTexture.GetContent(webRequest);
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 5f));
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
 
             onSuccess?.Invoke(sprite);
         }, onError: (jsonResponse) =>
@@ -550,22 +752,21 @@ public class ApiController : MonoBehaviour
 
     public void GetModelsUnderBuild(string modelId, System.Action<List<UserModelData>> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/userModels/model/" + modelId, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(baseUrl + "/userModels/model/" + UnityWebRequest.EscapeURL(modelId), onSuccess: (jsonResponse) =>
         {
-            APIResponse<List<UserModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<UserModelData>>>(jsonResponse);
+            APIResponse<List<UserModelData>> apiResponse = DeserializeResponse<List<UserModelData>>(jsonResponse);
             onSuccess?.Invoke(apiResponse?.data);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
-            onError?.Invoke(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudieron cargar las construcciones."));
         }));
     }
 
     public void GetUserModel(string userId, string modelId, System.Action<UserModelData> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/userModels/" + userId + "/" + modelId, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(baseUrl + "/userModels/" + UnityWebRequest.EscapeURL(userId) + "/" + UnityWebRequest.EscapeURL(modelId), onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserModelData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserModelData>>(jsonResponse);
+            APIResponse<UserModelData> apiResponse = DeserializeResponse<UserModelData>(jsonResponse);
             if (apiResponse?.data != null)
             {
                 try
@@ -583,8 +784,8 @@ public class ApiController : MonoBehaviour
             onSuccess?.Invoke(apiResponse?.data);
         }, onError: (jsonResponse) =>
         {
-            onError?.Invoke(jsonResponse);
-        }));
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo consultar la guía guardada."));
+        }, showFeedback: false));
     }
 
     public void CreateUserModel(UserModelData userModelData, System.Action<UserModelData> onSuccess, System.Action<string> onError)
@@ -593,13 +794,17 @@ public class ApiController : MonoBehaviour
 
         StartCoroutine(PostRequest(baseUrl + "/userModels", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserModelData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserModelData>>(jsonResponse);
-            UIController.Instance.UserModelData = apiResponse?.data;
+            APIResponse<UserModelData> apiResponse = DeserializeResponse<UserModelData>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke(InvalidResponse("guardar la construcción"));
+                return;
+            }
+            UIController.Instance.UserModelData = apiResponse.data;
             onSuccess?.Invoke(apiResponse.data);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
-            onError.Invoke(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo guardar la construcción."));
         }));
     }
 
@@ -611,28 +816,34 @@ public class ApiController : MonoBehaviour
 
         StartCoroutine(PatchRequest(baseUrl + "/userModels/" + UIController.Instance.UserModelData.id, jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<UserModelData> apiResponse = JsonConvert.DeserializeObject<APIResponse<UserModelData>>(jsonResponse);
+            APIResponse<UserModelData> apiResponse = DeserializeResponse<UserModelData>(jsonResponse);
             UIController.Instance.UserModelData = apiResponse?.data;
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            UIController.Instance?.ShowUserMessage(
+                ErrorMessage(jsonResponse, "No se pudo actualizar el progreso."),
+                true
+            );
         }));
     }
 
     public void SearchModels(string search)
     {
-        StartCoroutine(GetRequest(baseUrl + "/models/search/" + search, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(baseUrl + "/models/search/" + UnityWebRequest.EscapeURL(search), onSuccess: (jsonResponse) =>
         {
             UIController.Instance.SearchModelsData?.Clear();
-            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
             UIController.Instance.SearchModelsData = apiResponse?.data;
             UIController.Instance.ComesFromSearch = true;
             UIController.Instance.ScreenHandler("Models");
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
+            UIController.Instance?.ShowUserMessage(
+                ErrorMessage(jsonResponse, "No se pudo completar la búsqueda."),
+                true
+            );
         }));
     }
 
@@ -640,14 +851,13 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/models/user/" + userId, onSuccess: (jsonResponse) =>
         {
-            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
             UIController.Instance.MyModelsData = apiResponse?.data;
             onSuccess?.Invoke(apiResponse?.data);
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
-            onError?.Invoke(jsonResponse);
-            Debug.Log(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudieron cargar tus modelos."));
         }));
     }
 
@@ -655,14 +865,13 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/models/favorite/" + userId, onSuccess: (jsonResponse) =>
         {
-            APIResponse<List<ModelData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ModelData>>>(jsonResponse);
+            APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
             UIController.Instance.FavoritesModelsData = apiResponse?.data;
             onSuccess?.Invoke(apiResponse?.data);
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
-            onError?.Invoke(jsonResponse);
-            Debug.Log(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudieron cargar tus favoritos."));
         }));
     }
 
@@ -680,8 +889,7 @@ public class ApiController : MonoBehaviour
 
         StartCoroutine(PostRequest(baseUrl + "/favorites", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<FavoriteData> apiResponse =
-                JsonConvert.DeserializeObject<APIResponse<FavoriteData>>(jsonResponse);
+            APIResponse<FavoriteData> apiResponse = DeserializeResponse<FavoriteData>(jsonResponse);
             if (apiResponse?.data == null)
             {
                 onError?.Invoke("El servidor no confirmó el favorito.");
@@ -723,18 +931,7 @@ public class ApiController : MonoBehaviour
             onError?.Invoke("Respuesta invalida al consultar favoritos.");
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
-            onError?.Invoke(jsonResponse);
-        }));
-    }
-
-    public void SignInGoogle()
-    {
-        StartCoroutine(GetRequest(baseUrl + "/auth/google", onSuccess: (jsonResponse) =>
-        {
-        }, onError: (jsonResponse) =>
-        {
-            Debug.Log(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo consultar el favorito."));
         }));
     }
 
@@ -746,7 +943,7 @@ public class ApiController : MonoBehaviour
         );
         StartCoroutine(PostRequest(baseUrl + "/openai/message", jsonData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<string> apiResponse = JsonConvert.DeserializeObject<APIResponse<string>>(jsonResponse);
+            APIResponse<string> apiResponse = DeserializeResponse<string>(jsonResponse);
             if (apiResponse == null || string.IsNullOrWhiteSpace(apiResponse.data))
             {
                 onError?.Invoke("La respuesta del asistente está vacía.");
@@ -759,7 +956,6 @@ public class ApiController : MonoBehaviour
             onSuccess?.Invoke(apiResponse.data);
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
             onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo obtener una respuesta."));
         }));
     }
@@ -769,13 +965,17 @@ public class ApiController : MonoBehaviour
         string conversationData = JsonConvert.SerializeObject(conversationPostData);
         StartCoroutine(PostRequest(baseUrl + "/conversation", conversationData, onSuccess: (jsonResponse) =>
         {
-            APIResponse<ConversationData> apiResponse = JsonConvert.DeserializeObject<APIResponse<ConversationData>>(jsonResponse);
+            APIResponse<ConversationData> apiResponse = DeserializeResponse<ConversationData>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke(InvalidResponse("guardar la conversación"));
+                return;
+            }
             onSuccess?.Invoke(apiResponse.data);
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
-            onError?.Invoke(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudo guardar la conversación."));
         }));
     }
 
@@ -784,13 +984,17 @@ public class ApiController : MonoBehaviour
         string conversationMessagesData = JsonConvert.SerializeObject(conversationMessagesPostData);
         StartCoroutine(PostRequest(baseUrl + "/conversationMessage/all", conversationMessagesData, onSuccess: (jsonResponse) =>
         {
-            Debug.Log("Crear mensajes de la conver");
-            APIResponse<List<ConversationMessageData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ConversationMessageData>>>(jsonResponse);
+            APIResponse<List<ConversationMessageData>> apiResponse = DeserializeResponse<List<ConversationMessageData>>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke(InvalidResponse("guardar los mensajes"));
+                return;
+            }
             onSuccess?.Invoke(apiResponse.data);
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
-            onError?.Invoke(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudieron guardar los mensajes."));
         }));
     }
 
@@ -798,30 +1002,35 @@ public class ApiController : MonoBehaviour
     {
         StartCoroutine(GetRequest(baseUrl + "/conversationMessage/conversation/" + conversationId, onSuccess: (jsonResponse) =>
         {
-            Debug.Log("Devolver mensajes de la conver: " + jsonResponse);
-            APIResponse<List<ConversationMessageData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ConversationMessageData>>>(jsonResponse);
+            APIResponse<List<ConversationMessageData>> apiResponse = DeserializeResponse<List<ConversationMessageData>>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke(InvalidResponse("cargar los mensajes"));
+                return;
+            }
             onSuccess?.Invoke(apiResponse.data);
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
-            onError?.Invoke(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudieron cargar los mensajes."));
         }));
     }
 
     public void GetUserConversations(int userId, System.Action<List<ConversationData>> onSuccess, System.Action<string> onError)
     {
-        Debug.Log("GetUserConversations: " + userId);
         StartCoroutine(GetRequest(baseUrl + "/conversation/user/" + userId, onSuccess: (jsonResponse) =>
         {
-            Debug.Log("Devolver convers: " + jsonResponse);
-            APIResponse<List<ConversationData>> apiResponse = JsonConvert.DeserializeObject<APIResponse<List<ConversationData>>>(jsonResponse);
+            APIResponse<List<ConversationData>> apiResponse = DeserializeResponse<List<ConversationData>>(jsonResponse);
+            if (apiResponse?.data == null)
+            {
+                onError?.Invoke(InvalidResponse("cargar las conversaciones"));
+                return;
+            }
             onSuccess?.Invoke(apiResponse.data);
             // Deserializar la cadena JSON dentro del campo 'guide'
         }, onError: (jsonResponse) =>
         {
-            Debug.Log(jsonResponse);
-            onError?.Invoke(jsonResponse);
+            onError?.Invoke(ErrorMessage(jsonResponse, "No se pudieron cargar las conversaciones."));
         }));
     }
 }

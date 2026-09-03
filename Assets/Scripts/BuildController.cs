@@ -319,23 +319,23 @@ public class BuildController : MonoBehaviour
 
     public void StepForward()
     {
-        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
-        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
+        if (!TryGetCurrentGuide(out int modelId, out Guide Guide, out Paso CurrentStep))
+            return;
         int currentIndex = Guide.pasos.FindIndex(step => step.paso == CurrentStep.paso);
         if (currentIndex < 0 || currentIndex >= Guide.pasos.Count - 1) return;
         CurrentStep = Guide.pasos[currentIndex + 1];
-        CurrentStepDictionary[UIController.Instance.CurrentModelIndex] = CurrentStep;
+        CurrentStepDictionary[modelId] = CurrentStep;
         UpdateStep();
     }
 
     public void StepBackward()
     {
-        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
-        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
+        if (!TryGetCurrentGuide(out int modelId, out Guide Guide, out Paso CurrentStep))
+            return;
         int currentIndex = Guide.pasos.FindIndex(step => step.paso == CurrentStep.paso);
         if (currentIndex <= 0) return;
         CurrentStep = Guide.pasos[currentIndex - 1];
-        CurrentStepDictionary[UIController.Instance.CurrentModelIndex] = CurrentStep;
+        CurrentStepDictionary[modelId] = CurrentStep;
         UpdateStep();
     }
 
@@ -347,8 +347,8 @@ public class BuildController : MonoBehaviour
 
     private void UpdateStep()
     {
-        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
-        Guide Guide = GuidesDictionary[UIController.Instance.CurrentModelIndex];
+        if (!TryGetCurrentGuide(out _, out Guide Guide, out Paso CurrentStep))
+            return;
         StepTitle.text = CurrentStep.titulo;
         StepDescription.text = CurrentStep.descripcion;
         StepCount.text = "Paso " + CurrentStep.paso + "/" + Guide.pasos.Count;
@@ -380,7 +380,8 @@ public class BuildController : MonoBehaviour
 
     public void FinishAction()
     {
-        Paso CurrentStep = CurrentStepDictionary[UIController.Instance.CurrentModelIndex];
+        if (!TryGetCurrentGuide(out _, out _, out Paso CurrentStep))
+            return;
         UpdateUserModelData userModelData = new()
         {
             completed = (int)CompletedProfile.Complete,
@@ -394,6 +395,26 @@ public class BuildController : MonoBehaviour
         });
     }
 
+    private bool TryGetCurrentGuide(
+        out int modelId,
+        out Guide guide,
+        out Paso currentStep
+    )
+    {
+        modelId = UIController.Instance.CurrentModelIndex;
+        guide = null;
+        currentStep = null;
+        bool valid = GuidesDictionary.TryGetValue(modelId, out guide)
+            && guide?.pasos != null
+            && guide.pasos.Count > 0
+            && CurrentStepDictionary.TryGetValue(modelId, out currentStep)
+            && currentStep != null;
+        if (valid) return true;
+
+        ShowTemporaryMessage("Primero generá una guía para este modelo.");
+        return false;
+    }
+
     public void CloseFinishModal()
     {
         FinishModal.SetActive(false);
@@ -402,7 +423,7 @@ public class BuildController : MonoBehaviour
 
     public void StartChat()
     {
-        if (UIController.Instance.GuestUser || !UIController.Instance.HasValidSession())
+        if (UIController.Instance.GuestUser || !UIController.Instance.HasAuthenticatedSession())
         {
             ShowTemporaryMessage("Iniciá sesión para usar el asistente y guardar la conversación.");
             return;
@@ -422,7 +443,7 @@ public class BuildController : MonoBehaviour
 
     public void KnowMore()
     {
-        if (UIController.Instance.GuestUser || !UIController.Instance.HasValidSession())
+        if (UIController.Instance.GuestUser || !UIController.Instance.HasAuthenticatedSession())
         {
             ShowTemporaryMessage("Iniciá sesión para consultar al asistente.");
             return;

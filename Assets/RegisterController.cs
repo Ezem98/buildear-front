@@ -31,7 +31,7 @@ public class RegisterController : MonoBehaviour
                 UsernameInputField.text = "";
                 EmailInputField.text = "";
                 PasswordInputField.text = "";
-            }, onError: (errorMessage) => { Debug.Log(errorMessage); ErrorMessage.text = errorMessage; ErrorMessage.gameObject.SetActive(true); });
+            }, onError: (errorMessage) => { ErrorMessage.text = errorMessage; ErrorMessage.gameObject.SetActive(true); });
         }
     }
 }

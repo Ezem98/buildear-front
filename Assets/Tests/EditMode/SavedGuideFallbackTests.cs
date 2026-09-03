@@ -26,7 +26,7 @@ namespace BuildeAR.Tests.EditMode
             );
             int failureHandler = source.IndexOf("HandleSavedGuideLookupFailure");
             int sessionCheck = source.IndexOf(
-                "if (!UIController.Instance.HasValidSession())",
+                "if (!UIController.Instance.HasAuthenticatedSession())",
                 failureHandler
             );
             int generationRequest = source.IndexOf(
@@ -88,7 +88,8 @@ namespace BuildeAR.Tests.EditMode
                 source,
                 Does.Contain("No se pudo conectar con el servidor. Revisá tu conexión")
             );
-            Assert.That(source, Does.Contain("webRequest.timeout = 120;"));
+            Assert.That(source, Does.Contain("OpenAITimeoutSeconds = 120"));
+            Assert.That(source, Does.Contain("DefaultTimeoutSeconds = 30"));
         }
     }
 }
