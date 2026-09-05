@@ -726,9 +726,19 @@ PrefabInstance:
       objectReference: {fileID: 5132284406578706638}
     - target: {fileID: 2197295152833400743, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2197295152833400743, guid: cd70d674ad95bc5419577e84be8e3038,
+        type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 5151266273860004155}
+    - target: {fileID: 2197295152833400743, guid: cd70d674ad95bc5419577e84be8e3038,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2204274881631506399, guid: cd70d674ad95bc5419577e84be8e3038,
         type: 3}
       propertyPath: m_Sprite

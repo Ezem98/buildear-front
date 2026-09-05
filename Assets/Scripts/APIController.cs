@@ -8,14 +8,44 @@ using System.Text;
 
 public class ApiController : MonoBehaviour
 {
-    // URL de tu API
-    // private readonly string baseUrl = "http://ec2-44-219-46-170.compute-1.amazonaws.com:1234";
-
-    [SerializeField] private string baseUrl = "https://buildear-backend-production.up.railway.app/api/v1";
+    private const string BaseUrl = "https://buildear-backend-production.up.railway.app/api/v1";
     private const int DefaultTimeoutSeconds = 30;
     private const int OpenAITimeoutSeconds = 120;
     private bool refreshInProgress;
     private bool lastRefreshSucceeded;
+
+    public static ApiController Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+    private bool TryGetRequestExecutor(out ApiController executor)
+    {
+        executor = Instance;
+        if (executor != null)
+        {
+            return true;
+        }
+
+        Debug.LogError(
+            "No hay un ApiController configurado en la escena BuildUI. "
+            + "La solicitud no se ejecutará."
+        );
+        return false;
+    }
 
     private void ApplyAuthorization(UnityWebRequest webRequest)
     {
@@ -132,6 +162,13 @@ public class ApiController : MonoBehaviour
         return webRequest;
     }
 
+    private static void LogRequest(string method, string url)
+    {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"API request: {method} {url}");
+#endif
+    }
+
     private bool ShouldRefresh(string method, string url)
     {
         if (url.EndsWith("/auth/login") || url.EndsWith("/auth/refresh"))
@@ -177,10 +214,11 @@ public class ApiController : MonoBehaviour
 
         using (UnityWebRequest webRequest = CreateRequest(
             UnityWebRequest.kHttpVerbPOST,
-            baseUrl + "/auth/refresh",
+            BaseUrl + "/auth/refresh",
             jsonData
         ))
         {
+            LogRequest(UnityWebRequest.kHttpVerbPOST, BaseUrl + "/auth/refresh");
             yield return webRequest.SendWebRequest();
             if (webRequest.result == UnityWebRequest.Result.Success)
             {
@@ -242,6 +280,7 @@ public class ApiController : MonoBehaviour
         using (UnityWebRequest webRequest = CreateRequest(method, url, jsonData))
         {
             ApplyAuthorization(webRequest);
+            LogRequest(method, url);
             yield return webRequest.SendWebRequest();
 
             if (webRequest.result == UnityWebRequest.Result.Success)
@@ -416,7 +455,7 @@ public class ApiController : MonoBehaviour
     // Método que llamas para iniciar la solicitud
     public void GetAllUsers()
     {
-        StartCoroutine(GetRequest(baseUrl + "/users", onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/users", onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData[]> apiResponse = DeserializeResponse<UserData[]>(jsonResponse);
         }, onError: (jsonResponse) =>
@@ -430,7 +469,7 @@ public class ApiController : MonoBehaviour
 
     public void GetUserByUsername(string username)
     {
-        StartCoroutine(GetRequest(baseUrl + "/users/" + UnityWebRequest.EscapeURL(username), onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/users/" + UnityWebRequest.EscapeURL(username), onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = DeserializeResponse<UserData>(jsonResponse);
         }, onError: (jsonResponse) =>
@@ -449,7 +488,7 @@ public class ApiController : MonoBehaviour
         // Convertir el objeto a un string JSON
         string jsonData = JsonConvert.SerializeObject(registerData);
 
-        StartCoroutine(PostRequest(baseUrl + "/users", jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/users", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = DeserializeResponse<UserData>(jsonResponse);
             if (apiResponse?.data == null)
@@ -470,7 +509,7 @@ public class ApiController : MonoBehaviour
         // Convertir el objeto a un string JSON
         string jsonData = JsonConvert.SerializeObject(loginData);
 
-        StartCoroutine(PostRequest(baseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/auth/login", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<AuthData> apiResponse = DeserializeResponse<AuthData>(jsonResponse);
             if (
@@ -503,7 +542,7 @@ public class ApiController : MonoBehaviour
 
     public void Logout(System.Action onComplete)
     {
-        StartCoroutine(PostRequest(baseUrl + "/auth/logout", "{}", onSuccess: (_) =>
+        StartCoroutine(PostRequest(BaseUrl + "/auth/logout", "{}", onSuccess: (_) =>
         {
             onComplete?.Invoke();
         }, onError: (_) =>
@@ -525,7 +564,7 @@ public class ApiController : MonoBehaviour
         );
         string username = UnityWebRequest.EscapeURL(UIController.Instance.UserData.username);
 
-        StartCoroutine(PatchRequest(baseUrl + "/users/" + username, jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PatchRequest(BaseUrl + "/users/" + username, jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserData> apiResponse = DeserializeResponse<UserData>(jsonResponse);
             if (apiResponse?.data == null)
@@ -549,7 +588,7 @@ public class ApiController : MonoBehaviour
     )
     {
         string jsonData = JsonConvert.SerializeObject(passwordData);
-        StartCoroutine(PostRequest(baseUrl + "/users/me/password", jsonData, _ =>
+        StartCoroutine(PostRequest(BaseUrl + "/users/me/password", jsonData, _ =>
         {
             UIController.Instance.ClearSession();
             UIController.Instance.ScreenHandler("Login");
@@ -569,6 +608,17 @@ public class ApiController : MonoBehaviour
 
     public void GenerateBuildTutorial()
     {
+        if (this != Instance)
+        {
+            if (!TryGetRequestExecutor(out ApiController executor))
+            {
+                return;
+            }
+
+            executor.GenerateBuildTutorial();
+            return;
+        }
+
         if (UIController.Instance.GuestUser || !UIController.Instance.HasAuthenticatedSession())
         {
             BuildController.Instance.ShowTemporaryMessage("Iniciá sesión para generar y guardar una guía.");
@@ -638,7 +688,7 @@ public class ApiController : MonoBehaviour
         };
 
         string jsonData = JsonConvert.SerializeObject(tutorialData);
-        StartCoroutine(PostRequest(baseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/openai", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<Guide> apiResponse = DeserializeResponse<Guide>(jsonResponse);
             if (apiResponse?.data?.pasos == null || apiResponse.data.pasos.Count == 0)
@@ -722,7 +772,7 @@ public class ApiController : MonoBehaviour
 
     public void GetModelsByCategoryId(int categoryId, System.Action onSuccess)
     {
-        StartCoroutine(GetRequest(baseUrl + "/models/category/" + categoryId, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/models/category/" + categoryId, onSuccess: (jsonResponse) =>
         {
             APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
             UIController.Instance.ModelsData = apiResponse?.data;
@@ -752,7 +802,7 @@ public class ApiController : MonoBehaviour
 
     public void GetModelsUnderBuild(string modelId, System.Action<List<UserModelData>> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/userModels/model/" + UnityWebRequest.EscapeURL(modelId), onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/userModels/model/" + UnityWebRequest.EscapeURL(modelId), onSuccess: (jsonResponse) =>
         {
             APIResponse<List<UserModelData>> apiResponse = DeserializeResponse<List<UserModelData>>(jsonResponse);
             onSuccess?.Invoke(apiResponse?.data);
@@ -764,7 +814,7 @@ public class ApiController : MonoBehaviour
 
     public void GetUserModel(string userId, string modelId, System.Action<UserModelData> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/userModels/" + UnityWebRequest.EscapeURL(userId) + "/" + UnityWebRequest.EscapeURL(modelId), onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/userModels/" + UnityWebRequest.EscapeURL(userId) + "/" + UnityWebRequest.EscapeURL(modelId), onSuccess: (jsonResponse) =>
         {
             APIResponse<UserModelData> apiResponse = DeserializeResponse<UserModelData>(jsonResponse);
             if (apiResponse?.data != null)
@@ -792,7 +842,7 @@ public class ApiController : MonoBehaviour
     {
         string jsonData = JsonConvert.SerializeObject(userModelData);
 
-        StartCoroutine(PostRequest(baseUrl + "/userModels", jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/userModels", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserModelData> apiResponse = DeserializeResponse<UserModelData>(jsonResponse);
             if (apiResponse?.data == null)
@@ -814,7 +864,7 @@ public class ApiController : MonoBehaviour
         // Convertir el objeto a un string JSON
         string jsonData = JsonConvert.SerializeObject(updateUserModelData);
 
-        StartCoroutine(PatchRequest(baseUrl + "/userModels/" + UIController.Instance.UserModelData.id, jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PatchRequest(BaseUrl + "/userModels/" + UIController.Instance.UserModelData.id, jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<UserModelData> apiResponse = DeserializeResponse<UserModelData>(jsonResponse);
             UIController.Instance.UserModelData = apiResponse?.data;
@@ -830,7 +880,7 @@ public class ApiController : MonoBehaviour
 
     public void SearchModels(string search)
     {
-        StartCoroutine(GetRequest(baseUrl + "/models/search/" + UnityWebRequest.EscapeURL(search), onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/models/search/" + UnityWebRequest.EscapeURL(search), onSuccess: (jsonResponse) =>
         {
             UIController.Instance.SearchModelsData?.Clear();
             APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
@@ -849,7 +899,7 @@ public class ApiController : MonoBehaviour
 
     public void GetModelsByUserId(int userId, System.Action<List<ModelData>> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/models/user/" + userId, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/models/user/" + userId, onSuccess: (jsonResponse) =>
         {
             APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
             UIController.Instance.MyModelsData = apiResponse?.data;
@@ -863,7 +913,7 @@ public class ApiController : MonoBehaviour
 
     public void GetFavoritesModels(int userId, System.Action<List<ModelData>> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/models/favorite/" + userId, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/models/favorite/" + userId, onSuccess: (jsonResponse) =>
         {
             APIResponse<List<ModelData>> apiResponse = DeserializeResponse<List<ModelData>>(jsonResponse);
             UIController.Instance.FavoritesModelsData = apiResponse?.data;
@@ -887,7 +937,7 @@ public class ApiController : MonoBehaviour
             model_id = favoriteData.model_id
         });
 
-        StartCoroutine(PostRequest(baseUrl + "/favorites", jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/favorites", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<FavoriteData> apiResponse = DeserializeResponse<FavoriteData>(jsonResponse);
             if (apiResponse?.data == null)
@@ -909,7 +959,7 @@ public class ApiController : MonoBehaviour
         System.Action<string> onError = null
     )
     {
-        StartCoroutine(DeleteRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: () =>
+        StartCoroutine(DeleteRequest(BaseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: () =>
         {
             onSuccess?.Invoke();
         }, onError: (jsonResponse) =>
@@ -920,7 +970,7 @@ public class ApiController : MonoBehaviour
 
     public void IsFavorite(FavoriteData favoriteData, System.Action<bool> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/favorites/" + favoriteData.user_id + "/" + favoriteData.model_id, onSuccess: (jsonResponse) =>
         {
             if (TryParseBooleanResponse(jsonResponse, out bool isFavorite))
             {
@@ -941,7 +991,7 @@ public class ApiController : MonoBehaviour
             chatMessageData,
             new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }
         );
-        StartCoroutine(PostRequest(baseUrl + "/openai/message", jsonData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/openai/message", jsonData, onSuccess: (jsonResponse) =>
         {
             APIResponse<string> apiResponse = DeserializeResponse<string>(jsonResponse);
             if (apiResponse == null || string.IsNullOrWhiteSpace(apiResponse.data))
@@ -963,7 +1013,7 @@ public class ApiController : MonoBehaviour
     public void SaveConversation(ConversationPostData conversationPostData, System.Action<ConversationData> onSuccess, System.Action<string> onError)
     {
         string conversationData = JsonConvert.SerializeObject(conversationPostData);
-        StartCoroutine(PostRequest(baseUrl + "/conversation", conversationData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/conversation", conversationData, onSuccess: (jsonResponse) =>
         {
             APIResponse<ConversationData> apiResponse = DeserializeResponse<ConversationData>(jsonResponse);
             if (apiResponse?.data == null)
@@ -982,7 +1032,7 @@ public class ApiController : MonoBehaviour
     public void SaveMessages(ConversationMessagePostData conversationMessagesPostData, System.Action<List<ConversationMessageData>> onSuccess, System.Action<string> onError)
     {
         string conversationMessagesData = JsonConvert.SerializeObject(conversationMessagesPostData);
-        StartCoroutine(PostRequest(baseUrl + "/conversationMessage/all", conversationMessagesData, onSuccess: (jsonResponse) =>
+        StartCoroutine(PostRequest(BaseUrl + "/conversationMessage/all", conversationMessagesData, onSuccess: (jsonResponse) =>
         {
             APIResponse<List<ConversationMessageData>> apiResponse = DeserializeResponse<List<ConversationMessageData>>(jsonResponse);
             if (apiResponse?.data == null)
@@ -1000,7 +1050,7 @@ public class ApiController : MonoBehaviour
 
     public void GetConversationMessages(int conversationId, System.Action<List<ConversationMessageData>> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/conversationMessage/conversation/" + conversationId, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/conversationMessage/conversation/" + conversationId, onSuccess: (jsonResponse) =>
         {
             APIResponse<List<ConversationMessageData>> apiResponse = DeserializeResponse<List<ConversationMessageData>>(jsonResponse);
             if (apiResponse?.data == null)
@@ -1018,7 +1068,7 @@ public class ApiController : MonoBehaviour
 
     public void GetUserConversations(int userId, System.Action<List<ConversationData>> onSuccess, System.Action<string> onError)
     {
-        StartCoroutine(GetRequest(baseUrl + "/conversation/user/" + userId, onSuccess: (jsonResponse) =>
+        StartCoroutine(GetRequest(BaseUrl + "/conversation/user/" + userId, onSuccess: (jsonResponse) =>
         {
             APIResponse<List<ConversationData>> apiResponse = DeserializeResponse<List<ConversationData>>(jsonResponse);
             if (apiResponse?.data == null)
