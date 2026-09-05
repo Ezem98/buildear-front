@@ -1,6 +1,9 @@
+using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace BuildeAR.Tests.EditMode
 {
@@ -51,10 +54,16 @@ namespace BuildeAR.Tests.EditMode
         }
 
         [Test]
-        public void GoogleButtons_AreHiddenAndDisconnected()
+        public void GoogleSignInPlugin_IsAbsentAndButtonsStayHidden()
         {
             AssertGoogleButtonsHidden("UI.unity");
             AssertGoogleButtonsHidden("BuildUI.unity");
+            Assert.That(Directory.Exists(Path.Combine(Application.dataPath, "GoogleSignIn")), Is.False);
+            Assert.That(Directory.Exists(Path.Combine(Application.dataPath, "SignInSample")), Is.False);
+            Assert.That(
+                Directory.Exists(Path.Combine(Application.dataPath, "Plugins", "iOS", "GoogleSignIn")),
+                Is.False
+            );
         }
 
         private static void AssertGoogleButtonsHidden(string sceneName)
@@ -99,11 +108,82 @@ namespace BuildeAR.Tests.EditMode
         [Test]
         public void DuplicateController_CannotOverwritePersistedSession()
         {
-            string source = ReadSource("Scripts", "UIController.cs");
+            GameObject primaryObject = null;
+            GameObject duplicateObject = null;
+            try
+            {
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.SetInt("loggedIn", 1);
+                PlayerPrefs.SetString("accessToken", "persisted-access");
+                PlayerPrefs.SetString("accessTokenExpiresAt", DateTime.UtcNow.AddHours(1).ToString("O"));
+                PlayerPrefs.SetString("userData", "{\"id\":42,\"username\":\"persisted-user\"}");
+                PlayerPrefs.Save();
 
-            Assert.That(source, Does.Contain("isDuplicate = true;"));
-            Assert.That(source, Does.Contain("if (isDuplicate) return;"));
-            Assert.That(source, Does.Not.Contain("AddComponent<UIController>"));
+                Type controllerType = RequireRuntimeType("UIController");
+                System.Reflection.FieldInfo instanceField = controllerType.GetField(
+                    "_instance",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+                );
+                System.Reflection.MethodInfo register = controllerType.GetMethod(
+                    "TryRegisterInstance",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+                );
+                instanceField?.SetValue(null, null);
+                primaryObject = new GameObject("Primary UIController");
+                Component primary = primaryObject.AddComponent(controllerType);
+                Assert.That(register?.Invoke(primary, null), Is.True);
+                duplicateObject = new GameObject("Duplicate UIController");
+                Component duplicate = duplicateObject.AddComponent(controllerType);
+                LogAssert.Expect(LogType.Error, new Regex("Destroy may not be called from edit mode"));
+                Assert.That(register?.Invoke(duplicate, null), Is.False);
+
+                controllerType.GetProperty("LoggedIn")?.SetValue(duplicate, false);
+                controllerType.GetProperty("AccessToken")?.SetValue(duplicate, "replacement-access");
+                controllerType.GetMethod("SaveData")?.Invoke(duplicate, null);
+
+                Assert.That(PlayerPrefs.GetInt("loggedIn"), Is.EqualTo(1));
+                Assert.That(PlayerPrefs.GetString("accessToken"), Is.EqualTo("persisted-access"));
+                Assert.That(
+                    PlayerPrefs.GetString("userData"),
+                    Does.Contain("persisted-user")
+                );
+            }
+            finally
+            {
+                if (duplicateObject != null) UnityEngine.Object.DestroyImmediate(duplicateObject);
+                if (primaryObject != null) UnityEngine.Object.DestroyImmediate(primaryObject);
+                Type controllerType = Type.GetType("UIController, Assembly-CSharp");
+                controllerType?.GetField(
+                    "_instance",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+                )?.SetValue(null, null);
+                PlayerPrefs.DeleteAll();
+            }
+        }
+
+        [Test]
+        public void SessionValidity_DoesNotDependOnDeviceClock()
+        {
+            GameObject controllerObject = null;
+            try
+            {
+                PlayerPrefs.DeleteAll();
+                controllerObject = new GameObject("Clock-skew UIController");
+                Type controllerType = RequireRuntimeType("UIController");
+                Component controller = controllerObject.AddComponent(controllerType);
+                controllerType.GetProperty("AccessToken")?.SetValue(controller, "access-token");
+                controllerType.GetProperty("AccessTokenExpiresAt")?.SetValue(controller, "2000-01-01T00:00:00Z");
+                controllerType.GetProperty("RefreshToken")?.SetValue(controller, "refresh-token");
+                controllerType.GetProperty("RefreshTokenExpiresAt")?.SetValue(controller, "2000-01-01T00:00:00Z");
+
+                Assert.That(controllerType.GetMethod("HasValidSession")?.Invoke(controller, null), Is.True);
+                Assert.That(controllerType.GetMethod("HasRefreshSession")?.Invoke(controller, null), Is.True);
+            }
+            finally
+            {
+                if (controllerObject != null) UnityEngine.Object.DestroyImmediate(controllerObject);
+                PlayerPrefs.DeleteAll();
+            }
         }
 
         private static string ReadSource(params string[] parts)
@@ -111,6 +191,13 @@ namespace BuildeAR.Tests.EditMode
             string path = Application.dataPath;
             foreach (string part in parts) path = Path.Combine(path, part);
             return File.ReadAllText(path);
+        }
+
+        private static Type RequireRuntimeType(string typeName)
+        {
+            Type type = Type.GetType(typeName + ", Assembly-CSharp");
+            Assert.That(type, Is.Not.Null, typeName + " runtime type was not found");
+            return type;
         }
 
         private static void AssertInactiveNearName(string scene, string name)

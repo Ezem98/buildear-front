@@ -14,7 +14,8 @@ public class MyDataManager : MonoBehaviour
     [SerializeField] private Slider Slider;
     [SerializeField] private TextMeshProUGUI SliderValueText;
     [SerializeField] private ApiController ApiController;
-    private TextMeshProUGUI inlineError;
+    [SerializeField] private Button ChangePasswordButton;
+    [SerializeField] private TextMeshProUGUI inlineError;
     private readonly Dictionary<int, string> experienceLevelDictionary = new(){
         { 0, "Selecciona tu nivel de experiencia aproximado para continuar" },
         { 1, "Principiante" },
@@ -23,23 +24,20 @@ public class MyDataManager : MonoBehaviour
     };
     private int experienceLevel = 0;
 
-    private void Awake()
-    {
-        CreatePasswordButton();
-        CreateInlineError();
-    }
-
     // Start is called before the first frame update
     private void OnEnable()
     {
         SetUserData();
         Slider.onValueChanged.RemoveListener(HandleSliderValueChange);
         Slider.onValueChanged.AddListener(HandleSliderValueChange);
+        ChangePasswordButton?.onClick.RemoveListener(TryChangePassword);
+        ChangePasswordButton?.onClick.AddListener(TryChangePassword);
     }
 
     private void OnDisable()
     {
         Slider?.onValueChanged.RemoveListener(HandleSliderValueChange);
+        ChangePasswordButton?.onClick.RemoveListener(TryChangePassword);
     }
 
     private void SetUserData()
@@ -120,54 +118,6 @@ public class MyDataManager : MonoBehaviour
             experienceLevel,
             out string label
         ) ? label : experienceLevelDictionary[0];
-    }
-
-    private void CreatePasswordButton()
-    {
-        Transform submitTransform = transform.Find("SubmitButton");
-        if (submitTransform == null) return;
-
-        RectTransform profileButtonRect = submitTransform.GetComponent<RectTransform>();
-        profileButtonRect.anchoredPosition = new Vector2(
-            profileButtonRect.anchoredPosition.x,
-            -560f
-        );
-
-        GameObject passwordButtonObject = Instantiate(
-            submitTransform.gameObject,
-            transform
-        );
-        passwordButtonObject.name = "ChangePasswordButton";
-        RectTransform passwordButtonRect = passwordButtonObject.GetComponent<RectTransform>();
-        passwordButtonRect.anchoredPosition = new Vector2(
-            passwordButtonRect.anchoredPosition.x,
-            -690f
-        );
-        Button passwordButton = passwordButtonObject.GetComponent<Button>();
-        passwordButton.onClick = new Button.ButtonClickedEvent();
-        passwordButton.onClick.AddListener(TryChangePassword);
-
-        TextMeshProUGUI tmpLabel = passwordButtonObject.GetComponentInChildren<TextMeshProUGUI>();
-        if (tmpLabel != null) tmpLabel.text = "Cambiar contraseña";
-        Text legacyLabel = passwordButtonObject.GetComponentInChildren<Text>();
-        if (legacyLabel != null) legacyLabel.text = "Cambiar contraseña";
-    }
-
-    private void CreateInlineError()
-    {
-        GameObject errorObject = new("ProfileError", typeof(RectTransform), typeof(TextMeshProUGUI));
-        errorObject.transform.SetParent(transform, false);
-        RectTransform errorRect = errorObject.GetComponent<RectTransform>();
-        errorRect.anchorMin = new Vector2(0.08f, 0f);
-        errorRect.anchorMax = new Vector2(0.92f, 0f);
-        errorRect.anchoredPosition = new Vector2(0f, 65f);
-        errorRect.sizeDelta = new Vector2(0f, 90f);
-        inlineError = errorObject.GetComponent<TextMeshProUGUI>();
-        inlineError.alignment = TextAlignmentOptions.Center;
-        inlineError.fontSize = 28f;
-        inlineError.color = new Color(0.8f, 0.12f, 0.12f);
-        inlineError.enableWordWrapping = true;
-        inlineError.gameObject.SetActive(false);
     }
 
     private void SetInlineError(string message)

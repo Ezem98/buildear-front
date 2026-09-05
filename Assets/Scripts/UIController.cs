@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Globalization;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -38,8 +37,8 @@ public class UIController : MonoBehaviour
     private string refreshTokenExpiresAt;
     private bool isDuplicate;
     private Coroutine feedbackCoroutine;
-    private GameObject feedbackPanel;
-    private TextMeshProUGUI feedbackText;
+    [SerializeField] private GameObject feedbackPanel;
+    [SerializeField] private TextMeshProUGUI feedbackText;
     public int CurrentConversationId { get => currentConversationId; set => currentConversationId = value; }
     public string AccessToken { get => accessToken; set => accessToken = value; }
     public string AccessTokenExpiresAt { get => accessTokenExpiresAt; set => accessTokenExpiresAt = value; }
@@ -111,14 +110,7 @@ public class UIController : MonoBehaviour
         TouchSimulation.Enable();
         navigationStack.Push("Onboarding");
 
-        if (_instance != null)
-        {
-            isDuplicate = true;
-            Destroy(gameObject);
-            return;
-        }
-
-        _instance = this;
+        if (!TryRegisterInstance()) return;
         DontDestroyOnLoad(gameObject);
 
         screenDictionary = new(){
@@ -169,6 +161,19 @@ public class UIController : MonoBehaviour
                 {"ChatHistoryItem", false}
             };
         LoadData();
+    }
+
+    private bool TryRegisterInstance()
+    {
+        if (_instance != null)
+        {
+            isDuplicate = true;
+            Destroy(gameObject);
+            return false;
+        }
+
+        _instance = this;
+        return true;
     }
 
     void Start()
@@ -485,29 +490,20 @@ public class UIController : MonoBehaviour
         // Los tokens anteriores al sistema de sesiones no tenían vencimiento.
         // El backend actual no los acepta, por lo que deben forzar un nuevo login.
         if (string.IsNullOrWhiteSpace(accessTokenExpiresAt)) return false;
-
-        return IsFutureTimestamp(accessTokenExpiresAt);
+        // El backend es la autoridad del vencimiento. Comparar contra el reloj
+        // del dispositivo puede provocar refreshes continuos si está adelantado.
+        return true;
     }
 
     public bool HasRefreshSession()
     {
         return !string.IsNullOrWhiteSpace(refreshToken)
-            && IsFutureTimestamp(refreshTokenExpiresAt);
+            && !string.IsNullOrWhiteSpace(refreshTokenExpiresAt);
     }
 
     public bool HasAuthenticatedSession()
     {
         return LoggedIn && (HasValidSession() || HasRefreshSession());
-    }
-
-    private static bool IsFutureTimestamp(string value)
-    {
-        return DateTime.TryParse(
-            value,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-            out DateTime expiresAt
-        ) && expiresAt > DateTime.UtcNow;
     }
 
     public void ClearSession()
@@ -556,7 +552,6 @@ public class UIController : MonoBehaviour
     public void ShowUserMessage(string message, bool isError = false)
     {
         if (string.IsNullOrWhiteSpace(message)) return;
-        EnsureFeedbackPanel();
         if (feedbackPanel == null || feedbackText == null) return;
 
         feedbackText.text = message;
@@ -566,42 +561,6 @@ public class UIController : MonoBehaviour
         feedbackPanel.SetActive(true);
         if (feedbackCoroutine != null) StopCoroutine(feedbackCoroutine);
         feedbackCoroutine = StartCoroutine(HideFeedbackAfterDelay());
-    }
-
-    private void EnsureFeedbackPanel()
-    {
-        if (feedbackPanel != null) return;
-
-        GameObject feedbackCanvas = new("UserFeedbackCanvas", typeof(Canvas), typeof(CanvasScaler));
-        feedbackCanvas.transform.SetParent(transform, false);
-        Canvas overlay = feedbackCanvas.GetComponent<Canvas>();
-        overlay.renderMode = RenderMode.ScreenSpaceOverlay;
-        overlay.sortingOrder = 1000;
-        CanvasScaler scaler = feedbackCanvas.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1080f, 1920f);
-
-        feedbackPanel = new GameObject("UserFeedback", typeof(RectTransform), typeof(Image));
-        feedbackPanel.transform.SetParent(feedbackCanvas.transform, false);
-        RectTransform panelRect = feedbackPanel.GetComponent<RectTransform>();
-        panelRect.anchorMin = new Vector2(0.08f, 0.88f);
-        panelRect.anchorMax = new Vector2(0.92f, 0.98f);
-        panelRect.offsetMin = Vector2.zero;
-        panelRect.offsetMax = Vector2.zero;
-
-        GameObject textObject = new("Message", typeof(RectTransform), typeof(TextMeshProUGUI));
-        textObject.transform.SetParent(feedbackPanel.transform, false);
-        feedbackText = textObject.GetComponent<TextMeshProUGUI>();
-        feedbackText.alignment = TextAlignmentOptions.Center;
-        feedbackText.fontSize = 34f;
-        feedbackText.color = Color.white;
-        feedbackText.enableWordWrapping = true;
-        RectTransform textRect = textObject.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(24f, 12f);
-        textRect.offsetMax = new Vector2(-24f, -12f);
-        feedbackPanel.SetActive(false);
     }
 
     private IEnumerator HideFeedbackAfterDelay()
