@@ -342,7 +342,7 @@ public class BuildController : MonoBehaviour
     public void HandleGuideResponse(bool IsOpen)
     {
         GuideResponse.SetActive(IsOpen);
-        UIAnimation.Instance.FadeOut();
+        UIAnimation.Instance?.Close();
     }
 
     private void UpdateStep()
@@ -362,20 +362,20 @@ public class BuildController : MonoBehaviour
         CameraPivot.SetActive(true);
         ObjectSpawner.SetActive(false);
         ToolbarButton.SetActive(false);
-        UIAnimation.Instance.FadeOut();
+        UIAnimation.Instance?.Close();
     }
     public void GyroscopeAction()
     {
         Gyroscope.SetActive(true);
         ToolbarButton.SetActive(false);
-        UIAnimation.Instance.FadeOut();
+        UIAnimation.Instance?.Close();
     }
 
     public void MaterialListAction()
     {
         MaterialList.SetActive(true);
         ToolbarButton.SetActive(false);
-        UIAnimation.Instance.FadeOut();
+        UIAnimation.Instance?.Close();
     }
 
     public void FinishAction()
@@ -391,7 +391,7 @@ public class BuildController : MonoBehaviour
         {
             FinishModal.SetActive(true);
             ToolbarButton.SetActive(false);
-            UIAnimation.Instance.FadeOut();
+            UIAnimation.Instance?.Close();
         });
     }
 

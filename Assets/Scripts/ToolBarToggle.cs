@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.InputSystem.XR.Haptics;
 
 public class ToolBarToggle : MonoBehaviour
 {
@@ -10,34 +9,60 @@ public class ToolBarToggle : MonoBehaviour
     bool initialState;
     [SerializeField]
     UIAnimation uiAnimation;
-    bool currentState;
     [SerializeField]
-    UnityEvent turnedOn;
+    UnityEvent turnedOn = new();
     [SerializeField]
-    UnityEvent turnedOff;
+    UnityEvent turnedOff = new();
+
     public UnityEvent TurnedOn => turnedOn;
     public UnityEvent TurnedOff => turnedOff;
 
-    public void ToggleState(){
-        if(!uiAnimation.isPlaying){
-            currentState = !currentState;
-            if(currentState == true)
-                TurnOn();
-            else
-                TurnOff();
+    public UIAnimation UIAnimation
+    {
+        get => uiAnimation;
+        set => uiAnimation = value;
+    }
+
+    public bool CurrentState => uiAnimation != null && uiAnimation.IsOpen;
+
+    private void Awake()
+    {
+        if (uiAnimation == null)
+        {
+            uiAnimation = GetComponent<UIAnimation>();
         }
     }
 
-    public void TurnOn(){
-        if(!uiAnimation.isPlaying){
-            currentState = true;
-            turnedOn.Invoke();          
+    public void ToggleState()
+    {
+        if (uiAnimation != null)
+        {
+            if (uiAnimation.IsOpen)
+            {
+                TurnOff();
+            }
+            else
+            {
+                TurnOn();
+            }
+        }
+        else
+        {
+            turnedOn?.Invoke();
         }
     }
-    public void TurnOff(){
-        if(!uiAnimation.isPlaying){
-            currentState = false;
-            turnedOff.Invoke();
-        }
+
+    public void Toggle() => ToggleState();
+
+    public void TurnOn()
+    {
+        uiAnimation?.Open();
+        turnedOn?.Invoke();
+    }
+
+    public void TurnOff()
+    {
+        uiAnimation?.Close();
+        turnedOff?.Invoke();
     }
 }
