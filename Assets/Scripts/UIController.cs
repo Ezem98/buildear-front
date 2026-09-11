@@ -299,6 +299,14 @@ public class UIController : MonoBehaviour
         arSessionObject?.SetActive(true);
         XRComponent?.SetActive(true);
 
+        ARSession arSession = arSessionObject != null
+            ? arSessionObject.GetComponent<ARSession>()
+            : null;
+        if (arSession != null)
+            arSession.enabled = true;
+
+        SetWorkspaceVisible(true);
+
         if (objectSpawner != null)
             objectSpawner.spawnOptionId = currentModelIndex;
 
@@ -311,8 +319,16 @@ public class UIController : MonoBehaviour
 
         buildUI.SetActive(false);
 
-        XRComponent?.SetActive(false);
-        arSessionObject?.SetActive(false);
+        // XRComponent?.SetActive(false);
+        // Do not deactivate arSessionObject or XRComponent to prevent destroying subsystems and trackables.
+        ARSession arSession = arSessionObject != null
+            ? arSessionObject.GetComponent<ARSession>()
+            : null;
+        if (arSession != null)
+            arSession.enabled = false;
+
+        SetWorkspaceVisible(false);
+
         canvas?.SetActive(true);
     }
 
@@ -320,11 +336,64 @@ public class UIController : MonoBehaviour
     {
         objectSpawner?.ClearSpawnedObjects();
 
+        ClearWorkspaceRoot();
+
         ARSession arSession = arSessionObject != null
             ? arSessionObject.GetComponent<ARSession>()
             : null;
         if (arSession != null && arSessionObject.activeInHierarchy)
             arSession.Reset();
+    }
+
+    private GameObject workspaceRoot;
+
+    private GameObject GetOrCreateWorkspaceRoot()
+    {
+        if (workspaceRoot == null)
+        {
+            workspaceRoot = GameObject.Find("Workspace");
+            if (workspaceRoot == null)
+            {
+                workspaceRoot = new GameObject("Workspace");
+            }
+        }
+        return workspaceRoot;
+    }
+
+    private void SetWorkspaceVisible(bool visible)
+    {
+        GameObject root = GetOrCreateWorkspaceRoot();
+        if (visible)
+        {
+            root.SetActive(true);
+        }
+        else
+        {
+            SpawnedModelMetadata[] metadataItems = FindObjectsOfType<SpawnedModelMetadata>(true);
+            foreach (SpawnedModelMetadata meta in metadataItems)
+            {
+                if (meta != null && meta.transform.parent == null)
+                {
+                    meta.transform.SetParent(root.transform, true);
+                }
+            }
+            root.SetActive(false);
+        }
+    }
+
+    private void ClearWorkspaceRoot()
+    {
+        if (workspaceRoot == null)
+            return;
+
+        for (int i = workspaceRoot.transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = workspaceRoot.transform.GetChild(i);
+            if (Application.isPlaying)
+                Destroy(child.gameObject);
+            else
+                DestroyImmediate(child.gameObject);
+        }
     }
 
     public void ChangeCategory(int categoryIndex)

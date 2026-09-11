@@ -87,6 +87,11 @@ public class BuildController : MonoBehaviour
         ResetTransientUi();
         InitializeSelectedModel();
 
+        if (ARPlaneManager != null)
+        {
+            SanitizeOrphanedPlanes(ARPlaneManager);
+        }
+
         string modelPosition = UIController.Instance.ModelData?.position;
         if (ARPlaneManager != null &&
             !string.IsNullOrWhiteSpace(modelPosition) &&
@@ -121,7 +126,7 @@ public class BuildController : MonoBehaviour
         ResetTransientUi();
         ChatMessages.Clear();
         filterElevatedHorizontalPlanes = false;
-        SetAllPlaneRenderersVisible(true);
+        SetAllPlaneRenderersVisible(false);
     }
 
     private void Update()
@@ -189,13 +194,53 @@ public class BuildController : MonoBehaviour
             plane.alignment == PlaneAlignment.HorizontalUp;
     }
 
-    private void SetAllPlaneRenderersVisible(bool visible)
+    public void SetAllPlaneRenderersVisible(bool visible)
     {
         if (ARPlaneManager == null)
             return;
 
         foreach (ARPlane plane in ARPlaneManager.trackables)
             SetPlaneRendererVisible(plane, visible);
+    }
+
+    public static int SanitizeOrphanedPlanes(ARPlaneManager planeManager)
+    {
+        if (planeManager == null)
+            return 0;
+
+        Transform trackablesParent = null;
+        var xrOrigin = planeManager.GetComponent<Unity.XR.CoreUtils.XROrigin>();
+        if (xrOrigin != null)
+        {
+            trackablesParent = xrOrigin.TrackablesParent;
+        }
+        if (trackablesParent == null)
+        {
+            trackablesParent = planeManager.transform;
+        }
+
+        HashSet<TrackableId> activeTrackableIds = new();
+        foreach (ARPlane plane in planeManager.trackables)
+        {
+            if (plane != null)
+                activeTrackableIds.Add(plane.trackableId);
+        }
+
+        ARPlane[] allPlanes = trackablesParent.GetComponentsInChildren<ARPlane>(true);
+        int destroyedCount = 0;
+        foreach (ARPlane plane in allPlanes)
+        {
+            if (plane != null && !activeTrackableIds.Contains(plane.trackableId))
+            {
+                if (Application.isPlaying)
+                    Destroy(plane.gameObject);
+                else
+                    DestroyImmediate(plane.gameObject);
+                destroyedCount++;
+            }
+        }
+
+        return destroyedCount;
     }
 
     private static void SetPlaneRendererVisible(ARPlane plane, bool visible)

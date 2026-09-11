@@ -1,4 +1,4 @@
-﻿#if AR_FOUNDATION_PRESENT
+#if AR_FOUNDATION_PRESENT
 using UnityEngine.EventSystems;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -140,6 +140,8 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
 
         bool m_AttemptSpawn;
         bool m_EverHadSelection;
+        bool m_HasObservedSelectPerformedSinceEnable;
+        float m_EnableTime;
 
         /// <summary>
         /// See <see cref="MonoBehaviour"/>.
@@ -147,6 +149,8 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
         void OnEnable()
         {
             m_SpawnObjectInput.EnableDirectActionIfModeUsed();
+            m_HasObservedSelectPerformedSinceEnable = false;
+            m_EnableTime = Time.unscaledTime;
         }
 
         /// <summary>
@@ -216,6 +220,9 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
 
             var selectState = m_ARInteractor.logicalSelectState;
 
+            if (selectState.wasPerformedThisFrame)
+                m_HasObservedSelectPerformedSinceEnable = true;
+
             if (m_BlockSpawnWhenInteractorHasSelection)
             {
                 if (selectState.wasPerformedThisFrame)
@@ -229,10 +236,16 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
             {
                 case SpawnTriggerType.SelectAttempt:
                     if (selectState.wasCompletedThisFrame)
+                    {
                         m_AttemptSpawn = ShouldSpawnAfterSelectAttempt(
                             m_ARInteractor.hasSelection,
-                            ref m_EverHadSelection
+                            ref m_EverHadSelection,
+                            m_HasObservedSelectPerformedSinceEnable,
+                            Time.unscaledTime - m_EnableTime,
+                            0.3f
                         );
+                        m_HasObservedSelectPerformedSinceEnable = false;
+                    }
                     break;
 
                 case SpawnTriggerType.InputAction:
@@ -244,12 +257,24 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.ARStarterAssets
 
         public static bool ShouldSpawnAfterSelectAttempt(
             bool hasSelection,
+            ref bool everHadSelection,
+            bool hasObservedPerformedSinceEnable,
+            float timeSinceEnable,
+            float cooldownDuration = 0.3f
+        )
+        {
+            bool isCooldownOver = timeSinceEnable >= cooldownDuration;
+            bool shouldSpawn = !hasSelection && !everHadSelection && hasObservedPerformedSinceEnable && isCooldownOver;
+            everHadSelection = false;
+            return shouldSpawn;
+        }
+
+        public static bool ShouldSpawnAfterSelectAttempt(
+            bool hasSelection,
             ref bool everHadSelection
         )
         {
-            bool shouldSpawn = !hasSelection && !everHadSelection;
-            everHadSelection = false;
-            return shouldSpawn;
+            return ShouldSpawnAfterSelectAttempt(hasSelection, ref everHadSelection, true, 1f, 0.3f);
         }
 
         bool IsLowestHorizontalSurface(ARPlane candidate)
